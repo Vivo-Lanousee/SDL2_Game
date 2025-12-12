@@ -19,7 +19,38 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Player.cpp" />
+    <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SDL2.dll" />
+    <None Include="src\Player.hPlayer" />
+    <None Include="x64\Debug\MyGame.exe.recipe" />
+    <None Include="x64\Debug\MyGame.ilk" />
+    <None Include="x64\Debug\MyGame.tlog\CL.command.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\Cl.items.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\CL.read.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\CL.write.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\link.command.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\link.read.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\link.secondary.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\link.write.1.tlog" />
+    <None Include="x64\Debug\MyGame.tlog\MyGame.lastbuildstate" />
+    <None Include="x64\Debug\vc143.idb" />
+    <None Include="x64\Debug\vc143.pdb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="x64\Debug\main.obj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="x64\Debug\MyGame.log" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Bullet.h" />
+    <ClInclude Include="src\Player.h" />
+    <ClInclude Include="src\GameObject.h" />
+    <ClInclude Include="src\Game.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -1,12 +1,162 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Unity\\SDL\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Game.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Game.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Bullet.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Bullet.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Player.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Player.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Player.hPlayer||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Player.hPlayer||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 234,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "main.cpp",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\main.cpp",
+              "RelativeDocumentMoniker": "MyGame\\src\\main.cpp",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\main.cpp",
+              "RelativeToolTip": "MyGame\\src\\main.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-12-12T12:24:03.985Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 384,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Bullet.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Bullet.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\Bullet.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Bullet.h",
+              "RelativeToolTip": "MyGame\\src\\Bullet.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-12T15:02:25.403Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Player.cpp",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Player.cpp",
+              "RelativeDocumentMoniker": "MyGame\\src\\Player.cpp",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Player.cpp",
+              "RelativeToolTip": "MyGame\\src\\Player.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-12-12T14:23:26.394Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Player.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Player.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\Player.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Player.h",
+              "RelativeToolTip": "MyGame\\src\\Player.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-12T14:23:24.572Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Player.hPlayer",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Player.hPlayer",
+              "RelativeDocumentMoniker": "MyGame\\src\\Player.hPlayer",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Player.hPlayer",
+              "RelativeToolTip": "MyGame\\src\\Player.hPlayer",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-12T13:49:20.117Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "GameObject.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\GameObject.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\GameObject.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\GameObject.h",
+              "RelativeToolTip": "MyGame\\src\\GameObject.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-12T13:34:47.471Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Game.cpp",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Game.cpp",
+              "RelativeDocumentMoniker": "MyGame\\src\\Game.cpp",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Game.cpp",
+              "RelativeToolTip": "MyGame\\src\\Game.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-12-12T12:56:24.202Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Game.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Game.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\Game.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Game.h",
+              "RelativeToolTip": "MyGame\\src\\Game.h",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAB0AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-12T12:56:19.22Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
