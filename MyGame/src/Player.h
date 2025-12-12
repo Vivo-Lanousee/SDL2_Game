@@ -5,7 +5,7 @@
 class Player : public GameObject {
 public:
     // 親クラスのコンストラクタを呼ぶ
-    Player(float x, float y) : GameObject(x, y, 50, 50) {}
+    Player(float x, float y, SDL_Texture* tex) : GameObject(x, y, 50, 50, tex) {}
 
     // 親との約束「Update」の中身を書く
     void Update() override {
@@ -24,11 +24,19 @@ public:
         angle = atan2(mouseY - centerY, mouseX - centerX) * 180 / M_PI;
     }
 
+    
+
     void Render(SDL_Renderer* renderer) override {
-        // 本体（赤）
-        SDL_Rect rect = { (int)x, (int)y, width, height };
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(renderer, &rect);
+        SDL_Rect destRect = { (int)x, (int)y, width, height };
+
+        if (texture) {
+            SDL_RenderCopyEx(renderer, texture, NULL, &destRect, angle, NULL, SDL_FLIP_NONE);
+        }
+        else {
+            // 画像がないなら赤い四角
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            SDL_RenderFillRect(renderer, &destRect);
+        }
 
         // レーザー（緑）
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);

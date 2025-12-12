@@ -1,12 +1,19 @@
 ﻿#include "Game.h"
 #include <iostream>
 #include <cmath>
+#include <SDL_image.h>
 
+#include "TextureManager.h"
+#include "Constants.h"
 #include "Player.h"
-
 #include "Bullet.h"
 
-Game::Game() : isRunning(false), window(nullptr), renderer(nullptr) {}
+// コンストラクタでテクスチャ変数を初期化（重要）
+Game::Game() : isRunning(false), window(nullptr), renderer(nullptr),
+playerTexture(nullptr), bulletTexture(nullptr) {
+}
+
+Game::~Game() {}
 
 bool Game::Init(const char* title, int x, int y, int width, int height, bool fullscreen) {
     int flags = 0;
@@ -19,23 +26,40 @@ bool Game::Init(const char* title, int x, int y, int width, int height, bool ful
         if (window) {
             renderer = SDL_CreateRenderer(window, -1, 0);
             if (renderer) {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // 背景黒
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 isRunning = true;
             }
         }
-
-        player = new Player(350, 250); // 変数に入れておく
-        gameObjects.push_back(player); // リストにも入れる
     }
     else {
         return false;
     }
+
+    // SDL_imageの初期化（PNGを使えるようにする）
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+        std::cout << "IMG_Init Error: " << IMG_GetError() << std::endl;
+        return false;
+    }
+
+    if (renderer) {
+        // 画像の読み込み
+        playerTexture = IMG_LoadTexture(renderer, "assets/images/player.png");
+        bulletTexture = IMG_LoadTexture(renderer, "bullet.png");
+
+        // 画像の読み込みに失敗したらエラーを出す
+        if (!playerTexture || !bulletTexture) {
+            std::cout << "Texture Load Failed! Make sure png files are in the project folder." << std::endl;
+        }
+
+        // ★変更：プレイヤー生成時にテクスチャを渡す
+        // (Player.hのコンストラクタ変更が必要です)
+        player = new Player(350, 250, playerTexture);
+        gameObjects.push_back(player);
+    }
+
     return true;
 }
 
-/// <summary>
-/// キー入力処理
-/// </summary>
 void Game::HandleEvents() {
     SDL_Event event;
     SDL_PollEvent(&event);
@@ -43,50 +67,40 @@ void Game::HandleEvents() {
     case SDL_QUIT:
         isRunning = false;
         break;
-        // キー入力処理
+
     case SDL_MOUSEBUTTONDOWN:
         if (event.button.button == SDL_BUTTON_LEFT) {
             // プレイヤーの中心位置を計算
-            float spawnX = player->x + (player->width / 2);
-            float spawnY = player->y + (player->height / 2);
+            float spawnX = player->x + (player->width / 2) - 5; // -5は弾の半分のサイズ(微調整)
+            float spawnY = player->y + (player->height / 2) - 5;
 
-            // プレイヤーが今向いている角度を取得（Player.hにGetAngleが必要）
-            // ※もしPlayer.hにGetAngleがない場合は、次の補足を読んでください
-
-            // 角度計算をここでもう一度やってもOK（とりあえず動かすために）
+            // 角度計算
             int mouseX, mouseY;
             SDL_GetMouseState(&mouseX, &mouseY);
-            double radian = atan2(mouseY - spawnY, mouseX - spawnX);
+
+            // プレイヤー中心からの角度
+            float centerX = player->x + (player->width / 2);
+            float centerY = player->y + (player->height / 2);
+            double radian = atan2(mouseY - centerY, mouseX - centerX);
             double angle = radian * 180.0 / 3.14159265;
 
-            // 弾を生成してリストに追加！
-            gameObjects.push_back(new Bullet(spawnX, spawnY, angle));
+            // ★変更：弾を生成してリストに追加（テクスチャも渡す！）
+            gameObjects.push_back(new Bullet(spawnX, spawnY, angle, bulletTexture));
         }
         break;
     }
 }
 
-/// <summary>
-/// 毎秒計算
-/// </summary>
 void Game::Update() {
-    // UnityのUpdate()にあたる部分
-    // ここに「自動で動く敵」や「当たり判定」などを書く
-
-    
     for (auto obj : gameObjects) {
         obj->Update();
     }
 }
 
-/// <summary>
-/// 描画
-/// </summary>
 void Game::Render() {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    //Renderを一斉に
     for (auto obj : gameObjects) {
         obj->Render(renderer);
     }
@@ -95,14 +109,18 @@ void Game::Render() {
 }
 
 void Game::Clean() {
-
-    // C++ではnewしたものは必ずdelete！
+    // オブジェクトのメモリ解放
     for (auto obj : gameObjects) {
         delete obj;
     }
     gameObjects.clear();
 
-    SDL_DestroyRenderer(renderer); // 筆を片付ける
-    SDL_DestroyWindow(window);     // 窓を閉じる
+    // ★追加：読み込んだ画像のメモリ解放
+    SDL_DestroyTexture(playerTexture);
+    SDL_DestroyTexture(bulletTexture);
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     SDL_Quit();
+    IMG_Quit(); // ★追加：SDL_imageの終了処理
 }

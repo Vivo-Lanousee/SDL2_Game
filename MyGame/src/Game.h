@@ -27,4 +27,7 @@ private:
 
     //ゲーム全オブジェクト
     std::vector<GameObject*> gameObjects;
+
+    SDL_Texture* playerTexture;
+    SDL_Texture* bulletTexture;
 };

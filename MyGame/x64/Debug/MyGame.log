@@ -1,10 +1,8 @@
 ﻿  Game.cpp
-C:\Unity\SDL\MyGame\src\Bullet.h(16,28): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
+C:\Unity\SDL\MyGame\src\Bullet.h(13,28): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
   (ソース ファイル 'src/Game.cpp' をコンパイルしています)
   
-C:\Unity\SDL\MyGame\src\Bullet.h(17,28): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
+C:\Unity\SDL\MyGame\src\Bullet.h(14,28): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
   (ソース ファイル 'src/Game.cpp' をコンパイルしています)
   
-  main.cpp
-  コードを生成中...
   MyGame.vcxproj -> C:\Unity\SDL\x64\Debug\MyGame.exe
