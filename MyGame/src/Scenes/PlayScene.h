@@ -1,0 +1,33 @@
+﻿#pragma once
+#include "Scene.h"
+#include <vector>
+#include "../Objects/GameObject.h"
+#include "../Objects/Player.h"
+#include "../Objects/Bullet.h"
+
+class PlayScene : public Scene {
+public:
+    // シーンに入った時（初期化）
+    void OnEnter(Game* game) override;
+
+    // シーンを出る時（後片付け）
+    void OnExit(Game* game) override;
+
+    // 更新（移動など）
+    void Update(Game* game) override;
+
+    // 描画
+    void Render(Game* game) override;
+
+    // 入力（クリックなど）
+    void HandleEvents(Game* game) override;
+
+private:
+    // このシーンで使う変数たち
+    Player* player;
+    std::vector<GameObject*> gameObjects;
+
+    // テクスチャ
+    SDL_Texture* playerTexture;
+    SDL_Texture* bulletTexture;
+};

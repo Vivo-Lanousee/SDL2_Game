@@ -6,7 +6,6 @@
 #include <SDL_ttf.h>
 
 class Scene;
-
 class Game {
 public:
     Game();
@@ -18,10 +17,18 @@ public:
     void Render();
     void Clean();
 
-    // text:表示したい文字, x,y:座標, color:色
-    void DrawText(const char* text, int x, int y, SDL_Color color);
-
     bool Running() { return isRunning; }
+
+    void Quit() { isRunning = false; }
+
+    // シーンを切り替える重要関数
+    void ChangeScene(Scene* newScene);
+
+    // 各シーンからアクセスするゲッター
+    SDL_Renderer* GetRenderer() const { return renderer; }
+
+    // 共通で使う便利関数
+    void DrawText(const char* text, int x, int y, SDL_Color color);
 
 private:
     bool isRunning;
@@ -29,12 +36,6 @@ private:
     SDL_Renderer* renderer;
     TTF_Font* font;
 
-    //プレイヤーデータ
-    Player* player;
-
-    //ゲーム全オブジェクト
-    std::vector<GameObject*> gameObjects;
-
-    SDL_Texture* playerTexture;
-    SDL_Texture* bulletTexture;
+    // 現在のシーン（タイトル画面、プレイ画面など）
+    Scene* currentScene;
 };

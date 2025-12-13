@@ -22,6 +22,7 @@
     <ClCompile Include="src\Objects\Player.cpp" />
     <ClCompile Include="src\Core\Game.cpp" />
     <ClCompile Include="src\Core\main.cpp" />
+    <ClCompile Include="src\Scenes\PlayScene.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -59,6 +60,7 @@
     <ClInclude Include="src\Objects\Player.h" />
     <ClInclude Include="src\Objects\GameObject.h" />
     <ClInclude Include="src\Core\Game.h" />
+    <ClInclude Include="src\Scenes\PlayScene.h" />
     <ClInclude Include="src\Scenes\Scene.h" />
     <ClInclude Include="src\Scenes\TitleScene.h" />
     <ClInclude Include="src\TextureManager.h" />

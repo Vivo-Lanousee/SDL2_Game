@@ -1,16 +1,11 @@
 ﻿#include "Game.h"
 #include <iostream>
-#include <cmath>
 #include <SDL_image.h>
+#include "../Scenes/Scene.h"
+#include "../Scenes/TitleScene.h" 
 
-#include "../TextureManager.h"
-#include "../Constants.h"
-#include "../Objects/Player.h"
-#include "../Objects/Bullet.h"
 
-// コンストラクタでテクスチャ変数を初期化（重要）
-Game::Game() : isRunning(false), window(nullptr), renderer(nullptr),
-playerTexture(nullptr), bulletTexture(nullptr) {
+Game::Game() : isRunning(false), window(nullptr), renderer(nullptr), font(nullptr), currentScene(nullptr) {
 }
 
 Game::~Game() {}
@@ -21,11 +16,13 @@ bool Game::Init(const char* title, int x, int y, int width, int height, bool ful
         flags = SDL_WINDOW_FULLSCREEN;
     }
 
+    // SDLの初期化
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {
         window = SDL_CreateWindow(title, x, y, width, height, flags);
         if (window) {
             renderer = SDL_CreateRenderer(window, -1, 0);
             if (renderer) {
+                // 背景を黒で初期化
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 isRunning = true;
             }
@@ -35,120 +32,114 @@ bool Game::Init(const char* title, int x, int y, int width, int height, bool ful
         return false;
     }
 
-    // SDL_imageの初期化（PNGを使えるようにする）
+    // 画像システムの初期化
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         std::cout << "IMG_Init Error: " << IMG_GetError() << std::endl;
         return false;
     }
 
+    // 文字システムの初期化
     if (TTF_Init() == -1) {
         std::cout << "TTF_Init Error: " << TTF_GetError() << std::endl;
         return false;
     }
 
-    // フォントの読み込み
+    // フォント読み込み（ゲーム全体で共通使用）
     font = TTF_OpenFont("assets/fonts/PixelMplus10.ttf", 24);
     if (!font) {
-        std::cout << "Failed to load font!" << std::endl;
+        std::cout << "Failed to load font! Check assets/fonts folder." << std::endl;
     }
 
-    if (renderer) {
-        // 画像の読み込み
-        playerTexture = IMG_LoadTexture(renderer, "assets/images/player.png");
-        bulletTexture = IMG_LoadTexture(renderer, "bullet.png");
-
-        // 画像の読み込みに失敗したらエラーを出す
-        if (!playerTexture || !bulletTexture) {
-            std::cout << "Texture Load Failed! Make sure png files are in the project folder." << std::endl;
-        }
-
-        // プレイヤー生成時にテクスチャを渡す
-        player = new Player(350, 250, playerTexture);
-        gameObjects.push_back(player);
-    }
+    // ★重要：最初は「タイトルシーン」からスタート
+    ChangeScene(new TitleScene());
 
     return true;
 }
-void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
-    if (!font) return;
-    // 文字からサーフェス（生画像）を作る
-    SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
-    if (!surface) return;
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    //描画する場所とサイズを決める
-    SDL_Rect destRect = { x, y, surface->w, surface->h }; // 文字のサイズに合わせる
-    SDL_RenderCopy(renderer, texture, NULL, &destRect);
-    SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
+
+// シーン切り替え処理
+void Game::ChangeScene(Scene* newScene) {
+    // 1. 古いシーンがあれば片付ける（OnExit呼び出し）
+    if (currentScene) {
+        currentScene->OnExit(this);
+        delete currentScene; // メモリ解放
+    }
+
+    // 2. 新しいシーンに入れ替える
+    currentScene = newScene;
+
+    // 3. 新しいシーンの初期化（OnEnter呼び出し）
+    if (currentScene) {
+        currentScene->OnEnter(this);
+    }
 }
 
+// 入力処理（シーンへ委譲）
 void Game::HandleEvents() {
-    SDL_Event event;
-    SDL_PollEvent(&event);
-    switch (event.type) {
-    case SDL_QUIT:
-        isRunning = false;
-        break;
-
-    case SDL_MOUSEBUTTONDOWN:
-        if (event.button.button == SDL_BUTTON_LEFT) {
-            // プレイヤーの中心位置を計算
-            float spawnX = player->x + (player->width / 2) - 5; // -5は弾の半分のサイズ(微調整)
-            float spawnY = player->y + (player->height / 2) - 5;
-
-            // 角度計算
-            int mouseX, mouseY;
-            SDL_GetMouseState(&mouseX, &mouseY);
-
-            // プレイヤー中心からの角度
-            float centerX = player->x + (player->width / 2);
-            float centerY = player->y + (player->height / 2);
-            double radian = atan2(mouseY - centerY, mouseX - centerX);
-            double angle = radian * 180.0 / 3.14159265;
-
-            //　弾を生成してリストに追加（テクスチャも渡す！）
-            gameObjects.push_back(new Bullet(spawnX, spawnY, angle, bulletTexture));
-        }
-        break;
+    if (currentScene) {
+        currentScene->HandleEvents(this);
     }
 }
 
+// 更新処理（シーンへ委譲）
 void Game::Update() {
-    for (auto obj : gameObjects) {
-        obj->Update();
+    if (currentScene) {
+        currentScene->Update(this);
     }
 }
 
+// 描画処理（シーンへ委譲）
 void Game::Render() {
+    // 画面をクリア
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    for (auto obj : gameObjects) {
-        obj->Render(renderer);
+    // 現在のシーンを描画
+    if (currentScene) {
+        currentScene->Render(this);
     }
 
-    SDL_RenderPresent(renderer);
-
-
-    SDL_Color white = { 255, 255, 255, 255 }; // 白色
-    DrawText("SCORE: 100", 10, 10, white);
-
+    // 画面を更新（フリップ）
     SDL_RenderPresent(renderer);
 }
 
+// 終了処理
 void Game::Clean() {
-    // オブジェクトのメモリ解放
-    for (auto obj : gameObjects) {
-        delete obj;
+    // 最後のシーンを片付ける
+    if (currentScene) {
+        currentScene->OnExit(this);
+        delete currentScene;
     }
-    gameObjects.clear();
 
-    // ★追加：読み込んだ画像のメモリ解放
-    SDL_DestroyTexture(playerTexture);
-    SDL_DestroyTexture(bulletTexture);
+    // フォント解放
+    if (font) {
+        TTF_CloseFont(font);
+    }
 
+    // SDL関連の終了
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+
+    TTF_Quit();
+    IMG_Quit();
     SDL_Quit();
-    IMG_Quit(); // ★追加：SDL_imageの終了処理
+}
+
+// 共通機能：文字描画
+void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
+    if (!font) return;
+
+    // 文字からサーフェスを作成
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
+    if (!surface) return;
+
+    // サーフェスからテクスチャを作成
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    // 描画範囲の設定
+    SDL_Rect destRect = { x, y, surface->w, surface->h };
+    SDL_RenderCopy(renderer, texture, NULL, &destRect);
+
+    // メモリ解放（重要）
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
 }

@@ -9,6 +9,7 @@ public:
     // 初期化（入った瞬間）
     virtual void OnEnter(Game* game) = 0;
 
+    virtual void HandleEvents(Game* game) = 0;
     // 更新
     virtual void Update(Game* game) = 0;
 
