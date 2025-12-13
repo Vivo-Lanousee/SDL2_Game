@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Player.cpp" />
-    <ClCompile Include="src\Game.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Objects\Player.cpp" />
+    <ClCompile Include="src\Core\Game.cpp" />
+    <ClCompile Include="src\Core\main.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -31,7 +31,8 @@
     <None Include="libwebpdemux-2.dll" />
     <None Include="SDL2.dll" />
     <None Include="SDL2_image.dll" />
-    <None Include="src\Player.hPlayer" />
+    <None Include="SDL2_ttf.dll" />
+    <None Include="src\Objects\Player.hPlayer" />
     <None Include="x64\Debug\MyGame.exe.recipe" />
     <None Include="x64\Debug\MyGame.ilk" />
     <None Include="x64\Debug\MyGame.tlog\CL.command.1.tlog" />
@@ -53,15 +54,21 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Bullet.h" />
+    <ClInclude Include="src\Objects\Bullet.h" />
     <ClInclude Include="src\Constants.h" />
-    <ClInclude Include="src\Player.h" />
-    <ClInclude Include="src\GameObject.h" />
-    <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\Objects\Player.h" />
+    <ClInclude Include="src\Objects\GameObject.h" />
+    <ClInclude Include="src\Core\Game.h" />
+    <ClInclude Include="src\Scenes\Scene.h" />
+    <ClInclude Include="src\Scenes\TitleScene.h" />
     <ClInclude Include="src\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\images\player.png" />
     <Image Include="D:\救国のスネジンカ_素材\Char\Snezhinka\player.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="assets\fonts\PixelMplus10.ttf" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -149,13 +156,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)libs\SDL2\include;$(SolutionDir)libs\SDL2_image\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libs\SDL2\include;$(SolutionDir)libs\SDL2_image\include;$(SolutionDir)libs\SDL2_ttf\include;$(ProjectDir)Objects</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)libs\SDL2\lib\x64;$(SolutionDir)libs\SDL2_image\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)libs\SDL2\lib\x64;$(SolutionDir)libs\SDL2_image\lib\x64;$(SolutionDir)libs\SDL2_ttf\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -166,12 +173,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)libs\SDL2\include;$(SolutionDir)libs\SDL2_image\include;$(SolutionDir)libs\SDL2_ttf\include;$(ProjectDir)Objects</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)libs\SDL2\lib\x64;$(SolutionDir)libs\SDL2_image\lib\x64;$(SolutionDir)libs\SDL2_ttf\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

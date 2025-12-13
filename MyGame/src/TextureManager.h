@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Game.h" // SDLやSDL_imageのためにインクルード
+#include "Core/Game.h" // SDLやSDL_imageのためにインクルード
 
 class TextureManager {
 public:
