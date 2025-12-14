@@ -3,6 +3,7 @@
 #include "../TextureManager.h"
 #include <iostream>
 #include <cmath>
+#include <algorithm> // ★追加：remove_if を使うために必要
 
 #include "../Objects/Block.h"
 #include "../Core/Physics.h"
@@ -19,7 +20,7 @@ void PlayScene::OnEnter(Game* game) {
 
     // 1. プレイヤー生成
     player = new Player(100, 100, playerTexture);
-    player->useGravity = true;
+    // Player.h で name="Player" と設定されている前提
     gameObjects.push_back(player);
 
     // 2. 地面と足場生成
@@ -39,55 +40,34 @@ void PlayScene::OnExit(Game* game) {
 }
 
 void PlayScene::Update(Game* game) {
-    // 1. プレイヤーの入力処理
+    // 1. プレイヤーの更新
     player->Update(game);
-
-    // 2. 物理移動（重力適用）
     player->ApplyPhysics();
     player->isGrounded = false;
 
-    // ★追加：弾（Trigger）の当たり判定と削除処理
-    // リストからオブジェクトを削除する場合、普通のfor文だとバグるのでイテレータを使います
-    auto it = gameObjects.begin();
-    while (it != gameObjects.end()) {
-        GameObject* obj = *it;
-
-        // 「これは弾（Trigger）か？」
+    // 2. トリガー（弾など）の当たり判定
+    // シーンは「当たったこと」を伝えるだけで、どうなるか（消えるか等）はオブジェクトに任せる
+    for (auto obj : gameObjects) {
+        // 自分がトリガーなら、誰かに当たっているか調べる
         if (obj->isTrigger) {
-            bool hit = false;
-
-            // 他のすべてのオブジェクトと衝突チェック
             for (auto target : gameObjects) {
-                if (obj == target) continue;       // 自分自身は無視
-                if (target->isTrigger) continue;   // 弾同士は無視
+                if (obj == target) continue; // 自分自身は無視
 
-                // 弾が出た瞬間にプレイヤーに当たらないように除外する
-                if (target == player) continue;
-
-                // 物理演算なしの単純な重なり判定 (CheckAABB)
+                // 物理判定のみ実施（CheckAABB）
                 if (Physics::CheckAABB(obj, target)) {
-                    hit = true; // 当たった！
-                    break;
+                    // ★重要：ここで「当たったよ！」と本人に伝える
+                    // Bulletクラスなら、この中で「壁なら isDead = true」にする処理が走る
+                    obj->OnTriggerEnter(target);
                 }
             }
-
-            // 当たっていたら削除する
-            if (hit) {
-                delete obj;                 // メモリ解放
-                it = gameObjects.erase(it); // リストから削除し、イテレータを進める
-                continue;                   // 次のループへ（下の++itをスキップ）
-            }
         }
-        ++it;
     }
 
-
-    // 3. プレイヤーの衝突解決（壁・床）
+    // 3. プレイヤーの物理衝突解決（壁・床）
     for (auto obj : gameObjects) {
         if (obj == player) continue;
-        if (obj->isTrigger) continue; // 弾などのTriggerには乗れないようにする
+        if (obj->isTrigger) continue; // 弾やコインには乗れない
 
-        // 物理演算（押し戻し＆着地判定）
         if (Physics::ResolveCollision(player, obj)) {
             player->isGrounded = true;
         }
@@ -99,6 +79,18 @@ void PlayScene::Update(Game* game) {
             obj->Update(game);
         }
     }
+
+    // ★5. お掃除タイム（isDeadフラグが立ったオブジェクトをまとめて消去）
+    // erase-remove イディオムと呼ばれるC++の定石です
+    auto it = std::remove_if(gameObjects.begin(), gameObjects.end(), [](GameObject* obj) {
+        if (obj->isDead) {
+            delete obj;  // メモリ解放
+            return true; // リストから外す対象にする
+        }
+        return false;
+        });
+    // 実際にリストから削除
+    gameObjects.erase(it, gameObjects.end());
 }
 
 void PlayScene::Render(Game* game) {
@@ -134,26 +126,20 @@ void PlayScene::HandleEvents(Game* game) {
             if (event.button.button == SDL_BUTTON_RIGHT) {
                 std::cout << "--- Raycast Test ---" << std::endl;
 
-                // プレイヤーの中心座標
                 float startX = player->x + player->width / 2;
                 float startY = player->y + player->height / 2;
-
                 bool hitWall = false;
+
                 for (auto obj : gameObjects) {
                     if (obj == player) continue;
-                    if (obj->isTrigger) continue; // 弾は無視して壁だけ調べる
+                    if (obj->isTrigger) continue;
 
-                    // 線分判定 (Start -> MousePosition)
                     if (Physics::LineVsAABB(startX, startY, mx, my, obj)) {
-                        std::cout << "[Block] detected between player and mouse!" << std::endl;
+                        std::cout << "[Block] detected!" << std::endl;
                         hitWall = true;
-                        // ここで break すれば「一番手前の壁」だけ検知できる
                     }
                 }
-
-                if (!hitWall) {
-                    std::cout << "Clear line of sight!" << std::endl;
-                }
+                if (!hitWall) std::cout << "Clear!" << std::endl;
             }
         }
     }

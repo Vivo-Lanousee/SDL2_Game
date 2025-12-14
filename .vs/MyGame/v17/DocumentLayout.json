@@ -62,8 +62,7 @@
               "RelativeToolTip": "MyGame\\src\\Objects\\Block.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-14T07:42:06.373Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-14T07:42:06.373Z"
             },
             {
               "$type": "Document",
@@ -75,8 +74,7 @@
               "RelativeToolTip": "MyGame\\src\\Core\\Physics.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAGUAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-14T07:32:46.738Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-14T07:32:46.738Z"
             },
             {
               "$type": "Document",
@@ -88,8 +86,7 @@
               "RelativeToolTip": "MyGame\\src\\Objects\\GameObject.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEUAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-14T07:17:54.82Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-14T07:17:54.82Z"
             },
             {
               "$type": "Document",
@@ -99,7 +96,7 @@
               "RelativeDocumentMoniker": "MyGame\\src\\Scenes\\PlayScene.cpp",
               "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Scenes\\PlayScene.cpp",
               "RelativeToolTip": "MyGame\\src\\Scenes\\PlayScene.cpp",
-              "ViewState": "AgIAAG4AAAAAAAAAAAAUwJ8AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAHEAAAAAAAAAAADwv5EAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-14T07:16:41.179Z",
               "EditorCaption": ""
@@ -138,8 +135,7 @@
               "RelativeToolTip": "MyGame\\src\\Objects\\Bullet.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T13:21:53.422Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T13:21:53.422Z"
             },
             {
               "$type": "Document",
@@ -175,8 +171,7 @@
               "RelativeToolTip": "MyGame\\src\\Objects\\Player.h",
               "ViewState": "AgIAAAYAAAAAAAAAAADwvywAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T13:20:20.581Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T13:20:20.581Z"
             }
           ]
         }

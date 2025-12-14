@@ -22,51 +22,51 @@ public:
         // ステータスの初期値を設定
         status.hp = 100;
         status.maxHp = 100;
-        status.speed = 5.0f;     // 今まで「5」と書いていた速度
+        status.speed = 5.0f;
         status.attackPower = 10;
         angle = 0;
 
         useGravity = true;
+
+        // ★重要：自分の名前をセットする
+        // これがないと、Bulletが「これはプレイヤーだ」と認識できず、当たって消えてしまいます。
+        name = "Player";
     }
 
     void Update(Game* game) override {
         InputHandler* input = game->GetInput();
 
         // ■ 左右移動
-        // 座標(x)を直接変えるのではなく、速度(velX)を変更する
-        velX = 0; // キーを離したら止まるようにリセット
+        velX = 0;
         if (input->IsPressed(GameAction::MoveLeft))  velX = -status.speed;
         if (input->IsPressed(GameAction::MoveRight)) velX = status.speed;
 
-        // ■ ジャンプ (MoveUpボタン、またはJumpボタン)
-        // 「地面にいるとき(isGrounded == true)」だけジャンプできる
+        // ■ ジャンプ
         if (input->IsPressed(GameAction::MoveUp)) {
             if (isGrounded) {
-                velY = -14.0f; // 上方向に初速を与える
-                isGrounded = false; // 空中に飛び出した
+                velY = -14.0f; // ジャンプ力
+                isGrounded = false;
             }
         }
 
-        // ※ MoveDown はしゃがむ動作などに使いますが、今回は何もしません
-
-        // ■ マウスの方向を向く処理（そのまま維持）
+        // ■ マウスの方向を向く処理
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
         float centerX = x + width / 2;
         float centerY = y + height / 2;
-        double radian = 0;//atan2(mouseY - centerY, mouseX - centerX);
-        angle = radian * 180.0 / 3.14159265;
+
+        // ★コメントアウトされていた計算を復活させました
+        double radian = atan2(mouseY - centerY, mouseX - centerX);
+        angle = 0;// radian * 180.0 / 3.14159265;
     }
 
     void Render(SDL_Renderer* renderer) override {
         SDL_Rect destRect = { (int)x, (int)y, width, height };
 
         if (texture) {
-            // 画像を回転させて描画
             SDL_RenderCopyEx(renderer, texture, NULL, &destRect, angle, NULL, SDL_FLIP_NONE);
         }
         else {
-            // 画像がないなら赤い四角（デバッグ用）
             SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             SDL_RenderFillRect(renderer, &destRect);
         }
@@ -79,8 +79,7 @@ public:
     }
 
     Bullet* Shoot(int mouseX, int mouseY, SDL_Texture* bulletTex) {
-
-        // 1. 発射位置の計算（自分の中心）
+        // 発射位置の計算
         float spawnX = x + (width / 2) - 5;
         float spawnY = y + (height / 2) - 5;
 
@@ -90,28 +89,19 @@ public:
         double radian = atan2(mouseY - centerY, mouseX - centerX);
         double angle = radian * 180.0 / 3.14159265;
 
-        // 弾を作って渡す（ここではリストに追加しない）
         return new Bullet(spawnX, spawnY, angle, bulletTex);
     }
 
-
-    // --- 以下、便利機能 ---
-
-    // ダメージを受ける処理
+    // --- 便利機能 ---
     void TakeDamage(int damage) {
         status.hp -= damage;
         if (status.hp < 0) status.hp = 0;
     }
 
-    // HPを取得する（UI表示などで使う）
     int GetHP() const { return status.hp; }
-
-    // 最大HPを取得する
     int GetMaxHP() const { return status.maxHp; }
 
 public:
-    // ステータスデータ
-    // 外部（PlaySceneなど）から直接見れるように public にしています
     UnitStatus status;
 
 private:
