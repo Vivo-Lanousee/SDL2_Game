@@ -25,26 +25,37 @@ public:
         status.speed = 5.0f;     // 今まで「5」と書いていた速度
         status.attackPower = 10;
         angle = 0;
+
+        useGravity = true;
     }
 
     void Update(Game* game) override {
-        // キー入力状態を取得
         InputHandler* input = game->GetInput();
 
-        if (input->IsPressed(GameAction::MoveUp))    y -= status.speed;
-        if (input->IsPressed(GameAction::MoveDown))  y += status.speed;
-        if (input->IsPressed(GameAction::MoveLeft))  x -= status.speed;
-        if (input->IsPressed(GameAction::MoveRight)) x += status.speed;
+        // ■ 左右移動
+        // 座標(x)を直接変えるのではなく、速度(velX)を変更する
+        velX = 0; // キーを離したら止まるようにリセット
+        if (input->IsPressed(GameAction::MoveLeft))  velX = -status.speed;
+        if (input->IsPressed(GameAction::MoveRight)) velX = status.speed;
 
-        // マウスの方向を向く計算
+        // ■ ジャンプ (MoveUpボタン、またはJumpボタン)
+        // 「地面にいるとき(isGrounded == true)」だけジャンプできる
+        if (input->IsPressed(GameAction::MoveUp)) {
+            if (isGrounded) {
+                velY = -14.0f; // 上方向に初速を与える
+                isGrounded = false; // 空中に飛び出した
+            }
+        }
+
+        // ※ MoveDown はしゃがむ動作などに使いますが、今回は何もしません
+
+        // ■ マウスの方向を向く処理（そのまま維持）
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
-
         float centerX = x + width / 2;
         float centerY = y + height / 2;
-
-        // 角度計算 (M_PI が使えない環境も考慮して数値直書きで安定させます)
-        //angle = atan2(mouseY - centerY, mouseX - centerX) * 180.0 / 3.14159265;
+        double radian = 0;//atan2(mouseY - centerY, mouseX - centerX);
+        angle = radian * 180.0 / 3.14159265;
     }
 
     void Render(SDL_Renderer* renderer) override {

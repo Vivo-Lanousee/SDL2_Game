@@ -1,85 +1,158 @@
 ﻿#include "PlayScene.h"
 #include "../Core/Game.h"
-#include "../TextureManager.h" // TextureManagerを使う場合
+#include "../TextureManager.h"
 #include <iostream>
 #include <cmath>
+
+#include "../Objects/Block.h"
+#include "../Core/Physics.h"
 
 void PlayScene::OnEnter(Game* game) {
     std::cout << "Entering PlayScene..." << std::endl;
 
-    // 1. 画像の読み込み（TextureManagerを使うと楽！）
-    // TextureManagerがない場合は IMG_LoadTexture(game->GetRenderer(), "path") を使ってください
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
 
     if (!playerTexture || !bulletTexture) {
-        std::cout << "Failed to load textures in PlayScene!" << std::endl;
+        std::cout << "Failed to load textures!" << std::endl;
     }
 
-    // 2. プレイヤー生成
-    player = new Player(350, 250, playerTexture);
+    // 1. プレイヤー生成
+    player = new Player(100, 100, playerTexture);
+    player->useGravity = true;
     gameObjects.push_back(player);
+
+    // 2. 地面と足場生成
+    gameObjects.push_back(new Block(0, 500, 800, 50));
+    gameObjects.push_back(new Block(200, 350, 200, 30));
+    gameObjects.push_back(new Block(500, 250, 150, 30));
 }
 
 void PlayScene::OnExit(Game* game) {
     std::cout << "Exiting PlayScene..." << std::endl;
-
-    // メモリのお片付け
     for (auto obj : gameObjects) {
         delete obj;
     }
     gameObjects.clear();
-
     SDL_DestroyTexture(playerTexture);
     SDL_DestroyTexture(bulletTexture);
 }
 
 void PlayScene::Update(Game* game) {
-    // 全オブジェクトの更新
+    // 1. プレイヤーの入力処理
+    player->Update(game);
+
+    // 2. 物理移動（重力適用）
+    player->ApplyPhysics();
+    player->isGrounded = false;
+
+    // ★追加：弾（Trigger）の当たり判定と削除処理
+    // リストからオブジェクトを削除する場合、普通のfor文だとバグるのでイテレータを使います
+    auto it = gameObjects.begin();
+    while (it != gameObjects.end()) {
+        GameObject* obj = *it;
+
+        // 「これは弾（Trigger）か？」
+        if (obj->isTrigger) {
+            bool hit = false;
+
+            // 他のすべてのオブジェクトと衝突チェック
+            for (auto target : gameObjects) {
+                if (obj == target) continue;       // 自分自身は無視
+                if (target->isTrigger) continue;   // 弾同士は無視
+
+                // 弾が出た瞬間にプレイヤーに当たらないように除外する
+                if (target == player) continue;
+
+                // 物理演算なしの単純な重なり判定 (CheckAABB)
+                if (Physics::CheckAABB(obj, target)) {
+                    hit = true; // 当たった！
+                    break;
+                }
+            }
+
+            // 当たっていたら削除する
+            if (hit) {
+                delete obj;                 // メモリ解放
+                it = gameObjects.erase(it); // リストから削除し、イテレータを進める
+                continue;                   // 次のループへ（下の++itをスキップ）
+            }
+        }
+        ++it;
+    }
+
+
+    // 3. プレイヤーの衝突解決（壁・床）
     for (auto obj : gameObjects) {
-        obj->Update(game);
+        if (obj == player) continue;
+        if (obj->isTrigger) continue; // 弾などのTriggerには乗れないようにする
+
+        // 物理演算（押し戻し＆着地判定）
+        if (Physics::ResolveCollision(player, obj)) {
+            player->isGrounded = true;
+        }
+    }
+
+    // 4. その他のオブジェクト更新
+    for (auto obj : gameObjects) {
+        if (obj != player) {
+            obj->Update(game);
+        }
     }
 }
 
 void PlayScene::Render(Game* game) {
-    // 全オブジェクトの描画
     for (auto obj : gameObjects) {
         obj->Render(game->GetRenderer());
     }
 
-    // UI（スコアなど）の描画
     SDL_Color white = { 255, 255, 255, 255 };
-    game->DrawText("SCORE: 100", 10, 10, white);
+    game->DrawText("L-Click: Shoot / R-Click: Raycast Test", 10, 10, white);
 }
 
 void PlayScene::HandleEvents(Game* game) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-
-        // ×ボタンで終了
         if (event.type == SDL_QUIT) {
-            game->Quit(); 
+            game->Quit();
         }
 
-        // クリックで弾発射
         if (event.type == SDL_MOUSEBUTTONDOWN) {
+            int mx, my;
+            SDL_GetMouseState(&mx, &my);
+
+            // 左クリック：射撃
             if (event.button.button == SDL_BUTTON_LEFT) {
-                // プレイヤーがいない時は発射しない（安全装置）
                 if (!player) return;
-
-                // --- ここからは以前のGame.cppと同じ計算 ---
-                float spawnX = player->x + (player->width / 2) - 5;
-                float spawnY = player->y + (player->height / 2) - 5;
-
-                int mouseX, mouseY;
-                SDL_GetMouseState(&mouseX, &mouseY);
-
-                // 「撃ってくれ！」と頼む
-                Bullet* newBullet = player->Shoot(mouseX, mouseY, bulletTexture);
-
-                // 弾が返ってきたら、シーンのリストに追加してあげる
+                Bullet* newBullet = player->Shoot(mx, my, bulletTexture);
                 if (newBullet) {
                     gameObjects.push_back(newBullet);
+                }
+            }
+
+            // 右クリック：レイキャスト（視線判定）テスト
+            if (event.button.button == SDL_BUTTON_RIGHT) {
+                std::cout << "--- Raycast Test ---" << std::endl;
+
+                // プレイヤーの中心座標
+                float startX = player->x + player->width / 2;
+                float startY = player->y + player->height / 2;
+
+                bool hitWall = false;
+                for (auto obj : gameObjects) {
+                    if (obj == player) continue;
+                    if (obj->isTrigger) continue; // 弾は無視して壁だけ調べる
+
+                    // 線分判定 (Start -> MousePosition)
+                    if (Physics::LineVsAABB(startX, startY, mx, my, obj)) {
+                        std::cout << "[Block] detected between player and mouse!" << std::endl;
+                        hitWall = true;
+                        // ここで break すれば「一番手前の壁」だけ検知できる
+                    }
+                }
+
+                if (!hitWall) {
+                    std::cout << "Clear line of sight!" << std::endl;
                 }
             }
         }

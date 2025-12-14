@@ -14,6 +14,8 @@ public:
         velY = sin(radian) * speed;
 
         this->angle = angleDegrees;
+
+        isTrigger = true;
     }
 
     void Update(Game* game) override { // 引数を追加

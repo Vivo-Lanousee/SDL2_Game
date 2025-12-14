@@ -1,13 +1,17 @@
 ﻿#pragma once
 #include <SDL.h>
 
-class Game;
+class Game; // 前方宣言
+
 // すべてのゲーム内オブジェクトの親クラス
 class GameObject {
 public:
     GameObject(float x, float y, int w, int h, SDL_Texture* tex = nullptr)
         : x(x), y(y), width(w), height(h), texture(tex), angle(0),
-        velX(0), velY(0), accX(0), accY(0), useGravity(false), isGrounded(false) {
+        velX(0), velY(0), accX(0), accY(0),
+        useGravity(false), isGrounded(false),
+        isTrigger(false) // ★追加：初期化（デフォルトは実体あり）
+    {
     }
 
     virtual ~GameObject() {}
@@ -18,36 +22,49 @@ public:
     void ApplyPhysics() {
         // 重力の適用
         if (useGravity) {
-            accY = 0.5f; // 重力の強さ（お好みで調整）
+            velY += 0.5f; // 重力加速度（0.5ずつ加速）
+
+            // 落下速度制限（これがないと無限に加速してすり抜けます）
+            if (velY > 15.0f) {
+                velY = 15.0f;
+            }
         }
 
-        // 速度に加速度を足す
+        // 加速度を速度に加算（横移動の慣性などをつけたい場合に使用）
         velX += accX;
         velY += accY;
 
-        // 位置に速度を足す
+        // 速度を位置に加算（実際に移動させる）
         x += velX;
         y += velY;
 
-        // 加速度は毎フレームリセットしないと加速し続けるので注意
-        // （ただし重力のような定数は毎回セットするか、ここでリセットしない設計にする）
-        // 今回はシンプルに「重力は毎回セット」「入力による加速度は直接速度をいじる」方針にします
+        // 加速度は毎フレームリセットするのが一般的
+        accX = 0;
+        accY = 0;
     }
 
-    // 座標修正用（当たり判定で押し戻すときに使う）
+    // 座標修正用（Physicsクラスから押し戻すときに使う）
     void SetPos(float newX, float newY) {
         x = newX;
         y = newY;
     }
 
+    // 座標・サイズ
     float x, y;
     int width, height;
+
+    // 見た目
     SDL_Texture* texture;
     double angle;
 
-    // 物理演算用変数
+    // Physics.h がアクセスする変数
     float velX, velY; // 速度 (Velocity)
     float accX, accY; // 加速度 (Acceleration)
-    bool useGravity;  // 重力を使うか？
-    bool isGrounded;  // 地面に足がついているか？
+    bool useGravity;  // 重力フラグ
+    bool isGrounded;  // 着地フラグ
+
+    // ★追加：トリガーフラグ
+    // trueにすると、Physics::ResolveCollision（押し戻し）の対象にならず、すり抜けます。
+    // （弾、コイン、ゴール判定などに使用）
+    bool isTrigger;
 };

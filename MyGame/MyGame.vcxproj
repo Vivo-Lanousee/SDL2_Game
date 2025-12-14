@@ -56,6 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\InputHandler.h" />
+    <ClInclude Include="src\Core\Physics.h" />
+    <ClInclude Include="src\Objects\Block.h" />
     <ClInclude Include="src\Objects\Bullet.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\Objects\Player.h" />

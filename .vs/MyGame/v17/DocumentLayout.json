@@ -3,20 +3,28 @@
   "WorkspaceRootPath": "C:\\Unity\\SDL\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Objects\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Objects\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Scenes\\PlayScene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Scenes\\PlayScene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Objects\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Objects\\Player.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Scenes\\PlayScene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Scenes\\PlayScene.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Core\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Core\\Physics.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Objects\\Bullet.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Objects\\Bullet.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Objects\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Objects\\GameObject.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Objects\\Block.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|solutionrelative:MyGame\\src\\Objects\\Block.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{35AF98D1-19A1-425A-B75D-02FC625F00E0}|MyGame\\MyGame.vcxproj|C:\\Unity\\SDL\\MyGame\\src\\Core\\Game.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -42,37 +50,63 @@
       "DocumentGroups": [
         {
           "DockedWidth": 737,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 5,
+              "Title": "Block.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\Block.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\Objects\\Block.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\Block.h",
+              "RelativeToolTip": "MyGame\\src\\Objects\\Block.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-14T07:42:06.373Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Physics.h",
+              "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Core\\Physics.h",
+              "RelativeDocumentMoniker": "MyGame\\src\\Core\\Physics.h",
+              "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Core\\Physics.h",
+              "RelativeToolTip": "MyGame\\src\\Core\\Physics.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGUAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-14T07:32:46.738Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "GameObject.h",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\GameObject.h",
               "RelativeDocumentMoniker": "MyGame\\src\\Objects\\GameObject.h",
               "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\GameObject.h",
               "RelativeToolTip": "MyGame\\src\\Objects\\GameObject.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEUAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-14T07:17:54.82Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "PlayScene.cpp",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Scenes\\PlayScene.cpp",
               "RelativeDocumentMoniker": "MyGame\\src\\Scenes\\PlayScene.cpp",
               "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Scenes\\PlayScene.cpp",
               "RelativeToolTip": "MyGame\\src\\Scenes\\PlayScene.cpp",
-              "ViewState": "AgIAADYAAAAAAAAAAAAAABsAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAG4AAAAAAAAAAAAUwJ8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-14T07:16:41.179Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "Scene.h",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Scenes\\Scene.h",
               "RelativeDocumentMoniker": "MyGame\\src\\Scenes\\Scene.h",
@@ -80,12 +114,11 @@
               "RelativeToolTip": "MyGame\\src\\Scenes\\Scene.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T14:57:19.899Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T14:57:19.899Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Game.h",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Core\\Game.h",
               "RelativeDocumentMoniker": "MyGame\\src\\Core\\Game.h",
@@ -93,8 +126,7 @@
               "RelativeToolTip": "MyGame\\src\\Core\\Game.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T13:35:33.796Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T13:35:33.796Z"
             },
             {
               "$type": "Document",
@@ -104,14 +136,14 @@
               "RelativeDocumentMoniker": "MyGame\\src\\Objects\\Bullet.h",
               "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\Bullet.h",
               "RelativeToolTip": "MyGame\\src\\Objects\\Bullet.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-13T13:21:53.422Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "Game.cpp",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Core\\Game.cpp",
               "RelativeDocumentMoniker": "MyGame\\src\\Core\\Game.cpp",
@@ -119,12 +151,11 @@
               "RelativeToolTip": "MyGame\\src\\Core\\Game.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-12-12T17:15:24.123Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-12T17:15:24.123Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "InputHandler.h",
               "DocumentMoniker": "C:\\Unity\\SDL\\MyGame\\src\\Core\\InputHandler.h",
               "RelativeDocumentMoniker": "MyGame\\src\\Core\\InputHandler.h",
@@ -132,8 +163,7 @@
               "RelativeToolTip": "MyGame\\src\\Core\\InputHandler.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-14T06:58:47.692Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-14T06:58:47.692Z"
             },
             {
               "$type": "Document",
@@ -143,7 +173,7 @@
               "RelativeDocumentMoniker": "MyGame\\src\\Objects\\Player.h",
               "ToolTip": "C:\\Unity\\SDL\\MyGame\\src\\Objects\\Player.h",
               "RelativeToolTip": "MyGame\\src\\Objects\\Player.h",
-              "ViewState": "AgIAAEIAAAAAAAAAAAAAAF0AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAADwvywAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-13T13:20:20.581Z",
               "EditorCaption": ""
