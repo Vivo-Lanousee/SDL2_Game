@@ -16,8 +16,8 @@ public:
         this->angle = angleDegrees;
     }
 
-    void Update() override {
-        x += velX;
+    void Update(Game* game) override { // 引数を追加
+        x += velX; 
         y += velY;
     }
 

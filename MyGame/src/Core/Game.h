@@ -1,9 +1,8 @@
 ﻿#pragma once
 #include <SDL.h>
 #include <vector>
-#include "../Objects/GameObject.h"
-#include "../Objects/Player.h"
 #include <SDL_ttf.h>
+#include "InputHandler.h"
 
 class Scene;
 class Game {
@@ -29,12 +28,14 @@ public:
 
     // 共通で使う便利関数
     void DrawText(const char* text, int x, int y, SDL_Color color);
+    InputHandler* GetInput() { return inputHandler; }
 
 private:
     bool isRunning;
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_Font* font;
+    InputHandler* inputHandler;
 
     // 現在のシーン（タイトル画面、プレイ画面など）
     Scene* currentScene;

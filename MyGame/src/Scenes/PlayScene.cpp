@@ -37,7 +37,7 @@ void PlayScene::OnExit(Game* game) {
 void PlayScene::Update(Game* game) {
     // 全オブジェクトの更新
     for (auto obj : gameObjects) {
-        obj->Update();
+        obj->Update(game);
     }
 }
 

@@ -88,6 +88,9 @@
     <ClInclude Include="src\Scenes\PlayScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\InputHandler.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="D:\救国のスネジンカ_素材\Char\Snezhinka\player.png">

@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "GameObject.h"
 #include <cmath> 
+#include "../Core/Game.h"
 #include "Bullet.h"
+#include "../Core/InputHandler.h"
 
 struct UnitStatus {
     int hp;
@@ -17,7 +19,7 @@ class Player : public GameObject {
 public:
     // コンストラクタ
     Player(float x, float y, SDL_Texture* tex) : GameObject(x, y, 46, 128, tex) {
-        // ★ステータスの初期値を設定
+        // ステータスの初期値を設定
         status.hp = 100;
         status.maxHp = 100;
         status.speed = 5.0f;     // 今まで「5」と書いていた速度
@@ -25,14 +27,14 @@ public:
         angle = 0;
     }
 
-    void Update() override {
+    void Update(Game* game) override {
         // キー入力状態を取得
-        const Uint8* state = SDL_GetKeyboardState(NULL);
+        InputHandler* input = game->GetInput();
 
-        if (state[SDL_SCANCODE_UP])    y -= status.speed;
-        if (state[SDL_SCANCODE_DOWN])  y += status.speed;
-        if (state[SDL_SCANCODE_LEFT])  x -= status.speed;
-        if (state[SDL_SCANCODE_RIGHT]) x += status.speed;
+        if (input->IsPressed(GameAction::MoveUp))    y -= status.speed;
+        if (input->IsPressed(GameAction::MoveDown))  y += status.speed;
+        if (input->IsPressed(GameAction::MoveLeft))  x -= status.speed;
+        if (input->IsPressed(GameAction::MoveRight)) x += status.speed;
 
         // マウスの方向を向く計算
         int mouseX, mouseY;

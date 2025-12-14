@@ -6,6 +6,7 @@
 
 
 Game::Game() : isRunning(false), window(nullptr), renderer(nullptr), font(nullptr), currentScene(nullptr) {
+    inputHandler = new InputHandler();
 }
 
 Game::~Game() {}
@@ -75,6 +76,8 @@ void Game::ChangeScene(Scene* newScene) {
 
 // 入力処理（シーンへ委譲）
 void Game::HandleEvents() {
+    inputHandler->Update();
+
     if (currentScene) {
         currentScene->HandleEvents(this);
     }
@@ -109,6 +112,7 @@ void Game::Clean() {
         currentScene->OnExit(this);
         delete currentScene;
     }
+    delete inputHandler;
 
     // フォント解放
     if (font) {

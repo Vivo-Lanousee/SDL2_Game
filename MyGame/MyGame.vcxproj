@@ -55,6 +55,7 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\InputHandler.h" />
     <ClInclude Include="src\Objects\Bullet.h" />
     <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\Objects\Player.h" />
