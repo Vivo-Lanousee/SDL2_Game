@@ -1,0 +1,19 @@
+﻿{
+  "name": "Player",
+  "animations": [
+    {
+      "name": "Idle",
+      "row": 0,
+      "frameCount": 4,
+      "speed": 0.2,
+      "loop": true
+    },
+    {
+      "name": "Run",
+      "row": 1,
+      "frameCount": 6,
+      "speed": 0.1,
+      "loop": true
+    }
+  ]
+}

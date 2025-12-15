@@ -5,11 +5,10 @@ class Block : public GameObject {
 public:
     Block(float x, float y, int w, int h) : GameObject(x, y, w, h) {
         useGravity = false; // 地面は落ちない
-        name = "Block";     // 念のため名前をつけておくとデバッグで便利です
+        name = "Block";     
     }
 
     void Update(Game* game) override {
-        // 動かないので何もしない
     }
 
     void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override {

@@ -1,11 +1,13 @@
 ﻿#include "Button.h"
-#include "../Core/Game.h" // ★ここでGameの中身を読み込む
+#include "TextRenderer.h"
 
+// コンストラクタ
 Button::Button(int x, int y, int w, int h, std::string label)
-    : rect{ x, y, w, h }, text(label), isHovered(false), isClicked(false)
+    : rect{ x, y, w, h }, text(label), isHovered(false)
 {
 }
 
+// イベント処理
 bool Button::HandleEvents(SDL_Event* event) {
     if (event->type == SDL_MOUSEMOTION) {
         int mx = event->motion.x;
@@ -16,26 +18,34 @@ bool Button::HandleEvents(SDL_Event* event) {
 
     if (event->type == SDL_MOUSEBUTTONDOWN) {
         if (event->button.button == SDL_BUTTON_LEFT && isHovered) {
-            return true;
+            // ★修正：クリックされたら、登録されている関数を実行する
+            if (OnClick) {
+                OnClick();
+            }
+            return true; // イベントを処理した
         }
     }
     return false;
 }
 
-void Button::Render(Game* game) {
-    SDL_Renderer* r = game->GetRenderer();
+// 描画処理
+// ★修正：Game* ではなく SDL_Renderer* を受け取る
+void Button::Render(SDL_Renderer* renderer) {
+    // Game* game -> GetRenderer() の手間がなくなる
 
     if (isHovered) {
-        SDL_SetRenderDrawColor(r, 100, 100, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 100, 100, 255, 255);
     }
     else {
-        SDL_SetRenderDrawColor(r, 50, 50, 150, 255);
+        SDL_SetRenderDrawColor(renderer, 50, 50, 150, 255);
     }
 
-    SDL_RenderFillRect(r, &rect);
-    SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
-    SDL_RenderDrawRect(r, &rect);
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &rect);
 
     SDL_Color white = { 255, 255, 255, 255 };
-    game->DrawText(text.c_str(), rect.x + 20, rect.y + 15, white);
+
+    // TextRenderer は static なのでそのまま呼び出し
+    TextRenderer::Draw(renderer, text.c_str(), rect.x + 20, rect.y + 15, white);
 }

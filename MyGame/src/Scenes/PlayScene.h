@@ -5,6 +5,8 @@
 #include "../Objects/Player.h"
 #include "../Objects/Bullet.h"
 #include "../Core/Camera.h"
+#include <memory>
+#include "../TextureManager.h"
 
 class PlayScene : public Scene {
 public:
@@ -25,11 +27,14 @@ public:
 
 private:
     // このシーンで使う変数たち
+    // Playerは所有権をリスト(gameObjects)に渡すので、ここは参照用の生ポインタでOK
     Player* player;
-    std::vector<GameObject*> gameObjects;
 
-    Camera* camera;
-    // テクスチャ
-    SDL_Texture* playerTexture;
-    SDL_Texture* bulletTexture;
+    // GameObjectのリスト（所有権あり）
+    std::vector<std::unique_ptr<GameObject>> gameObjects;
+
+    // カメラ（所有権あり）
+    std::unique_ptr<Camera> camera;
+    TexturePtr playerTexture;
+    TexturePtr bulletTexture;
 };

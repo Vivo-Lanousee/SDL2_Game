@@ -84,7 +84,6 @@ public:
             bool isDown = (currentMouseState & SDL_BUTTON(button));
             bool wasDown = (prevMouseState & SDL_BUTTON(button));
 
-            // 「今は押されている」かつ「前は押されていなかった」
             if (isDown && !wasDown) return true;
         }
 
