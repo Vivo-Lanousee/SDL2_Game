@@ -1,46 +1,50 @@
 ﻿#pragma once
 #include "Scene.h"
-#include "../Core/Game.h"
-#include "PlayScene.h" // PlaySceneに移動するために必要
+#include "../UI/Button.h"
+#include "../Core/Game.h" // TitleSceneはGameの機能を使うのでインクルードOK
+
+#include "PlayScene.h"
 
 class TitleScene : public Scene {
 public:
     void OnEnter(Game* game) override {
-        // 必要ならBGM再生など
+        startButton = new Button(300, 300, 200, 50, "GAME START");
+        exitButton = new Button(300, 400, 200, 50, "EXIT GAME");
     }
 
     void HandleEvents(Game* game) override {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            // ×ボタン処理
-            if (event.type == SDL_QUIT) {
-                game->Quit();
+            if (event.type == SDL_QUIT) game->Quit();
+
+            if (startButton && startButton->HandleEvents(&event)) {
+                game->ChangeScene(new PlayScene());
+                return; // ★★★重要！シーンが変わったら、この関数の処理は即終了する！★★★
             }
 
-            // キー入力処理
-            if (event.type == SDL_KEYDOWN) {
-                // エンターキーでゲーム開始
-                if (event.key.keysym.sym == SDLK_RETURN) {
-                    game->ChangeScene(new PlayScene());
-                }
+            // ↑ここで return しないと、削除されたメモリにある exitButton を触りに行ってクラッシュします
+            if (exitButton && exitButton->HandleEvents(&event)) {
+                game->Quit();
             }
         }
     }
 
-    void Update(Game* game) override {
-        // 入力処理をHandleEventsに移したので、ここは空でもOK
-    }
+    void Update(Game* game) override {}
 
     void Render(Game* game) override {
-        // タイトル画面の文字表示
         SDL_Color white = { 255, 255, 255, 255 };
-        game->DrawText("SHOOTING GAME", 300, 200, white);
+        game->DrawText("SHOOTING GAME", 300, 150, white);
 
-        SDL_Color yellow = { 255, 255, 0, 255 };
-        game->DrawText("Press Enter to Start", 280, 300, yellow);
+        if (startButton) startButton->Render(game);
+        if (exitButton) exitButton->Render(game);
     }
 
     void OnExit(Game* game) override {
-        // 画像の破棄などがあればここで
+        if (startButton) { delete startButton; startButton = nullptr; }
+        if (exitButton) { delete exitButton; exitButton = nullptr; }
     }
+
+private:
+    Button* startButton = nullptr;
+    Button* exitButton = nullptr;
 };

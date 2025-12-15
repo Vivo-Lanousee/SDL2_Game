@@ -25,6 +25,7 @@
     <ClCompile Include="src\Core\main.cpp" />
     <ClCompile Include="src\Scenes\PlayScene.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
+    <ClCompile Include="src\UI\Button.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libavif-16.dll" />
