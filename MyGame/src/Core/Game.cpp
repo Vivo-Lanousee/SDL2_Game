@@ -51,7 +51,7 @@ bool Game::Init(const char* title, int x, int y, int width, int height, bool ful
         std::cout << "Failed to load font! Check assets/fonts folder." << std::endl;
     }
 
-    // ★重要：最初は「タイトルシーン」からスタート
+    // 重要：最初は「タイトルシーン」からスタート
     ChangeScene(new TitleScene());
 
     return true;
@@ -59,16 +59,16 @@ bool Game::Init(const char* title, int x, int y, int width, int height, bool ful
 
 // シーン切り替え処理
 void Game::ChangeScene(Scene* newScene) {
-    // 1. 古いシーンがあれば片付ける（OnExit呼び出し）
+    // OnExit呼び出し
     if (currentScene) {
         currentScene->OnExit(this);
         delete currentScene; // メモリ解放
     }
 
-    // 2. 新しいシーンに入れ替える
+    // 新しいシーンに入れ替える
     currentScene = newScene;
 
-    // 3. 新しいシーンの初期化（OnEnter呼び出し）
+    // 新しいシーンの初期化（OnEnter呼び出し）
     if (currentScene) {
         currentScene->OnEnter(this);
     }
@@ -89,6 +89,9 @@ void Game::Update() {
         currentScene->Update(this);
     }
 }
+
+
+
 
 // 描画処理（シーンへ委譲）
 void Game::Render() {

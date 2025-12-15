@@ -9,7 +9,6 @@ public:
         // 必要ならBGM再生など
     }
 
-    // ★★★ これを追加しないとエラーになります！ ★★★
     void HandleEvents(Game* game) override {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {

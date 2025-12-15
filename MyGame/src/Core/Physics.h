@@ -7,7 +7,6 @@
 
 class Physics {
 public:
-    // ■ AABB判定（重なっているかチェックするだけ）
     static bool CheckAABB(GameObject* a, GameObject* b) {
         return (a->x < b->x + b->width &&
             a->x + a->width > b->x &&
@@ -15,14 +14,13 @@ public:
             a->y + a->height > b->y);
     }
 
-    // ■ 点とAABBの判定（ある点 px, py が箱の中にあるか？）
+    // 点とAABBの判定
     static bool PointInAABB(float px, float py, GameObject* obj) {
         return (px >= obj->x && px <= obj->x + obj->width &&
             py >= obj->y && py <= obj->y + obj->height);
     }
 
-    // ■ 線分とAABBの判定（レイキャスト）
-    // (x1, y1) から (x2, y2) への線が、obj に当たっているかを返す
+    // レイキャスト
     static bool LineVsAABB(float x1, float y1, float x2, float y2, GameObject* obj) {
         float minX = obj->x;
         float maxX = obj->x + obj->width;
@@ -62,7 +60,7 @@ public:
         return tMax >= tMin;
     }
 
-    // ■ 衝突解決（当たっていたら押し戻す）
+    // 衝突解決（当たっていたら押し戻す）
     static bool ResolveCollision(GameObject* player, GameObject* wall) {
         if (!CheckAABB(player, wall)) return false;
 

@@ -5,15 +5,17 @@ class Block : public GameObject {
 public:
     Block(float x, float y, int w, int h) : GameObject(x, y, w, h) {
         useGravity = false; // 地面は落ちない
+        name = "Block";     // 念のため名前をつけておくとデバッグで便利です
     }
 
     void Update(Game* game) override {
         // 動かないので何もしない
     }
 
-    void Render(SDL_Renderer* renderer) override {
-        // グレーの四角形を描画
-        SDL_Rect rect = { (int)x, (int)y, width, height };
+    void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override {
+
+        SDL_Rect rect = { drawX, drawY, width, height };
+
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         SDL_RenderFillRect(renderer, &rect);
     }

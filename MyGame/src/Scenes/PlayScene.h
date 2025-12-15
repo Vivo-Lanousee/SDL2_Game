@@ -4,13 +4,14 @@
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
 #include "../Objects/Bullet.h"
+#include "../Core/Camera.h"
 
 class PlayScene : public Scene {
 public:
-    // シーンに入った時（初期化）
+    // シーンに入った時
     void OnEnter(Game* game) override;
 
-    // シーンを出る時（後片付け）
+    // シーンを出る時
     void OnExit(Game* game) override;
 
     // 更新（移動など）
@@ -19,7 +20,7 @@ public:
     // 描画
     void Render(Game* game) override;
 
-    // 入力（クリックなど）
+    // 入力
     void HandleEvents(Game* game) override;
 
 private:
@@ -27,6 +28,7 @@ private:
     Player* player;
     std::vector<GameObject*> gameObjects;
 
+    Camera* camera;
     // テクスチャ
     SDL_Texture* playerTexture;
     SDL_Texture* bulletTexture;

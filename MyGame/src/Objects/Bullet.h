@@ -12,15 +12,14 @@ public:
         float speed = 10.0f;
 
         // 親クラス(GameObject)の変数 velX, velY を使う
-        // （private変数は削除しました）
         this->velX = cos(radian) * speed;
         this->velY = sin(radian) * speed;
 
         this->angle = angleDegrees;
 
-        // ★設定
-        isTrigger = true; // 弾はトリガー（物理演算ですり抜ける）
-        name = "Bullet";  // 名前を設定（Playerが識別できるようにする）
+        // 設定
+        isTrigger = true; // 弾はトリガー
+        name = "Bullet";  // 名前を設定
     }
 
     void Update(Game* game) override {
@@ -29,21 +28,22 @@ public:
         y += velY;
     }
 
-    // ★追加：当たった時の処理（PlaySceneから呼ばれる）
+    // 当たった時の処理
     void OnTriggerEnter(GameObject* other) override {
-        // 1. プレイヤー自身には当たらない（発射した瞬間の自爆防止）
+        // プレイヤー自身には当たらない
         if (other->name == "Player") return;
 
-        // 2. 他の弾やトリガー（アイテム等）には当たらない
+        // 他の弾やトリガーには当たらない
         if (other->isTrigger) return;
 
-        // 3. それ以外（壁や地面）に当たったら消滅フラグを立てる
+        // それ以外（壁や地面）に当たったら消滅
         isDead = true;
     }
 
-    // Render関数
-    void Render(SDL_Renderer* renderer) override {
-        SDL_Rect destRect = { (int)x, (int)y, width, height };
+    void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override {
+
+        // (int)x, (int)y の代わりに、渡された drawX, drawY を使います
+        SDL_Rect destRect = { drawX, drawY, width, height };
 
         // テクスチャ描画
         if (texture) {

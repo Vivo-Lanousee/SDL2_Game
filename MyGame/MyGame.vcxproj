@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\Objects\Player.cpp" />
     <ClCompile Include="src\Core\Game.cpp" />
     <ClCompile Include="src\Core\main.cpp" />
@@ -55,6 +56,7 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\Camera.h" />
     <ClInclude Include="src\Core\InputHandler.h" />
     <ClInclude Include="src\Core\Physics.h" />
     <ClInclude Include="src\Objects\Block.h" />
@@ -67,6 +69,7 @@
     <ClInclude Include="src\Scenes\Scene.h" />
     <ClInclude Include="src\Scenes\TitleScene.h" />
     <ClInclude Include="src\TextureManager.h" />
+    <ClInclude Include="src\UI\Button.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\images\player.png" />
