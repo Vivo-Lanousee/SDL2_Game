@@ -69,12 +69,5 @@ Makefile
 Thumbs.db
 ehthumbs.db
 
-# -----------------------------
-# SDL2 特有の注意点
-# -----------------------------
-# SDL2.dll などの依存ファイルを git で管理したい（リポジトリに含めたい）場合は、
-# 以下のように「!」をつけて除外を打ち消します。
-# !lib/SDL2.dll
-# !lib/SDL2_image.dll
 
-MyGame/x64/Debug/*
+MyGame/x64/Debug/
