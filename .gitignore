@@ -77,4 +77,4 @@ ehthumbs.db
 # !lib/SDL2.dll
 # !lib/SDL2_image.dll
 
-MyGame/x64/Debug/
+MyGame/x64/Debug/*
