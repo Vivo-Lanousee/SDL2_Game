@@ -18,7 +18,6 @@ bool Button::HandleEvents(SDL_Event* event) {
 
     if (event->type == SDL_MOUSEBUTTONDOWN) {
         if (event->button.button == SDL_BUTTON_LEFT && isHovered) {
-            // ★修正：クリックされたら、登録されている関数を実行する
             if (OnClick) {
                 OnClick();
             }
@@ -29,7 +28,6 @@ bool Button::HandleEvents(SDL_Event* event) {
 }
 
 // 描画処理
-// ★修正：Game* ではなく SDL_Renderer* を受け取る
 void Button::Render(SDL_Renderer* renderer) {
     // Game* game -> GetRenderer() の手間がなくなる
 

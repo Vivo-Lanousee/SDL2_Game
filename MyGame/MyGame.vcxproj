@@ -19,6 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\libs\imgui\imgui.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_impl_sdlrenderer2.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Editor\EditorGUI.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\Objects\Player.cpp" />
@@ -62,6 +69,7 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Editor\EditorGUI.h" />
     <ClInclude Include="include\nlohmann\json.hpp" />
     <ClInclude Include="include\nlohmann\json_fwd.hpp" />
     <ClInclude Include="src\Core\Animator.h" />

@@ -25,16 +25,18 @@ public:
     // 入力
     void HandleEvents(Game* game) override;
 
+    std::vector<std::unique_ptr<GameObject>>& GetObjects() override {
+        return gameObjects;
+    }
+
 private:
-    // このシーンで使う変数たち
-    // Playerは所有権をリスト(gameObjects)に渡すので、ここは参照用の生ポインタでOK
     Player* player;
 
-    // GameObjectのリスト（所有権あり）
+    // GameObjectのリスト
     std::vector<std::unique_ptr<GameObject>> gameObjects;
 
-    // カメラ（所有権あり）
     std::unique_ptr<Camera> camera;
-    TexturePtr playerTexture;
-    TexturePtr bulletTexture;
+
+    SharedTexturePtr playerTexture;
+    SharedTexturePtr bulletTexture;
 };

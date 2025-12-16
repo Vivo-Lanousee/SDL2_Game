@@ -2,7 +2,6 @@
 #include "Scene.h"
 #include <memory> 
 
-// 前方宣言（Buttonの中身はまだ知らない状態）
 class Game;
 class Button;
 
