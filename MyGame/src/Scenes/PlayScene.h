@@ -29,6 +29,8 @@ public:
         return gameObjects;
     }
 
+    SDL_Texture* GetBulletTexturePtr() const { return bulletTexture.get(); }
+
 private:
     Player* player;
 

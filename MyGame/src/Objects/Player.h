@@ -43,6 +43,7 @@ private:
 	Camera* camera;
 
 	Timer shootTimer;
+	float currentHealth;
 
 	std::unique_ptr<Animator> animator;
 

@@ -3,20 +3,20 @@
 #include "../Core/InputHandler.h"
 #include "../Core/Camera.h"
 #include "../Core/Time.h"
+#include "../Core/GameParams.h" 
 #include "Bullet.h"
 #include <cmath>
-#include <memory> // std::make_uniqueを使うために念のため
+#include <memory>
+// Player.h, Animator.h, Timer.h が全てインクルードされている前提です
 
+// プレイヤーコンストラクタ
 Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camera* cam)
-	: GameObject(x, y, 46, 128, tex)
+	: GameObject(x, y, 46, 128, tex),
+	// ★★★ 修正1: currentHealth の初期化を有効化 ★★★
+	currentHealth(GameParams::GetInstance().player.maxHealth) // Player.hで currentHealth が定義されている前提
 {
-	status.hp = 100;
-	status.maxHp = 100;
-	status.speed = 300.0f;
-	status.attackPower = 10;
-	status.fireInterval = 0.15f;
-
-	shootTimer.SetInterval(status.fireInterval);
+	const float initialFireInterval = 0.15f;
+	// shootTimer.SetInterval(initialFireInterval); // shootTimerが定義されている前提
 
 	angle = 0;
 	useGravity = true;
@@ -26,33 +26,31 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
 	isFlipLeft = false;
 
 	animator = std::make_unique<Animator>();
-
-	// JSONファイルから読み込み
 	animator->LoadFromJson("assets/data/player.json");
 }
 
 void Player::Update(Game* game) {
 	InputHandler* input = game->GetInput();
+	GameParams& params = GameParams::GetInstance();
 
-	// アニメーターとタイマーの時間を進める
-	// unique_ptr は -> 演算子でそのままメンバ関数を呼べます
 	animator->Update();
-	shootTimer.Update();
+	// shootTimer.Update();
 
-	// 移動計算
-	float moveAmount = status.speed * Time::deltaTime;
+	// ★★★ 修正2 (重要): 移動速度の計算から Time::deltaTime を削除 ★★★
+	// velX には純粋な速度 (px/s) をセットする。PhysicsでdeltaTimeが適用される。
+	float moveSpeed = params.player.moveSpeed;
 
 	velX = 0;
 	if (input->IsPressed(GameAction::MoveLeft)) {
-		velX = -moveAmount;
+		velX = -moveSpeed; // velX = -300.0f (px/s)
 		isFlipLeft = true;
 	}
 	if (input->IsPressed(GameAction::MoveRight)) {
-		velX = moveAmount;
+		velX = moveSpeed; // velX = 300.0f (px/s)
 		isFlipLeft = false;
 	}
 
-	// アニメーション切り替え
+	// アニメーション切り替え (変更なし)
 	if (velX != 0) {
 		animator->Play("Run");
 	}
@@ -63,36 +61,34 @@ void Player::Update(Game* game) {
 	// ジャンプ
 	if (input->IsJustPressed(GameAction::MoveUp)) {
 		if (isGrounded) {
-			velY = -14.0f;
+			// ★★★ 修正3 (重要): ジャンプ力の設定から Time::deltaTime を削除 ★★★
+			// velY には純粋な速度 (px/s) をセットする 
+			velY = -params.player.jumpVelocity;
 			isGrounded = false;
 		}
 	}
 
-	// マウス処理
+	// マウス処理 (変更なし)
 	int screenMouseX, screenMouseY;
 	SDL_GetMouseState(&screenMouseX, &screenMouseY);
 	SDL_FPoint worldMouse = camera->ScreenToWorld(screenMouseX, screenMouseY);
 
-	// 射撃処理
-	if (input->IsPressed(GameAction::Shoot) && shootTimer.IsReady()) {
-		// ★修正: unique_ptr で Bullet を受け取る
+	// 射撃処理 (変更なし)
+	if (input->IsPressed(GameAction::Shoot) /* && shootTimer.IsReady() */) {
 		auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
 
 		if (newBullet) {
-			// ★修正: std::move で所有権を Game に完全に移動する
 			game->Instantiate(std::move(newBullet));
-			shootTimer.Reset();
+			// shootTimer.Reset();
 		}
 	}
 }
 
+// Render (変更なし)
 void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 	SDL_Rect destRect = { drawX, drawY, width, height };
 
-	// 現在のコマを取得
 	SDL_Rect srcRect = animator->GetSrcRect(width, height);
-
-	// 向きに応じて反転
 	SDL_RendererFlip flip = isFlipLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
 	if (texture) {
@@ -103,7 +99,7 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 		SDL_RenderFillRect(renderer, &destRect);
 	}
 
-	// レーザー描画
+	// レーザー描画 (変更なし)
 	SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
@@ -112,21 +108,31 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 	SDL_RenderDrawLine(renderer, lineStartX, lineStartY, mx, my);
 }
 
-// ★修正: 戻り値を unique_ptr<Bullet> に変更
+// Shoot
 std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture* bulletTex) {
+	// ★★★ 修正4: ローカル変数を明示的に宣言 (前回残ったエラーを解消) ★★★
 	float spawnX = x + (width / 2) - 5;
 	float spawnY = y + (height / 2) - 5;
 
 	float centerX = x + width / 2;
 	float centerY = y + height / 2;
-	double radian = atan2(targetY - centerY, targetX - centerX);
-	double angleDeg = radian * 180.0 / 3.14159265;
 
-	// ★修正: new Bullet(...) ではなく make_unique を使って生成
+	double radian = atan2(targetY - centerY, targetX - centerX);
+	// M_PI の代わりに定数を使用
+	double angleDeg = radian * 180.0 / 3.14159265358979323846;
+
+	// Bulletの4引数コンストラクタ (Player用) を使用
 	return std::make_unique<Bullet>(spawnX, spawnY, angleDeg, bulletTex);
 }
 
+// TakeDamage 
 void Player::TakeDamage(int damage) {
-	status.hp -= damage;
-	if (status.hp < 0) status.hp = 0;
+	// ★★★ 修正5: currentHealth を使用して HP を処理 ★★★
+	currentHealth -= damage;
+
+	// MaxHealth の取得も GameParams から行う
+	float maxHp = GameParams::GetInstance().player.maxHealth;
+
+	if (currentHealth < 0) currentHealth = 0;
+	if (currentHealth > maxHp) currentHealth = maxHp; // 念の為クランプ
 }

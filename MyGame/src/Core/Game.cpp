@@ -2,11 +2,11 @@
 #include <iostream>
 #include <memory>
 
-#include "../Objects/GameObject.h"
+#include "../Objects/GameObject.h" // Game::~Game() で unique_ptr を安全に解放するために必要
+#include "../Scenes/Scene.h"      // Scene::GetObjects() を呼び出すために必要
+#include "../Scenes/PlayScene.h"  // GetBulletTexture() で PlayScene のテクスチャにアクセスするために必要
 #include "InputHandler.h"
-#include "../Scenes/Scene.h"
 #include "../Scenes/TitleScene.h"
-#include "../Scenes/PlayScene.h"
 #include "../TextureManager.h"
 #include "../UI/TextRenderer.h"
 
@@ -15,6 +15,7 @@
 
 Game::Game() : isRunning(false), window(nullptr), renderer(nullptr) {}
 
+// ★★★ 修正箇所: デストラクタの実装を復活させる ★★★
 Game::~Game() { Clean(); }
 
 bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
@@ -102,4 +103,25 @@ void Game::Clean() {
 
 void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
     TextRenderer::Draw(renderer.get(), text, x, y, color);
+}
+
+// ★★★ [Turret機能向け 追加メソッドの実装] ★★★
+
+std::vector<std::unique_ptr<GameObject>>& Game::GetCurrentSceneObjects() {
+    if (currentScene) {
+        // Scene::GetObjects() (virtual) の実体が PlayScene で実装されている必要あり
+        return currentScene->GetObjects();
+    }
+    return pendingObjects;
+}
+
+SDL_Texture* Game::GetBulletTexture() {
+    PlayScene* playScene = dynamic_cast<PlayScene*>(currentScene.get());
+
+    if (playScene) {
+        // ★★★ 修正箇所: PlayScene::GetBulletTexturePtr() を呼び出す ★★★
+        // (PlayScene.h に public: SDL_Texture* GetBulletTexturePtr() const { return bulletTexture.get(); } がある前提)
+        return playScene->GetBulletTexturePtr();
+    }
+    return nullptr;
 }

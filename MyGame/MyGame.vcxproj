@@ -25,12 +25,17 @@
     <ClCompile Include="..\libs\imgui\imgui_impl_sdlrenderer2.cpp" />
     <ClCompile Include="..\libs\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\libs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Core\Physics.cpp" />
+    <ClCompile Include="src\Objects\Bullet.cpp" />
+    <ClCompile Include="src\Objects\Enemy.cpp" />
     <ClCompile Include="src\Editor\EditorGUI.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\Objects\Player.cpp" />
     <ClCompile Include="src\Core\Game.cpp" />
     <ClCompile Include="src\Core\main.cpp" />
+    <ClCompile Include="src\Objects\Turret.cpp" />
+    <ClCompile Include="src\Scenes\EditorScene.cpp" />
     <ClCompile Include="src\Scenes\PlayScene.cpp" />
     <ClCompile Include="src\Scenes\TitleScene.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
@@ -69,6 +74,8 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\GameParams.h" />
+    <ClInclude Include="src\Objects\Enemy.h" />
     <ClInclude Include="src\Editor\EditorGUI.h" />
     <ClInclude Include="include\nlohmann\json.hpp" />
     <ClInclude Include="include\nlohmann\json_fwd.hpp" />
@@ -83,6 +90,8 @@
     <ClInclude Include="src\Objects\Player.h" />
     <ClInclude Include="src\Objects\GameObject.h" />
     <ClInclude Include="src\Core\Game.h" />
+    <ClInclude Include="src\Objects\Turret.h" />
+    <ClInclude Include="src\Scenes\EditorScene.h" />
     <ClInclude Include="src\Scenes\PlayScene.h" />
     <ClInclude Include="src\Scenes\Scene.h" />
     <ClInclude Include="src\Scenes\TitleScene.h" />
@@ -90,6 +99,7 @@
     <ClInclude Include="src\UI\Button.h" />
     <ClInclude Include="src\UI\TextRenderer.h" />
     <ClInclude Include="src\Core\Time.h" />
+    <ClInclude Include="src\Weapons\WeaponConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\images\player.png" />

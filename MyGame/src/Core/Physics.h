@@ -2,11 +2,21 @@
 #include <SDL.h>
 #include <cmath>
 #include <algorithm>
-#include <limits> // 追加
+#include <limits>
 #include "../Objects/GameObject.h"
+
+// 前方宣言
+class Game;
 
 class Physics {
 public:
+    // ★★★ 修正箇所 1: ApplyPhysics の宣言を追加 ★★★
+    // 物理演算の適用（重力と終端速度の計算を含む）
+    static void ApplyPhysics(GameObject* obj, float deltaTime);
+
+
+    // --- 衝突判定ロジック (既存) ---
+
     static bool CheckAABB(GameObject* a, GameObject* b) {
         return (a->x < b->x + b->width &&
             a->x + a->width > b->x &&
@@ -39,7 +49,6 @@ public:
             tMax = std::min(tMax, std::max(tx1, tx2));
         }
         else {
-            // 垂直な線の場合、X座標が範囲外なら絶対に当たらない
             if (x1 < minX || x1 > maxX) return false;
         }
 
@@ -52,12 +61,16 @@ public:
             tMax = std::min(tMax, std::max(ty1, ty2));
         }
         else {
-            // 水平な線の場合、Y座標が範囲外なら絶対に当たらない
             if (y1 < minY || y1 > maxY) return false;
         }
 
-        // 共通の交差時間があれば衝突している
         return tMax >= tMin;
+    }
+
+    static float DistanceSquared(float x1, float y1, float x2, float y2) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        return dx * dx + dy * dy;
     }
 
     // 衝突解決（当たっていたら押し戻す）

@@ -1,5 +1,6 @@
 ﻿#include "Button.h"
 #include "TextRenderer.h"
+#include "imgui.h" // ★★★ 修正箇所 1: ImGuiのステータスチェックに必要 ★★★
 
 // コンストラクタ
 Button::Button(int x, int y, int w, int h, std::string label)
@@ -9,6 +10,16 @@ Button::Button(int x, int y, int w, int h, std::string label)
 
 // イベント処理
 bool Button::HandleEvents(SDL_Event* event) {
+
+    // ★★★ 修正箇所 2: ImGuiがマウスを掴んでいるかチェック ★★★
+    // ImGuiがマウスをキャプチャしている（つまり、ImGuiウィンドウ上でクリックやドラッグが行われている）場合、
+    // SDLのUI要素のイベント処理はスキップし、イベントを消費しない（falseを返す）。
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        // マウスが動いていても、ImGuiが優先されるため、isHoveredの更新も行いません。
+        return false;
+    }
+
     if (event->type == SDL_MOUSEMOTION) {
         int mx = event->motion.x;
         int my = event->motion.y;
@@ -29,8 +40,6 @@ bool Button::HandleEvents(SDL_Event* event) {
 
 // 描画処理
 void Button::Render(SDL_Renderer* renderer) {
-    // Game* game -> GetRenderer() の手間がなくなる
-
     if (isHovered) {
         SDL_SetRenderDrawColor(renderer, 100, 100, 255, 255);
     }
@@ -44,6 +53,5 @@ void Button::Render(SDL_Renderer* renderer) {
 
     SDL_Color white = { 255, 255, 255, 255 };
 
-    // TextRenderer は static なのでそのまま呼び出し
     TextRenderer::Draw(renderer, text.c_str(), rect.x + 20, rect.y + 15, white);
 }

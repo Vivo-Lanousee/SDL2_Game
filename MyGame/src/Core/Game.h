@@ -6,6 +6,8 @@
 class Scene;
 class InputHandler;
 class GameObject;
+class Bullet; // TurretでBulletをInstantiateするために必要
+struct SDL_Texture;
 
 
 struct WindowDestroyer {
@@ -38,18 +40,29 @@ public:
 
 	void ChangeScene(Scene* newScene);
 
-
 	SDL_Renderer* GetRenderer() const { return renderer.get(); }
 
 	InputHandler* GetInput() const { return inputHandler.get(); }
 
-	// ★修正: unique_ptr の vector を返すように変更
+	// --- オブジェクト生成/管理 ---
 	std::vector<std::unique_ptr<GameObject>>& GetPendingObjects() { return pendingObjects; }
 	void ClearPendingObjects() { pendingObjects.clear(); }
-	// ★修正: Instantiate は unique_ptr の所有権を受け取る
+	// Instantiate は unique_ptr の所有権を受け取る
 	void Instantiate(std::unique_ptr<GameObject> obj) { pendingObjects.push_back(std::move(obj)); }
 
+	// ★★★ [Turret機能向け 追加/修正] ★★★
+
+	// 1. Turretが敵を探索するために、現在のシーンの全オブジェクトリストへのアクセスを提供
+	//    注意: SceneクラスにGetObjects()が必要。PlayScene::GetObjects()をScene::GetObjects()で呼び出す。
+	std::vector<std::unique_ptr<GameObject>>& GetCurrentSceneObjects();
+
+	// 2. Turretが弾丸を生成するために、弾丸のテクスチャを取得
+	//    注意: PlaySceneなどのSceneクラスがテクスチャを所有しているため、そのポインタを返す
+	SDL_Texture* GetBulletTexture();
+
+	// 3. テキスト描画
 	void DrawText(const char* text, int x, int y, SDL_Color color);
+	// ★★★ 修正終わり ★★★
 
 private:
 	bool isRunning;
@@ -61,6 +74,6 @@ private:
 	std::unique_ptr<InputHandler> inputHandler;
 	std::unique_ptr<Scene> currentScene;
 
-	// ★修正: unique_ptr の vector に変更
+	// unique_ptr の vector に変更
 	std::vector<std::unique_ptr<GameObject>> pendingObjects;
 };
