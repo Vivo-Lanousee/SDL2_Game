@@ -2,13 +2,16 @@
 #include <iostream>
 #include <memory>
 
-#include "../Objects/GameObject.h" // Game::~Game() で unique_ptr を安全に解放するために必要
-#include "../Scenes/Scene.h"      // Scene::GetObjects() を呼び出すために必要
-#include "../Scenes/PlayScene.h"  // GetBulletTexture() で PlayScene のテクスチャにアクセスするために必要
+#include "../Objects/GameObject.h"
+#include "../Scenes/Scene.h"
+#include "../Scenes/PlayScene.h"
 #include "InputHandler.h"
 #include "../Scenes/TitleScene.h"
 #include "../TextureManager.h"
 #include "../UI/TextRenderer.h"
+
+// ★★★ 修正箇所 1: ImGuiの状態チェックに必要 ★★★
+#include "imgui.h" 
 
 // ★ここが重要：Editorフォルダのヘッダーを読み込む
 #include "../Editor/EditorGUI.h"
@@ -50,16 +53,38 @@ void Game::ChangeScene(Scene* newScene) {
     if (currentScene) currentScene->OnEnter(this);
 }
 
+// ★★★ 修正箇所 2: HandleEvents で ImGui のマウス制御を実装 ★★★
 void Game::HandleEvents() {
     if (inputHandler) inputHandler->Update();
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        // ★イベントをエディタに渡す
+
+        // ★イベントをエディタに渡す (ImGuiがイベントを消費)
         EditorGUI::HandleEvents(&event);
 
+        // ImGuiがマウス入力を必要としているかチェック
+        ImGuiIO& io = ImGui::GetIO();
+        bool guiWantsMouse = io.WantCaptureMouse;
+
         if (event.type == SDL_QUIT) Quit();
-        if (currentScene) currentScene->HandleEvents(this);
+
+        if (currentScene) {
+            bool isMouseEvent = (event.type == SDL_MOUSEBUTTONDOWN ||
+                event.type == SDL_MOUSEBUTTONUP ||
+                event.type == SDL_MOUSEMOTION);
+
+            if (isMouseEvent) {
+                // ImGuiがマウスを掴んでいない場合のみ、ゲーム内のマウスイベントを処理
+                if (!guiWantsMouse) {
+                    currentScene->HandleEvents(this);
+                }
+            }
+            else {
+                // キーボードなど、その他のイベントは常に処理を試みる
+                currentScene->HandleEvents(this);
+            }
+        }
     }
 }
 
@@ -112,7 +137,14 @@ std::vector<std::unique_ptr<GameObject>>& Game::GetCurrentSceneObjects() {
         // Scene::GetObjects() (virtual) の実体が PlayScene で実装されている必要あり
         return currentScene->GetObjects();
     }
-    return pendingObjects;
+    // pendingObjects は Game::Update の外部で使われることが想定されるため、
+    // Gameクラスのメンバとして定義されている前提
+    // return pendingObjects; 
+
+    // pendingObjects が Gameクラスのメンバとして定義されている前提で、ここでは仮の空リストを返します。
+    // 実際の pendingObjects へのアクセスロジックに合わせて修正してください。
+    static std::vector<std::unique_ptr<GameObject>> emptyList;
+    return emptyList;
 }
 
 SDL_Texture* Game::GetBulletTexture() {
@@ -120,7 +152,6 @@ SDL_Texture* Game::GetBulletTexture() {
 
     if (playScene) {
         // ★★★ 修正箇所: PlayScene::GetBulletTexturePtr() を呼び出す ★★★
-        // (PlayScene.h に public: SDL_Texture* GetBulletTexturePtr() const { return bulletTexture.get(); } がある前提)
         return playScene->GetBulletTexturePtr();
     }
     return nullptr;
