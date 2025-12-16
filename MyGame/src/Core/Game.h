@@ -51,6 +51,7 @@ public:
 
 private:
     bool isRunning;
+    bool isCleanedUp = false;
 
     WindowPtr window;
     RendererPtr renderer;

@@ -79,17 +79,23 @@ void Game::Render() {
 }
 
 void Game::Clean() {
+    if (isCleanedUp) return;
+
     if (currentScene) {
         currentScene->OnExit(this);
         currentScene.reset();
     }
 
-    // ★エディタの終了処理
+    // エディタの終了処理
     EditorGUI::Clean();
 
     TextRenderer::Clean();
     TextureManager::Clean();
+
     SDL_Quit();
+
+    // ★ 追加：終了処理完了フラグを設定
+    isCleanedUp = true;
 }
 
 void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
