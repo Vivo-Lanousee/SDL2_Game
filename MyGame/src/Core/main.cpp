@@ -1,5 +1,9 @@
 ﻿#include "Game.h"
 #include "Time.h"
+#include "../Scenes/Scene.h" 
+#include "../Objects/GameObject.h" 
+#include "Game.h"
+
 
 Game* game = nullptr;
 

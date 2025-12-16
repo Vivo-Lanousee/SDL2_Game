@@ -37,14 +37,12 @@ void PlayScene::OnEnter(Game* game) {
     );
 
     // ★変更点2：GUI用に名前をつける
-    // これを設定しないと、Inspector画面で "Object 0" のようになってしまいます
     playerPtr->name = "Player";
 
     player = playerPtr.get();
     gameObjects.push_back(std::move(playerPtr));
 
     // ★変更点3：ブロックにも名前をつけて生成
-    // make_unique したものを一時変数に入れて、名前をつけてからリストに入れます
 
     // 床
     auto ground = std::make_unique<Block>(0, 500, 800, 50);
@@ -70,8 +68,6 @@ void PlayScene::OnEnter(Game* game) {
 void PlayScene::OnExit(Game* game) {
     std::cout << "Exiting PlayScene..." << std::endl;
     gameObjects.clear();
-    // TextureManagerのキャッシュ機能により、テクスチャデータ自体はメモリに残ります。
-    // 次回同じテクスチャを使う時はロード時間がゼロになります。
 }
 
 void PlayScene::Update(Game* game) {
@@ -134,11 +130,17 @@ void PlayScene::Update(Game* game) {
     gameObjects.erase(it, gameObjects.end());
 
     // 6. 新しく生まれたオブジェクトを回収
-    std::vector<GameObject*>& newObjs = game->GetPendingObjects();
-    for (auto obj : newObjs) {
-        gameObjects.push_back(std::unique_ptr<GameObject>(obj));
+    // ★★★ 修正箇所: Game::GetPendingObjects の戻り値の型が変わったため修正 ★★★
+    std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
+
+    // unique_ptr ごと PlayScene の gameObjects に移動 (move) する
+    for (auto& obj : newObjs) {
+        gameObjects.push_back(std::move(obj));
     }
+
+    // pendingObjects の中身を移動したので、Game側のリストはクリアする
     game->ClearPendingObjects();
+    // ★★★ 修正終わり ★★★
 }
 
 void PlayScene::Render(Game* game) {
@@ -153,24 +155,20 @@ void PlayScene::Render(Game* game) {
 
 void PlayScene::HandleEvents(Game* game) {
     SDL_Event event;
+    // ImGui のイベント処理は Game.cpp 側で一括で行われているため、ここではゲーム固有のイベントを処理
     while (SDL_PollEvent(&event)) {
-        // ImGuiのイベント処理は Game.cpp 側で行われているのでここは標準入力のみ
-
         if (event.type == SDL_QUIT) {
             game->Quit();
         }
 
         if (event.type == SDL_MOUSEBUTTONDOWN) {
-            // ImGuiの上でクリックした時はゲーム内のレイキャストを発動させない方が親切ですが、
-            // とりあえず今はそのままでOKです。
-
-            int mx, my;
-            SDL_GetMouseState(&mx, &my);
-
+            // 右クリックでのレイキャストテスト
             if (event.button.button == SDL_BUTTON_RIGHT) {
                 std::cout << "--- Raycast Test ---" << std::endl;
                 if (!camera || !player) return;
 
+                int mx, my;
+                SDL_GetMouseState(&mx, &my);
                 SDL_FPoint worldPoint = camera->ScreenToWorld(mx, my);
 
                 float startX = player->x + player->width / 2;

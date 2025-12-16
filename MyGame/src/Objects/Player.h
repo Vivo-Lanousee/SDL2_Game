@@ -11,39 +11,40 @@ class Bullet;
 struct SDL_Texture;
 
 struct UnitStatus {
-    int hp;
-    int maxHp;
-    float speed;
-    int attackPower;
-    float fireInterval;
+	int hp;
+	int maxHp;
+	float speed;
+	int attackPower;
+	float fireInterval;
 };
 
 class Player : public GameObject {
 public:
-    Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camera* cam);
+	Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camera* cam);
 
 
-    void Update(Game* game) override;
-    void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override;
+	void Update(Game* game) override;
+	void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override;
 
-    void TakeDamage(int damage);
-    int GetHP() const { return status.hp; }
-    int GetMaxHP() const { return status.maxHp; }
+	void TakeDamage(int damage);
+	int GetHP() const { return status.hp; }
+	int GetMaxHP() const { return status.maxHp; }
 
 private:
-    Bullet* Shoot(float targetX, float targetY, SDL_Texture* bulletTex);
+	// ★修正: unique_ptr<Bullet> を返すように変更
+	std::unique_ptr<Bullet> Shoot(float targetX, float targetY, SDL_Texture* bulletTex);
 
 public:
-    UnitStatus status;
+	UnitStatus status;
 
 private:
-    double angle;
-    SDL_Texture* bulletTexture;
-    Camera* camera;
+	double angle;
+	SDL_Texture* bulletTexture;
+	Camera* camera;
 
-    Timer shootTimer;
+	Timer shootTimer;
 
-    std::unique_ptr<Animator> animator;
+	std::unique_ptr<Animator> animator;
 
-    bool isFlipLeft = false;
+	bool isFlipLeft = false;
 };

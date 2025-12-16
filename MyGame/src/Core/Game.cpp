@@ -1,6 +1,8 @@
 ﻿#include "Game.h"
 #include <iostream>
 #include <memory>
+
+#include "../Objects/GameObject.h"
 #include "InputHandler.h"
 #include "../Scenes/Scene.h"
 #include "../Scenes/TitleScene.h"
