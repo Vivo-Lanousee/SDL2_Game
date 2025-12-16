@@ -25,6 +25,7 @@
     <ClCompile Include="..\libs\imgui\imgui_impl_sdlrenderer2.cpp" />
     <ClCompile Include="..\libs\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\libs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Core\ConfigManager.cpp" />
     <ClCompile Include="src\Core\Physics.cpp" />
     <ClCompile Include="src\Objects\Bullet.cpp" />
     <ClCompile Include="src\Objects\Enemy.cpp" />
@@ -44,7 +45,6 @@
     <ClCompile Include="src\Core\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\data\player.json" />
     <None Include="libavif-16.dll" />
     <None Include="libtiff-5.dll" />
     <None Include="libwebp-7.dll" />
@@ -74,6 +74,7 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\ConfigManager.h" />
     <ClInclude Include="src\Core\GameParams.h" />
     <ClInclude Include="src\Objects\Enemy.h" />
     <ClInclude Include="src\Editor\EditorGUI.h" />

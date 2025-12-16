@@ -84,6 +84,9 @@
     <ClCompile Include="src\Core\Physics.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\Core\ConfigManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />
@@ -107,7 +110,6 @@
     <None Include="libwebpdemux-2.dll" />
     <None Include="SDL2_image.dll" />
     <None Include="SDL2_ttf.dll" />
-    <None Include="assets\data\player.json" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="x64\Debug\main.obj" />
@@ -192,6 +194,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\Scenes\EditorScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\ConfigManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
