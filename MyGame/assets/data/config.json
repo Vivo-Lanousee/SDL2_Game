@@ -1,6 +1,6 @@
 {
     "ActiveEnemyPreset": "Default",
-    "ActivePlayerPreset": "NewPlayerPreset",
+    "ActivePlayerPreset": "",
     "Enemy": {
         "baseHealth": 100,
         "baseSpeed": 50.0
@@ -18,23 +18,13 @@
     "Player": {
         "jumpVelocity": 600.0,
         "maxHealth": 100.0,
-        "moveSpeed": 403.3999938964844
+        "moveSpeed": 373.70001220703125
     },
     "PlayerPresets": {
         "Default": {
             "jumpVelocity": 600.0,
             "maxHealth": 100.0,
             "moveSpeed": 379.8999938964844
-        },
-        "NewPlayerPreset": {
-            "jumpVelocity": 600.0,
-            "maxHealth": 100.0,
-            "moveSpeed": 403.3999938964844
-        },
-        "test": {
-            "jumpVelocity": 600.0,
-            "maxHealth": 100.0,
-            "moveSpeed": 373.70001220703125
         }
     }
 }

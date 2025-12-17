@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <algorithm> 
+#include <cstring> 
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
 #include "../Objects/GameObject.h"
@@ -154,7 +155,7 @@ void EditorGUI::DrawConfigEditorWindow() {
     }
 
     if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
-        ImGui::TextColored(ImVec4(1, 1, 0, 1), title.c_str());
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), title.c_str());
         ImGui::Separator();
         switch (currentConfigView) {
         case ConfigViewMode::PLAYER: DrawPlayerConfigPanel(params); break;
@@ -169,69 +170,119 @@ void EditorGUI::DrawConfigEditorWindow() {
 // --------------------------------------------------------------------------------------
 
 static void DrawPlayerConfigPanel(GameParams& params) {
+    static char nameBuf[64] = "";
+    if (nameBuf[0] == '\0' && !params.activePlayerPresetName.empty()) {
+        strncpy_s(nameBuf, params.activePlayerPresetName.c_str(), _TRUNCATE);
+    }
+
     if (ImGui::CollapsingHeader("Edit Active Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Speed", &params.player.moveSpeed, 50.0f, 600.0f, "%.1f");
         ImGui::SliderFloat("Jump", &params.player.jumpVelocity, 100.0f, 1000.0f, "%.1f");
         ImGui::InputFloat("Health", &params.player.maxHealth, 10.0f, 100.0f, "%.0f");
     }
 
-    if (ImGui::CollapsingHeader("Load / Save Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Active: %s", params.activePlayerPresetName.c_str());
+    if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextDisabled("Presets List (Click to Load):");
+        std::string toDelete = "";
 
-        // ★ プリセット一覧をボタンでロードできるように変更
-        ImGui::BeginChild("PresetList", ImVec2(0, 100), true);
-        for (auto const& item : params.playerPresets) {
-            bool isCurrent = (params.activePlayerPresetName == item.first);
+        ImGui::BeginChild("PlayerPresetList", ImVec2(0, 120), true);
+        for (auto it = params.playerPresets.begin(); it != params.playerPresets.end(); ++it) {
+            const std::string& name = it->first;
+            const PlayerParams& data = it->second;
+
+            ImGui::PushID(name.c_str());
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+
+            bool isCurrent = (params.activePlayerPresetName == name);
             if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-
-            if (ImGui::Button(item.first.c_str(), ImVec2(-1, 0))) {
-                params.player = item.second;
-                params.activePlayerPresetName = item.first;
+            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                params.player = data;
+                params.activePlayerPresetName = name;
+                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
             }
-
             if (isCurrent) ImGui::PopStyleColor();
+            ImGui::PopID();
         }
         ImGui::EndChild();
 
+        if (!toDelete.empty()) {
+            params.playerPresets.erase(toDelete);
+            if (params.activePlayerPresetName == toDelete) params.activePlayerPresetName = "";
+        }
+
         ImGui::Separator();
-        static char newName[64] = "NewPlayerPreset";
-        ImGui::InputText("NewName", newName, IM_ARRAYSIZE(newName));
-        if (ImGui::Button("ADD/OVERWRITE PRESET", ImVec2(-1, 30))) {
-            params.playerPresets[newName] = params.player;
-            params.activePlayerPresetName = newName;
+        // ★ 修正箇所：newNameBuf から nameBuf に修正
+        ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
+        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
+            params.playerPresets[nameBuf] = params.player;
+            params.activePlayerPresetName = nameBuf;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+            params.playerPresets[nameBuf] = params.player;
+            params.activePlayerPresetName = nameBuf;
         }
     }
 }
 
 static void DrawEnemyConfigPanel(GameParams& params) {
+    static char nameBuf[64] = "";
+    if (nameBuf[0] == '\0' && !params.activeEnemyPresetName.empty()) {
+        strncpy_s(nameBuf, params.activeEnemyPresetName.c_str(), _TRUNCATE);
+    }
+
     if (ImGui::CollapsingHeader("Edit Active Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Speed", &params.enemy.baseSpeed, 10.0f, 300.0f, "%.1f");
         ImGui::InputInt("Health", &params.enemy.baseHealth, 10, 500);
     }
 
-    if (ImGui::CollapsingHeader("Load / Save Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Active: %s", params.activeEnemyPresetName.c_str());
+    if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextDisabled("Presets List (Click to Load):");
+        std::string toDelete = "";
 
-        ImGui::BeginChild("EnemyPresetList", ImVec2(0, 100), true);
-        for (auto const& item : params.enemyPresets) {
-            bool isCurrent = (params.activeEnemyPresetName == item.first);
+        ImGui::BeginChild("EnemyPresetList", ImVec2(0, 120), true);
+        for (auto it = params.enemyPresets.begin(); it != params.enemyPresets.end(); ++it) {
+            const std::string& name = it->first;
+            const EnemyParams& data = it->second;
+
+            ImGui::PushID(name.c_str());
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+
+            bool isCurrent = (params.activeEnemyPresetName == name);
             if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-
-            if (ImGui::Button(item.first.c_str(), ImVec2(-1, 0))) {
-                params.enemy = item.second;
-                params.activeEnemyPresetName = item.first;
+            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                params.enemy = data;
+                params.activeEnemyPresetName = name;
+                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
             }
-
             if (isCurrent) ImGui::PopStyleColor();
+            ImGui::PopID();
         }
         ImGui::EndChild();
 
+        if (!toDelete.empty()) {
+            params.enemyPresets.erase(toDelete);
+            if (params.activeEnemyPresetName == toDelete) params.activeEnemyPresetName = "";
+        }
+
         ImGui::Separator();
-        static char newName[64] = "NewEnemyPreset";
-        ImGui::InputText("NewName", newName, IM_ARRAYSIZE(newName));
-        if (ImGui::Button("ADD/OVERWRITE PRESET", ImVec2(-1, 30))) {
-            params.enemyPresets[newName] = params.enemy;
-            params.activeEnemyPresetName = newName;
+        ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
+        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
+            params.enemyPresets[nameBuf] = params.enemy;
+            params.activeEnemyPresetName = nameBuf;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+            params.enemyPresets[nameBuf] = params.enemy;
+            params.activeEnemyPresetName = nameBuf;
         }
     }
 }
