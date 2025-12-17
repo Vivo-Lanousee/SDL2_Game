@@ -2,14 +2,11 @@
 #include <fstream>
 #include <iostream>
 
-// ... (インクルード省略) ...
 
-// ★★★ 修正箇所 1: パス定数の実体定義 ★★★
 const std::string ConfigManager::CONFIG_FILEPATH = "assets/data/config.json";
 
 // 設定をファイルに保存する
 bool ConfigManager::Save(const GameParams& params) {
-    // ★★★ 修正箇所 2: 内部定数を使用 ★★★
     const std::string& filepath = CONFIG_FILEPATH;
 
     std::ofstream file(filepath);
