@@ -1,15 +1,30 @@
 {
+    "ActiveEnemyPreset": "Default",
+    "ActivePlayerPreset": "Default",
     "Enemy": {
         "baseHealth": 100,
         "baseSpeed": 50.0
     },
+    "EnemyPresets": {
+        "Default": {
+            "baseHealth": 100,
+            "baseSpeed": 50.0
+        }
+    },
     "Physics": {
-        "gravity": 9.800000190734863,
-        "terminalVelocity": 1500.0
+        "gravity": 22.010000228881836,
+        "terminalVelocity": 1537.0
     },
     "Player": {
         "jumpVelocity": 600.0,
         "maxHealth": 100.0,
-        "moveSpeed": 474.1000061035156
+        "moveSpeed": 264.70001220703125
+    },
+    "PlayerPresets": {
+        "Default": {
+            "jumpVelocity": 600.0,
+            "maxHealth": 100.0,
+            "moveSpeed": 300.0
+        }
     }
 }

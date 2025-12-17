@@ -2,6 +2,7 @@
 
 // ★★★ 修正箇所 1: JSONライブラリのインクルードと名前空間の使用 ★★★
 #include <nlohmann/json.hpp> 
+#include <map> // プリセット管理に必要
 using json = nlohmann::json;
 // ★★★ 修正終わり ★★★
 
@@ -18,7 +19,7 @@ struct PlayerParams {
     float jumpVelocity = 600.0f;
     float maxHealth = 100.0f;
 
-    // JSON シリアライズ/デシリアライズ用関数
+    // JSON シリアライズ/デシリアライズ用関数 (変更なし)
     friend void to_json(json& j, const PlayerParams& p) {
         j = json{
             {"moveSpeed", p.moveSpeed},
@@ -35,12 +36,10 @@ struct PlayerParams {
 
 
 struct PhysicsParams {
-    // ★★★ 修正箇所 2: gravity の初期値を 9.8f に戻し、GUI表示と一致させる ★★★
     float gravity = 9.8f; // GUI表示用の重力加速度 (m/s^2 相当)
-    // ★★★ 修正箇所 3: 終端速度を維持 ★★★
     float terminalVelocity = 1500.0f; // 終端速度 (px/s)
 
-    // JSON シリアライズ/デシリアライズ用関数
+    // JSON シリアライズ/デシリアライズ用関数 (変更なし)
     friend void to_json(json& j, const PhysicsParams& p) {
         j = json{
             {"gravity", p.gravity},
@@ -58,7 +57,7 @@ struct EnemyParams {
     float baseSpeed = 50.0f;
     int baseHealth = 100;
 
-    // JSON シリアライズ/デシリアライズ用関数
+    // JSON シリアライズ/デシリアライズ用関数 (変更なし)
     friend void to_json(json& j, const EnemyParams& p) {
         j = json{
             {"baseSpeed", p.baseSpeed},
@@ -66,7 +65,6 @@ struct EnemyParams {
         };
     }
     friend void from_json(const json& j, EnemyParams& p) {
-        // baseHealth は int ですが、JSONはintとfloatの変換を自動で行うため、get_toで問題ありません。
         j.at("baseSpeed").get_to(p.baseSpeed);
         j.at("baseHealth").get_to(p.baseHealth);
     }
@@ -85,12 +83,28 @@ struct GameParams {
     PhysicsParams physics;
     EnemyParams enemy;
 
+    // ★★★ 修正箇所 3: プリセット管理用のメンバを追加 ★★★
+    std::map<std::string, PlayerParams> playerPresets;
+    std::string activePlayerPresetName;
+
+    std::map<std::string, EnemyParams> enemyPresets;
+    std::string activeEnemyPresetName;
+    // ★★★ 修正終わり ★★★
+
+
     // GameParams全体を JSON に変換する関数
     friend void to_json(json& j, const GameParams& p) {
         j = json{
             {"Player", p.player},
             {"Physics", p.physics},
-            {"Enemy", p.enemy}
+            {"Enemy", p.enemy},
+
+            // ★★★ 修正箇所 4: プリセット関連をJSONに含める ★★★
+            {"PlayerPresets", p.playerPresets},
+            {"ActivePlayerPreset", p.activePlayerPresetName},
+            {"EnemyPresets", p.enemyPresets},
+            {"ActiveEnemyPreset", p.activeEnemyPresetName}
+            // ★★★ 修正終わり ★★★
         };
     }
 
@@ -99,10 +113,55 @@ struct GameParams {
         j.at("Player").get_to(p.player);
         j.at("Physics").get_to(p.physics);
         j.at("Enemy").get_to(p.enemy);
+
+        // ★★★ 修正箇所 5: プリセット関連をJSONからロードし、アクティブ設定を適用 ★★★
+        if (j.contains("PlayerPresets")) j.at("PlayerPresets").get_to(p.playerPresets);
+        if (j.contains("ActivePlayerPreset")) j.at("ActivePlayerPreset").get_to(p.activePlayerPresetName);
+
+        if (j.contains("EnemyPresets")) j.at("EnemyPresets").get_to(p.enemyPresets);
+        if (j.contains("ActiveEnemyPreset")) j.at("ActiveEnemyPreset").get_to(p.activeEnemyPresetName);
+
+        // ロード後、アクティブなプリセットを現在のパラメータに適用
+        p.applyActivePresets();
+        // ★★★ 修正終わり ★★★
     }
 
 private:
-    GameParams() = default; // シングルトン化
+    // ★★★ 修正箇所 6: コンストラクタでデフォルトプリセットを初期化 ★★★
+    GameParams() {
+        // 初期状態として、現在のplayer/enemy値を「Default」プリセットとして登録
+        playerPresets["Default"] = player;
+        activePlayerPresetName = "Default";
+
+        enemyPresets["Default"] = enemy;
+        activeEnemyPresetName = "Default";
+    }
+
+    // ★★★ 修正箇所 7: ロード後にアクティブなプリセットを適用するヘルパー関数 ★★★
+    void applyActivePresets() {
+        if (playerPresets.count(activePlayerPresetName)) {
+            player = playerPresets.at(activePlayerPresetName);
+        }
+        else {
+            // 見つからなかった場合、Defaultをアクティブにする
+            activePlayerPresetName = "Default";
+            if (playerPresets.count("Default")) {
+                player = playerPresets.at("Default");
+            }
+        }
+
+        if (enemyPresets.count(activeEnemyPresetName)) {
+            enemy = enemyPresets.at(activeEnemyPresetName);
+        }
+        else {
+            activeEnemyPresetName = "Default";
+            if (enemyPresets.count("Default")) {
+                enemy = enemyPresets.at("Default");
+            }
+        }
+    }
+    // ★★★ 修正終わり ★★★
+
     GameParams(const GameParams&) = delete;
     GameParams& operator=(const GameParams&) = delete;
 };

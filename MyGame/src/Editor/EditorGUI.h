@@ -5,10 +5,16 @@
 
 class EditorGUI {
 public:
-    // ★★★ 修正箇所 1: エディタモードの定義 ★★★
     enum class Mode {
-        GAME,   // 通常のゲーム実行モード
+        GAME,    // 通常のゲーム実行モード
         EDITOR  // オブジェクト配置や経路編集が可能なエディタモード
+    };
+
+    enum class ConfigViewMode {
+        NONE,    // 初期状態/非表示
+        PLAYER,
+        ENEMY,
+        PHYSICS
     };
 
     // 初期化・イベント・描画・終了
@@ -17,19 +23,21 @@ public:
     static void Render(SDL_Renderer* renderer, Scene* currentScene);
     static void Clean();
 
-    // ★★★ 修正箇所 2: モード設定機能の追加 ★★★
     static void SetMode(Mode newMode);
+
+    // 選択中のオブジェクト (Inspector連動用)
+    static GameObject* selectedObject;
 
 private:
     // 内部描画関数
     static void DrawHierarchy(Scene* currentScene);
     static void DrawInspector();
-    // ★★★ 修正箇所 3: パラメータ調整ウィンドウの追加 ★★★
-    static void DrawParameters();
+    static void DrawParameters(); // Config Launcher (ボタン配置)
 
-    // 選択中のオブジェクト
-    static GameObject* selectedObject;
+    static void DrawConfigEditorWindow(); // メインの編集画面を表示する関数
 
-    // ★★★ 修正箇所 4: 現在のモードを保持する静的メンバの追加 ★★★
+    // 現在の設定ビューを保持するメンバ
+    static ConfigViewMode currentConfigView;
+
     static Mode currentMode;
 };
