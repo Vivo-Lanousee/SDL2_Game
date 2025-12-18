@@ -1,19 +1,19 @@
 ﻿#include "PlayScene.h"
 #include "../Core/Game.h"
-#include "../Core/Time.h"           // ★修正: Physics::ApplyPhysics に必要
+#include "../Core/Time.h" 
 #include "../TextureManager.h" 
 #include <iostream>
 #include <algorithm> 
 
 #include "../Objects/Block.h"
-#include "../Core/Physics.h"        // ★修正: Physics::ApplyPhysics に必要
+#include "../Core/Physics.h"
 #include "../Core/Camera.h"
 #include "../UI/TextRenderer.h"
 
 void PlayScene::OnEnter(Game* game) {
     std::cout << "Entering PlayScene..." << std::endl;
 
-    // ★変更点1：テクスチャ読み込み (変更なし)
+    // ★変更点1：テクスチャ読み込み
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
 
@@ -26,7 +26,7 @@ void PlayScene::OnEnter(Game* game) {
     camera->limitX = 2000;
     camera->limitY = 1000;
 
-    // プレイヤー生成 (変更なし)
+    // プレイヤー生成
     auto playerPtr = std::make_unique<Player>(
         100,
         100,
@@ -39,7 +39,7 @@ void PlayScene::OnEnter(Game* game) {
     player = playerPtr.get();
     gameObjects.push_back(std::move(playerPtr));
 
-    // ブロック生成 (変更なし)
+    // ブロック生成
     auto ground = std::make_unique<Block>(0, 500, 800, 50);
     ground->name = "Ground";
     gameObjects.push_back(std::move(ground));
@@ -70,7 +70,6 @@ void PlayScene::Update(Game* game) {
         player->Update(game);
 
         // ★★★ 修正箇所 1: Physics::ApplyPhysics を呼び出す ★★★
-        // 古いコード: player->ApplyPhysics();
         Physics::ApplyPhysics(player, deltaTime);
         player->isGrounded = false;
 
@@ -83,12 +82,12 @@ void PlayScene::Update(Game* game) {
     for (auto& obj : gameObjects) {
         if (obj.get() != player) {
             obj->Update(game);
-            // player以外の重力を持つオブジェクトにも Physics を適用 (Blockは持たない想定)
+            // player以外の重力を持つオブジェクトにも Physics を適用
             Physics::ApplyPhysics(obj.get(), deltaTime);
         }
     }
 
-    // 3. トリガーの当たり判定 (変更なし)
+    // 3. トリガーの当たり判定
     for (auto& obj : gameObjects) {
         if (obj->isTrigger) {
             for (auto& target : gameObjects) {
@@ -101,7 +100,7 @@ void PlayScene::Update(Game* game) {
         }
     }
 
-    // 4. プレイヤーの物理衝突解決 (変更なし)
+    // 4. プレイヤーの物理衝突解決
     if (player) {
         for (auto& obj : gameObjects) {
             if (obj.get() == player) continue;
@@ -113,7 +112,7 @@ void PlayScene::Update(Game* game) {
         }
     }
 
-    // 5. お掃除タイム (変更なし)
+    // 5. お掃除タイム
     auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
         [](const std::unique_ptr<GameObject>& obj) {
             return obj->isDead;
@@ -130,27 +129,34 @@ void PlayScene::Update(Game* game) {
     // 6. 新しく生まれたオブジェクトを回収
     std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
 
-    // unique_ptr ごと PlayScene の gameObjects に移動 (move) する
     for (auto& obj : newObjs) {
         gameObjects.push_back(std::move(obj));
     }
 
-    // pendingObjects の中身を移動したので、Game側のリストはクリアする
     game->ClearPendingObjects();
 }
 
 void PlayScene::Render(Game* game) {
     for (auto& obj : gameObjects) {
         // ★★★ 修正箇所 2: RenderWithCamera を呼び出す ★★★
-        // 古いコード: obj->Render(game->GetRenderer(), camera.get());
         obj->RenderWithCamera(game->GetRenderer(), camera.get());
     }
 
     SDL_Color white = { 255, 255, 255, 255 };
-    // UIテキストも少し更新
     TextRenderer::Draw(game->GetRenderer(), "WASD: Move | Mouse: Adjust Params", 10, 10, white);
 }
 
-void PlayScene::HandleEvents(Game* game) {
-    // ... (変更なし) ...
+// ★重要修正箇所: 引数を (Game* game, SDL_Event* event) に変更
+void PlayScene::HandleEvents(Game* game, SDL_Event* event) {
+    // Game::HandleEvents の PollEvent ループから 1 つずつイベントが渡されます。
+
+    if (event->type == SDL_QUIT) {
+        game->Quit();
+        return;
+    }
+
+    // プレイヤーのジャンプボタン（単発押し下げ）などのイベント処理が必要な場合
+    if (player) {
+        // player->HandleInput(event); などのメソッドがある場合はここで呼ぶ
+    }
 }

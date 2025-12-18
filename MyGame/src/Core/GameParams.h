@@ -1,13 +1,9 @@
 ﻿#pragma once
 
-// ★★★ 修正箇所 1: JSONライブラリのインクルードと名前空間の使用 ★★★
 #include <nlohmann/json.hpp> 
-#include <map> // プリセット管理に必要
+#include <map>
 using json = nlohmann::json;
-// ★★★ 修正終わり ★★★
 
-
-// ★★★ 修正箇所 2: PhysicsSettings 名前空間とスケーリング定数を定義 ★★★
 namespace PhysicsSettings {
     // GUIに表示される値を内部のピクセル値に変換するための係数
     constexpr float GravityScale = 100.0f;
@@ -83,13 +79,11 @@ struct GameParams {
     PhysicsParams physics;
     EnemyParams enemy;
 
-    // ★★★ 修正箇所 3: プリセット管理用のメンバを追加 ★★★
     std::map<std::string, PlayerParams> playerPresets;
     std::string activePlayerPresetName;
 
     std::map<std::string, EnemyParams> enemyPresets;
     std::string activeEnemyPresetName;
-    // ★★★ 修正終わり ★★★
 
 
     // GameParams全体を JSON に変換する関数
@@ -104,7 +98,6 @@ struct GameParams {
             {"ActivePlayerPreset", p.activePlayerPresetName},
             {"EnemyPresets", p.enemyPresets},
             {"ActiveEnemyPreset", p.activeEnemyPresetName}
-            // ★★★ 修正終わり ★★★
         };
     }
 
@@ -114,7 +107,6 @@ struct GameParams {
         j.at("Physics").get_to(p.physics);
         j.at("Enemy").get_to(p.enemy);
 
-        // ★★★ 修正箇所 5: プリセット関連をJSONからロードし、アクティブ設定を適用 ★★★
         if (j.contains("PlayerPresets")) j.at("PlayerPresets").get_to(p.playerPresets);
         if (j.contains("ActivePlayerPreset")) j.at("ActivePlayerPreset").get_to(p.activePlayerPresetName);
 
@@ -123,11 +115,9 @@ struct GameParams {
 
         // ロード後、アクティブなプリセットを現在のパラメータに適用
         p.applyActivePresets();
-        // ★★★ 修正終わり ★★★
     }
 
 private:
-    // ★★★ 修正箇所 6: コンストラクタでデフォルトプリセットを初期化 ★★★
     GameParams() {
         // 初期状態として、現在のplayer/enemy値を「Default」プリセットとして登録
         playerPresets["Default"] = player;
@@ -137,7 +127,6 @@ private:
         activeEnemyPresetName = "Default";
     }
 
-    // ★★★ 修正箇所 7: ロード後にアクティブなプリセットを適用するヘルパー関数 ★★★
     void applyActivePresets() {
         if (playerPresets.count(activePlayerPresetName)) {
             player = playerPresets.at(activePlayerPresetName);
@@ -160,7 +149,6 @@ private:
             }
         }
     }
-    // ★★★ 修正終わり ★★★
 
     GameParams(const GameParams&) = delete;
     GameParams& operator=(const GameParams&) = delete;

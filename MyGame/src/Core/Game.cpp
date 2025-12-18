@@ -24,6 +24,8 @@ bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bo
 
         if (window && renderer) {
             SDL_SetRenderDrawColor(renderer.get(), 255, 255, 255, 255);
+
+            // バックエンドの初期化のみ最初に行う
             EditorGUI::Init(window.get(), renderer.get());
 
             TextRenderer::Init("assets/fonts/PixelMplus10.ttf", 24);
@@ -44,34 +46,18 @@ void Game::ChangeScene(Scene* newScene) {
     currentScene.reset(newScene);
     if (currentScene) currentScene->OnEnter(this);
 }
+
 void Game::HandleEvents() {
     if (inputHandler) inputHandler->Update();
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        EditorGUI::HandleEvents(&event);
-
-        // ImGuiがマウス入力を必要としているかチェック
-        ImGuiIO& io = ImGui::GetIO();
-        bool guiWantsMouse = io.WantCaptureMouse;
-
         if (event.type == SDL_QUIT) Quit();
 
         if (currentScene) {
-            bool isMouseEvent = (event.type == SDL_MOUSEBUTTONDOWN ||
-                event.type == SDL_MOUSEBUTTONUP ||
-                event.type == SDL_MOUSEMOTION);
-
-            if (isMouseEvent) {
-                // ImGuiがマウスを掴んでいない場合のみ、ゲーム内のマウスイベントを処理
-                if (!guiWantsMouse) {
-                    currentScene->HandleEvents(this);
-                }
-            }
-            else {
-                // キーボードなど、その他のイベントは常に処理を試みる
-                currentScene->HandleEvents(this);
-            }
+            // 全てのイベント処理をシーンに任せる。
+            // ImGuiを使うかどうかは各シーンが内部で判断する。
+            currentScene->HandleEvents(this, &event);
         }
     }
 }
@@ -86,8 +72,9 @@ void Game::Render() {
     SDL_RenderClear(renderer.get());
 
     // ゲーム本編
-    if (currentScene) currentScene->Render(this);
-    EditorGUI::Render(renderer.get(), currentScene.get());
+    if (currentScene) {
+        currentScene->Render(this);
+    }
 
     SDL_RenderPresent(renderer.get());
 }
@@ -100,9 +87,8 @@ void Game::Clean() {
         currentScene.reset();
     }
 
-    // エディタの終了処理
+    // 終了処理は一括で行う
     EditorGUI::Clean();
-
     TextRenderer::Clean();
     TextureManager::Clean();
 
@@ -114,10 +100,8 @@ void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
     TextRenderer::Draw(renderer.get(), text, x, y, color);
 }
 
-
 std::vector<std::unique_ptr<GameObject>>& Game::GetCurrentSceneObjects() {
     if (currentScene) {
-        // Scene::GetObjects() (virtual) の実体が PlayScene で実装されている必要あり
         return currentScene->GetObjects();
     }
     static std::vector<std::unique_ptr<GameObject>> emptyList;
@@ -126,7 +110,6 @@ std::vector<std::unique_ptr<GameObject>>& Game::GetCurrentSceneObjects() {
 
 SDL_Texture* Game::GetBulletTexture() {
     PlayScene* playScene = dynamic_cast<PlayScene*>(currentScene.get());
-
     if (playScene) {
         return playScene->GetBulletTexturePtr();
     }

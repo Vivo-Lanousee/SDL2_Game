@@ -10,20 +10,16 @@
 
 class PlayScene : public Scene {
 public:
-    // シーンに入った時
     void OnEnter(Game* game) override;
-
-    // シーンを出る時
     void OnExit(Game* game) override;
-
-    // 更新（移動など）
     void Update(Game* game) override;
-
-    // 描画
     void Render(Game* game) override;
 
-    // 入力
-    void HandleEvents(Game* game) override;
+    // 引数を (Game* game, SDL_Event* event) に修正
+    void HandleEvents(Game* game, SDL_Event* event) override;
+
+    // プレイシーンでは ImGui を使わない
+    bool ShowImGui() const override { return false; };
 
     std::vector<std::unique_ptr<GameObject>>& GetObjects() override {
         return gameObjects;
@@ -33,12 +29,8 @@ public:
 
 private:
     Player* player;
-
-    // GameObjectのリスト
     std::vector<std::unique_ptr<GameObject>> gameObjects;
-
     std::unique_ptr<Camera> camera;
-
     SharedTexturePtr playerTexture;
     SharedTexturePtr bulletTexture;
 };

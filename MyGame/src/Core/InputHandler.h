@@ -20,11 +20,8 @@ public:
         keyMap[GameAction::MoveDown] = SDL_SCANCODE_DOWN;
         keyMap[GameAction::MoveLeft] = SDL_SCANCODE_LEFT;
         keyMap[GameAction::MoveRight] = SDL_SCANCODE_RIGHT;
-        //keyMap[GameAction::Shoot] = SDL_SCANCODE_R; // Rキーでも撃てる
         keyMap[GameAction::Pause] = SDL_SCANCODE_ESCAPE;
 
-        // 追加：マウス設定 ---
-        // Shootアクションを「左クリック」に割り当て
         mouseMap[GameAction::Shoot] = SDL_BUTTON_LEFT;
 
 
