@@ -253,7 +253,7 @@ static void DrawGunConfigPanel(GameParams& params) {
 
     if (ImGui::CollapsingHeader("Edit Active Gun Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec");
-        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 100.0f, 2000.0f, "%.0f");
+        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 150.0f, "%.0f");
         ImGui::InputInt("Damage", &params.gun.damage);
 
         // ★銃の画像パス入力

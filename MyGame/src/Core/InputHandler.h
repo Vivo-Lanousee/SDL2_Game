@@ -16,10 +16,10 @@ class InputHandler {
 public:
     InputHandler() {
         // --- キーボード設定 ---
-        keyMap[GameAction::MoveUp] = SDL_SCANCODE_UP;
-        keyMap[GameAction::MoveDown] = SDL_SCANCODE_DOWN;
-        keyMap[GameAction::MoveLeft] = SDL_SCANCODE_LEFT;
-        keyMap[GameAction::MoveRight] = SDL_SCANCODE_RIGHT;
+        keyMap[GameAction::MoveUp] = SDL_SCANCODE_W;
+        keyMap[GameAction::MoveDown] = SDL_SCANCODE_S;
+        keyMap[GameAction::MoveLeft] = SDL_SCANCODE_A;
+        keyMap[GameAction::MoveRight] = SDL_SCANCODE_D;
         keyMap[GameAction::Pause] = SDL_SCANCODE_ESCAPE;
 
         mouseMap[GameAction::Shoot] = SDL_BUTTON_LEFT;

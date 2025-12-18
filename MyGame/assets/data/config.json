@@ -1,6 +1,7 @@
 {
     "ActiveEnemyPreset": "Default",
-    "ActivePlayerPreset": "Default",
+    "ActiveGunPreset": "Default",
+    "ActivePlayerPreset": "Defa",
     "Enemy": {
         "baseHealth": 100,
         "baseSpeed": 50.0
@@ -11,20 +12,39 @@
             "baseSpeed": 50.0
         }
     },
+    "Gun": {
+        "bulletSpeed": 49.0,
+        "damage": 10,
+        "fireRate": 0.25999999046325684,
+        "texturePath": "assets/images/gun.png"
+    },
+    "GunPresets": {
+        "Default": {
+            "bulletSpeed": 49.0,
+            "damage": 10,
+            "fireRate": 0.25999999046325684,
+            "texturePath": "assets/images/gun.png"
+        }
+    },
     "Physics": {
-        "gravity": 22.010000228881836,
+        "gravity": 24.020000457763672,
         "terminalVelocity": 1537.0
     },
     "Player": {
-        "jumpVelocity": 600.0,
+        "jumpVelocity": 733.5,
         "maxHealth": 100.0,
-        "moveSpeed": 379.8999938964844
+        "moveSpeed": 440.20001220703125
     },
     "PlayerPresets": {
-        "Default": {
-            "jumpVelocity": 600.0,
+        "Defa": {
+            "jumpVelocity": 733.5,
             "maxHealth": 100.0,
-            "moveSpeed": 379.8999938964844
+            "moveSpeed": 440.20001220703125
+        },
+        "Default": {
+            "jumpVelocity": 733.5,
+            "maxHealth": 100.0,
+            "moveSpeed": 477.1000061035156
         }
     }
 }
