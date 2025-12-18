@@ -9,16 +9,10 @@
 #include "../Scenes/TitleScene.h"
 #include "../TextureManager.h"
 #include "../UI/TextRenderer.h"
-
-// ★★★ 修正箇所 1: ImGuiの状態チェックに必要 ★★★
 #include "imgui.h" 
-
-// ★ここが重要：Editorフォルダのヘッダーを読み込む
 #include "../Editor/EditorGUI.h"
 
 Game::Game() : isRunning(false), window(nullptr), renderer(nullptr) {}
-
-// ★★★ 修正箇所: デストラクタの実装を復活させる ★★★
 Game::~Game() { Clean(); }
 
 bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
@@ -30,8 +24,6 @@ bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bo
 
         if (window && renderer) {
             SDL_SetRenderDrawColor(renderer.get(), 255, 255, 255, 255);
-
-            // ★ImGuiの初期化を委譲
             EditorGUI::Init(window.get(), renderer.get());
 
             TextRenderer::Init("assets/fonts/PixelMplus10.ttf", 24);
@@ -52,15 +44,11 @@ void Game::ChangeScene(Scene* newScene) {
     currentScene.reset(newScene);
     if (currentScene) currentScene->OnEnter(this);
 }
-
-// ★★★ 修正箇所 2: HandleEvents で ImGui のマウス制御を実装 ★★★
 void Game::HandleEvents() {
     if (inputHandler) inputHandler->Update();
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-
-        // ★イベントをエディタに渡す (ImGuiがイベントを消費)
         EditorGUI::HandleEvents(&event);
 
         // ImGuiがマウス入力を必要としているかチェック
@@ -99,8 +87,6 @@ void Game::Render() {
 
     // ゲーム本編
     if (currentScene) currentScene->Render(this);
-
-    // ★エディタUIの描画
     EditorGUI::Render(renderer.get(), currentScene.get());
 
     SDL_RenderPresent(renderer.get());
@@ -121,8 +107,6 @@ void Game::Clean() {
     TextureManager::Clean();
 
     SDL_Quit();
-
-    // ★ 追加：終了処理完了フラグを設定
     isCleanedUp = true;
 }
 
@@ -130,19 +114,12 @@ void Game::DrawText(const char* text, int x, int y, SDL_Color color) {
     TextRenderer::Draw(renderer.get(), text, x, y, color);
 }
 
-// ★★★ [Turret機能向け 追加メソッドの実装] ★★★
 
 std::vector<std::unique_ptr<GameObject>>& Game::GetCurrentSceneObjects() {
     if (currentScene) {
         // Scene::GetObjects() (virtual) の実体が PlayScene で実装されている必要あり
         return currentScene->GetObjects();
     }
-    // pendingObjects は Game::Update の外部で使われることが想定されるため、
-    // Gameクラスのメンバとして定義されている前提
-    // return pendingObjects; 
-
-    // pendingObjects が Gameクラスのメンバとして定義されている前提で、ここでは仮の空リストを返します。
-    // 実際の pendingObjects へのアクセスロジックに合わせて修正してください。
     static std::vector<std::unique_ptr<GameObject>> emptyList;
     return emptyList;
 }
@@ -151,7 +128,6 @@ SDL_Texture* Game::GetBulletTexture() {
     PlayScene* playScene = dynamic_cast<PlayScene*>(currentScene.get());
 
     if (playScene) {
-        // ★★★ 修正箇所: PlayScene::GetBulletTexturePtr() を呼び出す ★★★
         return playScene->GetBulletTexturePtr();
     }
     return nullptr;

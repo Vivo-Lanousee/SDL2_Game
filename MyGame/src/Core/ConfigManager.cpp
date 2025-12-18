@@ -30,7 +30,6 @@ bool ConfigManager::Save(const GameParams& params) {
 
 // 設定をファイルからロードする
 bool ConfigManager::Load(GameParams& params) {
-    // ★★★ 修正箇所 3: 内部定数を使用 ★★★
     const std::string& filepath = CONFIG_FILEPATH;
 
     std::ifstream file(filepath);

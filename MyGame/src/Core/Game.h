@@ -1,12 +1,12 @@
 ﻿#pragma once
 #include <SDL.h>
 #include <vector>
-#include <memory> // ★ std::unique_ptr を使うため
+#include <memory> 
 
 class Scene;
 class InputHandler;
 class GameObject;
-class Bullet; // TurretでBulletをInstantiateするために必要
+class Bullet;
 struct SDL_Texture;
 
 
@@ -50,19 +50,13 @@ public:
 	// Instantiate は unique_ptr の所有権を受け取る
 	void Instantiate(std::unique_ptr<GameObject> obj) { pendingObjects.push_back(std::move(obj)); }
 
-	// ★★★ [Turret機能向け 追加/修正] ★★★
-
-	// 1. Turretが敵を探索するために、現在のシーンの全オブジェクトリストへのアクセスを提供
-	//    注意: SceneクラスにGetObjects()が必要。PlayScene::GetObjects()をScene::GetObjects()で呼び出す。
+	
 	std::vector<std::unique_ptr<GameObject>>& GetCurrentSceneObjects();
 
-	// 2. Turretが弾丸を生成するために、弾丸のテクスチャを取得
-	//    注意: PlaySceneなどのSceneクラスがテクスチャを所有しているため、そのポインタを返す
 	SDL_Texture* GetBulletTexture();
 
 	// 3. テキスト描画
 	void DrawText(const char* text, int x, int y, SDL_Color color);
-	// ★★★ 修正終わり ★★★
 
 private:
 	bool isRunning;
