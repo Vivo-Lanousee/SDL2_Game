@@ -33,12 +33,13 @@ struct PlayerParams {
 };
 
 
-// --- 追加: 銃のパラメータ構造体 ---
+// --- 銃のパラメータ構造体 ---
 struct GunParams {
     float fireRate = 0.2f;      // 発射間隔（秒）
     float bulletSpeed = 800.0f; // 弾の速度
     int damage = 10;            // 攻撃力
-    std::string texturePath = "assets/images/gun.png"; // 銃の画像パス
+    float spreadAngle = 5.0f;   // ★追加: 集弾率（拡散角度 0〜45度想定）
+    std::string texturePath = "assets/images/guns/default_gun.png"; // 銃の画像パス
 
     // JSON シリアライズ/デシリアライズ用関数
     friend void to_json(json& j, const GunParams& p) {
@@ -46,6 +47,7 @@ struct GunParams {
             {"fireRate", p.fireRate},
             {"bulletSpeed", p.bulletSpeed},
             {"damage", p.damage},
+            {"spreadAngle", p.spreadAngle}, // ★追加
             {"texturePath", p.texturePath}
         };
     }
@@ -53,10 +55,8 @@ struct GunParams {
         j.at("fireRate").get_to(p.fireRate);
         j.at("bulletSpeed").get_to(p.bulletSpeed);
         j.at("damage").get_to(p.damage);
-        // パスがJSONにない場合の安全策
-        if (j.contains("texturePath")) {
-            j.at("texturePath").get_to(p.texturePath);
-        }
+        if (j.contains("spreadAngle")) j.at("spreadAngle").get_to(p.spreadAngle); // ★追加
+        if (j.contains("texturePath")) j.at("texturePath").get_to(p.texturePath);
     }
 };
 
@@ -106,7 +106,7 @@ struct GameParams {
 
     // 各パラメータ
     PlayerParams player;
-    GunParams gun;      // ★追加: 現在の銃設定
+    GunParams gun;
     PhysicsParams physics;
     EnemyParams enemy;
 
@@ -114,7 +114,7 @@ struct GameParams {
     std::map<std::string, PlayerParams> playerPresets;
     std::string activePlayerPresetName;
 
-    std::map<std::string, GunParams> gunPresets;       // ★追加: 銃のプリセット
+    std::map<std::string, GunParams> gunPresets;
     std::string activeGunPresetName;
 
     std::map<std::string, EnemyParams> enemyPresets;
@@ -125,15 +125,15 @@ struct GameParams {
     friend void to_json(json& j, const GameParams& p) {
         j = json{
             {"Player", p.player},
-            {"Gun", p.gun},       // ★追加
+            {"Gun", p.gun},
             {"Physics", p.physics},
             {"Enemy", p.enemy},
 
             {"PlayerPresets", p.playerPresets},
             {"ActivePlayerPreset", p.activePlayerPresetName},
 
-            {"GunPresets", p.gunPresets},        // ★追加
-            {"ActiveGunPreset", p.activeGunPresetName}, // ★追加
+            {"GunPresets", p.gunPresets},
+            {"ActiveGunPreset", p.activeGunPresetName},
 
             {"EnemyPresets", p.enemyPresets},
             {"ActiveEnemyPreset", p.activeEnemyPresetName}
@@ -142,16 +142,16 @@ struct GameParams {
 
     // JSON から GameParams 全体をロードする関数
     friend void from_json(const json& j, GameParams& p) {
-        j.at("Player").get_to(p.player);
-        if (j.contains("Gun")) j.at("Gun").get_to(p.gun); // ★追加
-        j.at("Physics").get_to(p.physics);
-        j.at("Enemy").get_to(p.enemy);
+        if (j.contains("Player")) j.at("Player").get_to(p.player);
+        if (j.contains("Gun")) j.at("Gun").get_to(p.gun);
+        if (j.contains("Physics")) j.at("Physics").get_to(p.physics);
+        if (j.contains("Enemy")) j.at("Enemy").get_to(p.enemy);
 
         if (j.contains("PlayerPresets")) j.at("PlayerPresets").get_to(p.playerPresets);
         if (j.contains("ActivePlayerPreset")) j.at("ActivePlayerPreset").get_to(p.activePlayerPresetName);
 
-        if (j.contains("GunPresets")) j.at("GunPresets").get_to(p.gunPresets); // ★追加
-        if (j.contains("ActiveGunPreset")) j.at("ActiveGunPreset").get_to(p.activeGunPresetName); // ★追加
+        if (j.contains("GunPresets")) j.at("GunPresets").get_to(p.gunPresets);
+        if (j.contains("ActiveGunPreset")) j.at("ActiveGunPreset").get_to(p.activeGunPresetName);
 
         if (j.contains("EnemyPresets")) j.at("EnemyPresets").get_to(p.enemyPresets);
         if (j.contains("ActiveEnemyPreset")) j.at("ActiveEnemyPreset").get_to(p.activeEnemyPresetName);
@@ -166,8 +166,8 @@ private:
         playerPresets["Default"] = player;
         activePlayerPresetName = "Default";
 
-        gunPresets["Default"] = gun;       // ★追加
-        activeGunPresetName = "Default";   // ★追加
+        gunPresets["Default"] = gun;
+        activeGunPresetName = "Default";
 
         enemyPresets["Default"] = enemy;
         activeEnemyPresetName = "Default";
@@ -183,7 +183,7 @@ private:
             if (playerPresets.count("Default")) player = playerPresets.at("Default");
         }
 
-        // Gun 適用 ★追加
+        // Gun 適用 
         if (gunPresets.count(activeGunPresetName)) {
             gun = gunPresets.at(activeGunPresetName);
         }

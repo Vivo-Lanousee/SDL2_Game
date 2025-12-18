@@ -7,9 +7,9 @@
 #include <map>
 #include <algorithm> 
 #include <cstring> 
-#include <filesystem> // ★C++17必須
-#include <windows.h>  // ★ファイルダイアログ用
-#include <commdlg.h>  // ★ファイルダイアログ用
+#include <filesystem> // C++17必須
+#include <windows.h>  // ファイルダイアログ用
+#include <commdlg.h>  // ファイルダイアログ用
 
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
@@ -63,7 +63,7 @@ void EditorGUI::SetMode(Mode newMode) {
     currentMode = newMode;
 }
 
-// ★追加: Windows標準のファイル選択ダイアログを開き、指定フォルダへコピーする関数
+// Windows標準のファイル選択ダイアログを開き、指定フォルダへコピーする関数
 std::string EditorGUI::ImportTexture() {
     char szFile[260] = { 0 };
     OPENFILENAMEA ofn;
@@ -280,11 +280,13 @@ static void DrawGunConfigPanel(GameParams& params) {
         ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f");
         ImGui::InputInt("Damage", &params.gun.damage);
 
+        // ★追加：集弾率（拡散角度）のスライダー
+        ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 45.0f, "%.1f deg");
+
         ImGui::Separator();
         ImGui::Text("Appearance");
         ImGui::Text("Current Path: %s", params.gun.texturePath.c_str());
 
-        // ★修正ポイント: ファイルインポートボタンの設置
         if (ImGui::Button("📂 Import Gun Image", ImVec2(-1, 30))) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {

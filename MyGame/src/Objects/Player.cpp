@@ -8,6 +8,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include <random> // ★追加: 集弾率の計算に必要
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -29,8 +30,6 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
     animator->LoadFromJson("assets/data/player.json");
 
     // 初期化時に現在の設定で銃をロード
-    // ※この時点ではまだ renderer が確定していない場合があるため、
-    // 最初の描画やUpdate内で必要に応じて RefreshGunConfig が呼ばれるようにします。
 }
 
 void Player::Update(Game* game) {
@@ -128,19 +127,35 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture* bulletTex) {
     GameParams& params = GameParams::GetInstance();
 
+    // 弾の発射位置（プレイヤーの中心付近）
     float spawnX = x + (width / 2.0f);
     float spawnY = y + (height / 2.0f);
 
+    // 1. ターゲット（マウス座標）への基本角度を計算
     float dx = targetX - spawnX;
     float dy = targetY - spawnY;
-    float distance = sqrt(dx * dx + dy * dy);
+    float baseAngleRad = atan2(dy, dx);
 
     // 0除算防止
-    if (distance == 0) return nullptr;
+    if (dx == 0 && dy == 0) return nullptr;
 
-    // GameParams の bulletSpeed を使って弾の速度を決定
-    float vx = (dx / distance) * params.gun.bulletSpeed;
-    float vy = (dy / distance) * params.gun.bulletSpeed;
+    // 2. ★集弾率（スプレッド）の適用
+    // 狙った角度に対して ±(spreadAngle / 2) の範囲でランダムな誤差を加える
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+
+    // 度数法をラジアンに変換
+    float spreadRad = params.gun.spreadAngle * (M_PI / 180.0f);
+    std::uniform_real_distribution<float> dist(-spreadRad / 2.0f, spreadRad / 2.0f);
+
+    // 最終的な発射角度
+    double finalAngleRad = baseAngleRad + dist(gen);
+
+    // 3. 最終的な速度ベクトルを算出
+    // $vx = \cos(angle) \times bulletSpeed$
+    // $vy = \sin(angle) \times bulletSpeed$
+    float vx = (float)cos(finalAngleRad) * params.gun.bulletSpeed;
+    float vy = (float)sin(finalAngleRad) * params.gun.bulletSpeed;
 
     // Bulletの生成 (x, y, w, h, vx, vy, damage, texture)
     return std::make_unique<Bullet>(

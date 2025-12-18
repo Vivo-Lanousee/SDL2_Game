@@ -16,6 +16,7 @@
         "bulletSpeed": 49.0,
         "damage": 10,
         "fireRate": 0.25999999046325684,
+        "spreadAngle": 5.0,
         "texturePath": "assets/images/guns/GR1_c.png"
     },
     "GunPresets": {
@@ -23,6 +24,7 @@
             "bulletSpeed": 49.0,
             "damage": 10,
             "fireRate": 0.25999999046325684,
+            "spreadAngle": 5.0,
             "texturePath": "assets/images/guns/GR1_c.png"
         }
     },
@@ -31,7 +33,7 @@
         "terminalVelocity": 1537.0
     },
     "Player": {
-        "jumpVelocity": 1000.0,
+        "jumpVelocity": 733.5,
         "maxHealth": 100.0,
         "moveSpeed": 440.20001220703125
     },
