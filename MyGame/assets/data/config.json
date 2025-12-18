@@ -1,6 +1,6 @@
 {
     "ActiveEnemyPreset": "Default",
-    "ActiveGunPreset": "Default",
+    "ActiveGunPreset": "test",
     "ActivePlayerPreset": "Defa",
     "Enemy": {
         "baseHealth": 100,
@@ -14,18 +14,34 @@
     },
     "Gun": {
         "bulletSpeed": 49.0,
-        "damage": 10,
-        "fireRate": 0.25999999046325684,
-        "spreadAngle": 5.0,
-        "texturePath": "assets/images/guns/GR1_c.png"
+        "damage": 13,
+        "fireRate": 0.14000000059604645,
+        "offsetX": 1.5,
+        "offsetY": -0.5,
+        "shotCount": 1,
+        "spreadAngle": 21.200000762939453,
+        "texturePath": "assets/images/guns/AdvLMG1_c.png"
     },
     "GunPresets": {
         "Default": {
             "bulletSpeed": 49.0,
             "damage": 10,
             "fireRate": 0.25999999046325684,
+            "offsetX": 0.0,
+            "offsetY": 0.0,
+            "shotCount": 1,
             "spreadAngle": 5.0,
             "texturePath": "assets/images/guns/GR1_c.png"
+        },
+        "test": {
+            "bulletSpeed": 49.0,
+            "damage": 13,
+            "fireRate": 0.14000000059604645,
+            "offsetX": 1.5,
+            "offsetY": -0.5,
+            "shotCount": 1,
+            "spreadAngle": 21.200000762939453,
+            "texturePath": "assets/images/guns/AdvLMG1_c.png"
         }
     },
     "Physics": {

@@ -7,13 +7,14 @@
 #include <map>
 #include <algorithm> 
 #include <cstring> 
-#include <filesystem> // C++17必須
-#include <windows.h>  // ファイルダイアログ用
-#include <commdlg.h>  // ファイルダイアログ用
+#include <filesystem> // ★C++17必須
+#include <windows.h>  // ★ファイルダイアログ用
+#include <commdlg.h>  // ★ファイルダイアログ用
 
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
 #include "../Objects/GameObject.h"
+#include "../Objects/Player.h" // ★Playerの関数を呼ぶために追加
 #include "../Core/ConfigManager.h" 
 
 // filesystemの名前空間を短縮
@@ -25,9 +26,9 @@ EditorGUI::Mode EditorGUI::currentMode = EditorGUI::Mode::GAME;
 EditorGUI::ConfigViewMode EditorGUI::currentConfigView = EditorGUI::ConfigViewMode::NONE;
 bool EditorGUI::isTestMode = false;
 
-// --- 内部描画ヘルパー関数の宣言 ---
+// --- 内部描画ヘルパー関数の宣言 (引数に renderer と scene を追加) ---
 static void DrawPlayerConfigPanel(GameParams& params);
-static void DrawGunConfigPanel(GameParams& params);
+static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
 static void DrawEnemyConfigPanel(GameParams& params);
 static void DrawPhysicsConfigPanel(GameParams& params);
 
@@ -86,26 +87,35 @@ std::string EditorGUI::ImportTexture() {
         std::string destDir = "assets/images/guns/";
 
         try {
-            // フォルダがなければ作成
             if (!fs::exists(destDir)) {
                 fs::create_directories(destDir);
             }
 
-            // ファイル名を取得してコピー先パスを作成
             std::string fileName = srcPath.filename().string();
             std::string destPath = destDir + fileName;
 
-            // ファイルを上書きコピー
             fs::copy_file(srcPath, destPath, fs::copy_options::overwrite_existing);
 
             std::cout << "Import Success: " << destPath << std::endl;
-            return destPath; // プロジェクト内相対パスを返す
+            return destPath;
         }
         catch (const fs::filesystem_error& e) {
             std::cerr << "File system error: " << e.what() << std::endl;
         }
     }
     return "";
+}
+
+// ★ヘルパー関数: シーン内のプレイヤーを見つけて銃の設定をリロードさせる
+static void NotifyPlayerGunChanged(SDL_Renderer* renderer, Scene* currentScene) {
+    if (!currentScene) return;
+    auto& objects = currentScene->GetObjects();
+    for (auto& obj : objects) {
+        Player* player = dynamic_cast<Player*>(obj.get());
+        if (player) {
+            player->RefreshGunConfig(renderer);
+        }
+    }
 }
 
 void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
@@ -116,10 +126,35 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
     if (currentMode == Mode::EDITOR) {
         DrawHierarchy(currentScene);
         DrawInspector();
-        DrawParameters(); // Launcher
+        DrawParameters();
 
         if (currentConfigView != ConfigViewMode::NONE) {
-            DrawConfigEditorWindow();
+            // ★修正: renderer と currentScene を渡すように変更
+            GameParams& params = GameParams::GetInstance();
+            ImGui::SetNextWindowPos(ImVec2(890, 370), ImGuiCond_Once);
+            ImGui::SetNextWindowSize(ImVec2(300, 420), ImGuiCond_Once);
+
+            std::string title = "Editor";
+            switch (currentConfigView) {
+            case ConfigViewMode::PLAYER:  title += " [Player]"; break;
+            case ConfigViewMode::GUN:     title += " [Gun]";    break;
+            case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
+            case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
+            default: return;
+            }
+
+            if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
+                ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), title.c_str());
+                ImGui::Separator();
+                switch (currentConfigView) {
+                case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
+                case ConfigViewMode::GUN:     DrawGunConfigPanel(params, renderer, currentScene); break;
+                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
+                case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
+                default: break;
+                }
+                ImGui::End();
+            }
         }
     }
 
@@ -180,51 +215,23 @@ void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(200, 260), ImGuiCond_Once);
 
-    ImGui::Begin("🛠️ Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
+    ImGui::Begin(" Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
-    if (ImGui::Button("🏃 Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
-    if (ImGui::Button("🔫 Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
-    if (ImGui::Button("👹 Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
-    if (ImGui::Button("🌍 Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
+    if (ImGui::Button(" Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
+    if (ImGui::Button("Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
+    if (ImGui::Button("Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
+    if (ImGui::Button("Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
 
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.4f, 0.6f, 0.6f));
-    if (ImGui::Button("💾 SAVE ALL TO FILE", ImVec2(-1, 40))) {
+    if (ImGui::Button("SAVE ALL TO FILE", ImVec2(-1, 40))) {
         ConfigManager::Save(GameParams::GetInstance());
     }
     ImGui::PopStyleColor();
     ImGui::End();
 }
 
-void EditorGUI::DrawConfigEditorWindow() {
-    GameParams& params = GameParams::GetInstance();
-    ImGui::SetNextWindowPos(ImVec2(890, 370), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(300, 420), ImGuiCond_Once);
-
-    std::string title = "⚙️ Editor";
-    switch (currentConfigView) {
-    case ConfigViewMode::PLAYER:  title += " [Player]"; break;
-    case ConfigViewMode::GUN:     title += " [Gun]";    break;
-    case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
-    case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
-    default: return;
-    }
-
-    if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
-        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), title.c_str());
-        ImGui::Separator();
-        switch (currentConfigView) {
-        case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
-        case ConfigViewMode::GUN:     DrawGunConfigPanel(params);     break;
-        case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
-        case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
-        default: break;
-        }
-        ImGui::End();
-    }
-}
-
-// --------------------------------------------------------------------------------------
+// --- 内部描画関数 ---
 
 static void DrawPlayerConfigPanel(GameParams& params) {
     static char nameBuf[64] = "";
@@ -233,7 +240,7 @@ static void DrawPlayerConfigPanel(GameParams& params) {
     }
 
     ImGui::PushStyleColor(ImGuiCol_Button, EditorGUI::isTestMode ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
-    std::string btnLabel = EditorGUI::isTestMode ? "🛑 STOP TEST" : "🚀 SPAWN TEST PLAYER";
+    std::string btnLabel = EditorGUI::isTestMode ? " STOP TEST" : "SPAWN TEST PLAYER";
     if (ImGui::Button(btnLabel.c_str(), ImVec2(-1, 40))) {
         EditorGUI::isTestMode = !EditorGUI::isTestMode;
     }
@@ -266,7 +273,7 @@ static void DrawPlayerConfigPanel(GameParams& params) {
     }
 }
 
-static void DrawGunConfigPanel(GameParams& params) {
+static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene) {
     static char nameBuf[64] = "";
     static char pathBuf[256] = "";
 
@@ -279,9 +286,13 @@ static void DrawGunConfigPanel(GameParams& params) {
         ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec");
         ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f");
         ImGui::InputInt("Damage", &params.gun.damage);
+        ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg");
+        ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20);
 
-        // ★追加：集弾率（拡散角度）のスライダー
-        ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 45.0f, "%.1f deg");
+        ImGui::Separator();
+        ImGui::Text("Visual Offsets (Display)");
+        ImGui::DragFloat("Offset X", &params.gun.offsetX, 0.5f, -100.0f, 100.0f, "%.1f px");
+        ImGui::DragFloat("Offset Y", &params.gun.offsetY, 0.5f, -100.0f, 100.0f, "%.1f px");
 
         ImGui::Separator();
         ImGui::Text("Appearance");
@@ -291,22 +302,28 @@ static void DrawGunConfigPanel(GameParams& params) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {
                 params.gun.texturePath = newPath;
+                // ★画像が新しくなったのでプレイヤーの表示を更新
+                NotifyPlayerGunChanged(renderer, currentScene);
             }
         }
 
         if (ImGui::InputText("Texture Path (Manual)", pathBuf, IM_ARRAYSIZE(pathBuf))) {
             params.gun.texturePath = pathBuf;
+            // ★手動入力時も更新
+            NotifyPlayerGunChanged(renderer, currentScene);
         }
     }
 
     if (ImGui::CollapsingHeader("Gun Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::BeginChild("GunPresetList", ImVec2(0, 120), true);
+        ImGui::BeginChild("GunPresetList", ImVec2(0, 100), true);
         for (auto it = params.gunPresets.begin(); it != params.gunPresets.end(); ++it) {
             const std::string& name = it->first;
             if (ImGui::Selectable(name.c_str(), params.activeGunPresetName == name)) {
                 params.gun = it->second;
                 params.activeGunPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
+                // ★プリセットを切り替えたのでプレイヤーの表示を更新
+                NotifyPlayerGunChanged(renderer, currentScene);
             }
         }
         ImGui::EndChild();

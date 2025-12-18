@@ -103,6 +103,7 @@
     <ClInclude Include="src\Weapons\WeaponConfig.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\images\guns\AdvLMG1_c.png" />
     <Image Include="assets\images\guns\GR1_c.png" />
     <Image Include="assets\images\player.png" />
   </ItemGroup>

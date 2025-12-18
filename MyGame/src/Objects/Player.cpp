@@ -8,7 +8,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
-#include <random> // ★追加: 集弾率の計算に必要
+#include <random>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -28,8 +28,6 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
 
     animator = std::make_unique<Animator>();
     animator->LoadFromJson("assets/data/player.json");
-
-    // 初期化時に現在の設定で銃をロード
 }
 
 void Player::Update(Game* game) {
@@ -57,36 +55,38 @@ void Player::Update(Game* game) {
         animator->Play("Idle");
     }
 
-    // 2. ジャンプロジック
+    // ジャンプロジック
     if (input->IsJustPressed(GameAction::MoveUp)) {
         if (isGrounded) {
             velY = -params.player.jumpVelocity;
             isGrounded = false;
         }
     }
-
-    // 3. 銃のテクスチャが未ロード、またはパスが変更された場合に更新
     if (!gunTexture) {
         RefreshGunConfig(game->GetRenderer());
     }
 
-    // 4. 連射クールダウンの更新
+    // 連射クールダウンの更新
     if (fireCooldown > 0) {
         fireCooldown -= Time::deltaTime;
     }
 
-    // 5. 射撃処理
+    //  射撃処理
     int screenMouseX, screenMouseY;
     SDL_GetMouseState(&screenMouseX, &screenMouseY);
     SDL_FPoint worldMouse = camera->ScreenToWorld(screenMouseX, screenMouseY);
 
     if (input->IsPressed(GameAction::Shoot) && fireCooldown <= 0.0f) {
-        auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
-        if (newBullet) {
-            game->Instantiate(std::move(newBullet));
-            // GameParamsに設定された連射間隔を適用
-            fireCooldown = params.gun.fireRate;
+        // shotCount の数だけ弾を同時に生成する
+        for (int i = 0; i < params.gun.shotCount; ++i) {
+            auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
+            if (newBullet) {
+                game->Instantiate(std::move(newBullet));
+            }
         }
+
+        // クールダウンを設定
+        fireCooldown = params.gun.fireRate;
     }
 }
 
@@ -102,19 +102,21 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 
     // --- 銃の描画ロジック ---
     if (gunTexture) {
+        GameParams& params = GameParams::GetInstance();
         int mx, my;
         SDL_GetMouseState(&mx, &my);
 
-        // プレイヤーの中心（肩のあたり）を回転軸にする
-        float centerX = (float)drawX + (float)width / 2.0f;
-        float centerY = (float)drawY + (float)height / 2.0f;
+        // プレイヤーの中心 ＋ エディタで設定したオフセットを回転軸にする
+        float centerX = (float)drawX + (float)width / 2.0f + params.gun.offsetX;
+        float centerY = (float)drawY + (float)height / 2.0f + params.gun.offsetY;
 
         // マウスへの角度計算
         double gunAngle = atan2(my - (centerY - camera->y + camera->y), mx - (centerX - camera->x + camera->x)) * 180.0 / M_PI;
 
-        // 銃のサイズ（仮に 64x32 とする。必要ならGameParamsに持たせても良い）
+        // 銃のサイズ（64x32）
         int gunW = 64;
         int gunH = 32;
+        // 銃の描画位置（オフセット適用済み）
         SDL_Rect gunDest = { (int)centerX - gunW / 4, (int)centerY - gunH / 2, gunW, gunH };
 
         // 銃が逆さまにならないようにフリップ処理
@@ -127,9 +129,9 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture* bulletTex) {
     GameParams& params = GameParams::GetInstance();
 
-    // 弾の発射位置（プレイヤーの中心付近）
-    float spawnX = x + (width / 2.0f);
-    float spawnY = y + (height / 2.0f);
+    // ★修正箇所：銃のオフセット位置を発射起点（マズル位置のベース）にする
+    float spawnX = x + (width / 2.0f) + params.gun.offsetX;
+    float spawnY = y + (height / 2.0f) + params.gun.offsetY;
 
     // 1. ターゲット（マウス座標）への基本角度を計算
     float dx = targetX - spawnX;
@@ -139,8 +141,7 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
     // 0除算防止
     if (dx == 0 && dy == 0) return nullptr;
 
-    // 2. ★集弾率（スプレッド）の適用
-    // 狙った角度に対して ±(spreadAngle / 2) の範囲でランダムな誤差を加える
+    // 集弾率（スプレッド）の適用
     static std::random_device rd;
     static std::mt19937 gen(rd());
 
@@ -151,9 +152,7 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
     // 最終的な発射角度
     double finalAngleRad = baseAngleRad + dist(gen);
 
-    // 3. 最終的な速度ベクトルを算出
-    // $vx = \cos(angle) \times bulletSpeed$
-    // $vy = \sin(angle) \times bulletSpeed$
+    // 最終的な速度ベクトルを算出
     float vx = (float)cos(finalAngleRad) * params.gun.bulletSpeed;
     float vy = (float)sin(finalAngleRad) * params.gun.bulletSpeed;
 

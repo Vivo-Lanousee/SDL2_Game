@@ -33,29 +33,44 @@ struct PlayerParams {
 };
 
 
-// --- 銃のパラメータ構造体 ---
+// --- 銃のパラメータ構造体 (同時発射数とオフセットを追加) ---
 struct GunParams {
     float fireRate = 0.2f;      // 発射間隔（秒）
     float bulletSpeed = 800.0f; // 弾の速度
     int damage = 10;            // 攻撃力
-    float spreadAngle = 5.0f;   // ★追加: 集弾率（拡散角度 0〜45度想定）
+    float spreadAngle = 5.0f;   // 集弾率（拡散角度 0〜45度想定）
+
+    // ★追加パラメータ
+    int shotCount = 1;          // 同時発射数（ショットガン等）
+    float offsetX = 0.0f;       // 銃の表示位置オフセットX
+    float offsetY = 0.0f;       // 銃の表示位置オフセットY
+
     std::string texturePath = "assets/images/guns/default_gun.png"; // 銃の画像パス
 
-    // JSON シリアライズ/デシリアライズ用関数
+    // JSON シリアライズ用関数
     friend void to_json(json& j, const GunParams& p) {
         j = json{
             {"fireRate", p.fireRate},
             {"bulletSpeed", p.bulletSpeed},
             {"damage", p.damage},
-            {"spreadAngle", p.spreadAngle}, // ★追加
+            {"spreadAngle", p.spreadAngle},
+            {"shotCount", p.shotCount},    // ★
+            {"offsetX", p.offsetX},        // ★
+            {"offsetY", p.offsetY},        // ★
             {"texturePath", p.texturePath}
         };
     }
+    // JSON デシリアライズ用関数
     friend void from_json(const json& j, GunParams& p) {
         j.at("fireRate").get_to(p.fireRate);
         j.at("bulletSpeed").get_to(p.bulletSpeed);
         j.at("damage").get_to(p.damage);
-        if (j.contains("spreadAngle")) j.at("spreadAngle").get_to(p.spreadAngle); // ★追加
+
+        // 追加された項目は contains で存在チェックを行うと古いJSONとの互換性が保てます
+        if (j.contains("spreadAngle")) j.at("spreadAngle").get_to(p.spreadAngle);
+        if (j.contains("shotCount"))   j.at("shotCount").get_to(p.shotCount);   // ★
+        if (j.contains("offsetX"))     j.at("offsetX").get_to(p.offsetX);       // ★
+        if (j.contains("offsetY"))     j.at("offsetY").get_to(p.offsetY);       // ★
         if (j.contains("texturePath")) j.at("texturePath").get_to(p.texturePath);
     }
 };
