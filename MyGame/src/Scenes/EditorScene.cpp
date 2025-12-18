@@ -3,7 +3,7 @@
 #include "../Core/Time.h"
 #include "../Core/InputHandler.h"
 #include "../Editor/EditorGUI.h"
-#include "imgui.h" // WantCaptureMouseの判定に必要
+#include "imgui.h" 
 #include <iostream>
 
 EditorScene::EditorScene()
@@ -33,11 +33,8 @@ void EditorScene::OnExit(Game* game) {
 }
 
 void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
-    // 1. まず ImGui にイベントを渡す
-    // これにより、GUIウィンドウ上のクリックなどが処理される
     EditorGUI::HandleEvents(event);
 
-    // 2. ImGuiがマウスやキーボードを「使いたい（Capture中）」と言っているか確認
     ImGuiIO& io = ImGui::GetIO();
 
     // GUIを操作している場合は、背後のエディタシーン（カメラ操作やオブジェクト選択）の処理をスキップ

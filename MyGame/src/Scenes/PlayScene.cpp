@@ -13,7 +13,6 @@
 void PlayScene::OnEnter(Game* game) {
     std::cout << "Entering PlayScene..." << std::endl;
 
-    // ★変更点1：テクスチャ読み込み
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
 
@@ -69,7 +68,6 @@ void PlayScene::Update(Game* game) {
     if (player) {
         player->Update(game);
 
-        // ★★★ 修正箇所 1: Physics::ApplyPhysics を呼び出す ★★★
         Physics::ApplyPhysics(player, deltaTime);
         player->isGrounded = false;
 
@@ -78,7 +76,6 @@ void PlayScene::Update(Game* game) {
         }
     }
 
-    // 2. その他のオブジェクト更新と物理演算
     for (auto& obj : gameObjects) {
         if (obj.get() != player) {
             obj->Update(game);
@@ -87,7 +84,6 @@ void PlayScene::Update(Game* game) {
         }
     }
 
-    // 3. トリガーの当たり判定
     for (auto& obj : gameObjects) {
         if (obj->isTrigger) {
             for (auto& target : gameObjects) {
@@ -126,7 +122,7 @@ void PlayScene::Update(Game* game) {
 
     gameObjects.erase(it, gameObjects.end());
 
-    // 6. 新しく生まれたオブジェクトを回収
+    // 新しく生まれたオブジェクトを回収
     std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
 
     for (auto& obj : newObjs) {
@@ -138,7 +134,6 @@ void PlayScene::Update(Game* game) {
 
 void PlayScene::Render(Game* game) {
     for (auto& obj : gameObjects) {
-        // ★★★ 修正箇所 2: RenderWithCamera を呼び出す ★★★
         obj->RenderWithCamera(game->GetRenderer(), camera.get());
     }
 
@@ -146,7 +141,6 @@ void PlayScene::Render(Game* game) {
     TextRenderer::Draw(game->GetRenderer(), "WASD: Move | Mouse: Adjust Params", 10, 10, white);
 }
 
-// ★重要修正箇所: 引数を (Game* game, SDL_Event* event) に変更
 void PlayScene::HandleEvents(Game* game, SDL_Event* event) {
     // Game::HandleEvents の PollEvent ループから 1 つずつイベントが渡されます。
 
@@ -155,8 +149,6 @@ void PlayScene::HandleEvents(Game* game, SDL_Event* event) {
         return;
     }
 
-    // プレイヤーのジャンプボタン（単発押し下げ）などのイベント処理が必要な場合
     if (player) {
-        // player->HandleInput(event); などのメソッドがある場合はここで呼ぶ
     }
 }
