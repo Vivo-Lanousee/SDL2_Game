@@ -17,7 +17,9 @@
 Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camera* cam)
     : GameObject(x, y, 46, 128, tex),
     currentHealth(GameParams::GetInstance().player.maxHealth),
-    fireCooldown(0.0f)
+    fireCooldown(0.0f),
+    reloadTimer(0.0f),
+    isReloading(false)
 {
     angle = 0;
     useGravity = true;
@@ -25,6 +27,9 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
     this->bulletTexture = bulletTex;
     this->camera = cam;
     isFlipLeft = false;
+
+    // 初期弾数を設定
+    currentAmmo = GameParams::GetInstance().gun.magazineSize;
 
     animator = std::make_unique<Animator>();
     animator->LoadFromJson("assets/data/player.json");
@@ -66,17 +71,41 @@ void Player::Update(Game* game) {
         RefreshGunConfig(game->GetRenderer());
     }
 
+    // --- リロード処理 ---
+    // Rキーによる手動リロード、または弾が0の時の自動リロード
+    bool wantsReload = input->IsJustPressed(GameAction::Reload);
+
+    if ((wantsReload || currentAmmo <= 0) && !isReloading && currentAmmo < params.gun.magazineSize) {
+        isReloading = true;
+        reloadTimer = params.gun.reloadTime;
+        std::cout << "Player Reloading..." << std::endl;
+    }
+
+    if (isReloading) {
+        reloadTimer -= Time::deltaTime;
+        if (reloadTimer <= 0) {
+            currentAmmo = params.gun.magazineSize;
+            isReloading = false;
+            std::cout << "Player Reload Complete!" << std::endl;
+        }
+    }
+
     // 連射クールダウンの更新
     if (fireCooldown > 0) {
         fireCooldown -= Time::deltaTime;
     }
 
-    //  射撃処理
+    // 射撃処理
     int screenMouseX, screenMouseY;
     SDL_GetMouseState(&screenMouseX, &screenMouseY);
     SDL_FPoint worldMouse = camera->ScreenToWorld(screenMouseX, screenMouseY);
 
-    if (input->IsPressed(GameAction::Shoot) && fireCooldown <= 0.0f) {
+    // 射撃条件: ボタン押下中 且つ クールダウン終了 且つ リロード中でない 且つ 残弾がある
+    if (input->IsPressed(GameAction::Shoot) && fireCooldown <= 0.0f && !isReloading && currentAmmo > 0) {
+
+        // 残弾を減らす
+        currentAmmo--;
+
         // shotCount の数だけ弾を同時に生成する
         for (int i = 0; i < params.gun.shotCount; ++i) {
             auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
@@ -111,7 +140,7 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         float centerY = (float)drawY + (float)height / 2.0f + params.gun.offsetY;
 
         // マウスへの角度計算
-        double gunAngle = atan2(my - (centerY - camera->y + camera->y), mx - (centerX - camera->x + camera->x)) * 180.0 / M_PI;
+        double gunAngle = atan2(my - centerY, mx - centerX) * 180.0 / M_PI;
 
         // 銃のサイズ（64x32）
         int gunW = 64;
@@ -122,6 +151,14 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         // 銃が逆さまにならないようにフリップ処理
         SDL_RendererFlip gunFlip = (gunAngle > 90 || gunAngle < -90) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
 
+        // リロード中は銃を少し透明にするなどの演出
+        if (isReloading) {
+            SDL_SetTextureAlphaMod(gunTexture.get(), 128);
+        }
+        else {
+            SDL_SetTextureAlphaMod(gunTexture.get(), 255);
+        }
+
         SDL_RenderCopyEx(renderer, gunTexture.get(), NULL, &gunDest, gunAngle, NULL, gunFlip);
     }
 }
@@ -129,7 +166,6 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture* bulletTex) {
     GameParams& params = GameParams::GetInstance();
 
-    // ★修正箇所：銃のオフセット位置を発射起点（マズル位置のベース）にする
     float spawnX = x + (width / 2.0f) + params.gun.offsetX;
     float spawnY = y + (height / 2.0f) + params.gun.offsetY;
 
@@ -138,25 +174,20 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
     float dy = targetY - spawnY;
     float baseAngleRad = atan2(dy, dx);
 
-    // 0除算防止
     if (dx == 0 && dy == 0) return nullptr;
 
     // 集弾率（スプレッド）の適用
     static std::random_device rd;
     static std::mt19937 gen(rd());
 
-    // 度数法をラジアンに変換
     float spreadRad = params.gun.spreadAngle * (M_PI / 180.0f);
     std::uniform_real_distribution<float> dist(-spreadRad / 2.0f, spreadRad / 2.0f);
 
-    // 最終的な発射角度
     double finalAngleRad = baseAngleRad + dist(gen);
 
-    // 最終的な速度ベクトルを算出
     float vx = (float)cos(finalAngleRad) * params.gun.bulletSpeed;
     float vy = (float)sin(finalAngleRad) * params.gun.bulletSpeed;
 
-    // Bulletの生成 (x, y, w, h, vx, vy, damage, texture)
     return std::make_unique<Bullet>(
         spawnX - 5, spawnY - 5,
         10, 10,
@@ -178,9 +209,11 @@ int Player::GetMaxHP() const {
 }
 
 void Player::RefreshGunConfig(SDL_Renderer* renderer) {
-    // GameParams に保存されているパスからテクスチャをロード
     std::string path = GameParams::GetInstance().gun.texturePath;
     if (!path.empty()) {
         gunTexture = TextureManager::LoadTexture(path.c_str(), renderer);
     }
+    // 武器設定が変わった際、現在の残弾もリセットする
+    currentAmmo = GameParams::GetInstance().gun.magazineSize;
+    isReloading = false;
 }

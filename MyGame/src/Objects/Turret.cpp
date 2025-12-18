@@ -18,11 +18,17 @@ Turret::Turret(float x, float y, const WeaponConfig& config, SDL_Texture* tex)
     weaponConfig(config),
     fireCooldown(0.0f),
     currentTarget(nullptr),
-    rotationAngle(0.0f)
+    rotationAngle(0.0f),
+    reloadTimer(0.0f),
+    isReloading(false)
 {
     name = "Turret (" + config.name + ")";
     useGravity = false;
     isTrigger = false;
+
+    // 残弾初期化
+    currentAmmo = config.magazineSize;
+
     if (config.fireRate > 0) {
         fireCooldown = 1.0f / config.fireRate;
     }
@@ -30,6 +36,17 @@ Turret::Turret(float x, float y, const WeaponConfig& config, SDL_Texture* tex)
 
 void Turret::Update(Game* game) {
     if (isDead) return;
+
+    // --- リロードタイマーの更新 ---
+    if (isReloading) {
+        reloadTimer -= Time::deltaTime;
+        if (reloadTimer <= 0) {
+            currentAmmo = weaponConfig.magazineSize;
+            isReloading = false;
+            std::cout << name << " Reload Complete!" << std::endl;
+        }
+        return; // リロード中は索敵・射撃を行わない
+    }
 
     if (fireCooldown > 0) {
         fireCooldown -= Time::deltaTime;
@@ -41,8 +58,18 @@ void Turret::Update(Game* game) {
 
     if (currentTarget) {
         RotateTowardTarget(Time::deltaTime);
+
+        // クールダウン終了判定
         if (fireCooldown <= 0.0f) {
-            Fire(game);
+            // 弾がある場合は射撃、弾がない場合はリロード開始
+            if (currentAmmo > 0) {
+                Fire(game);
+            }
+            else {
+                isReloading = true;
+                reloadTimer = weaponConfig.reloadTime;
+                std::cout << name << " Out of ammo! Reloading..." << std::endl;
+            }
         }
     }
 }
@@ -91,6 +118,9 @@ void Turret::Fire(Game* game) {
         fireCooldown = std::numeric_limits<float>::max();
     }
 
+    // 弾数を減らす
+    currentAmmo--;
+
     float targetAngle = GetAngleToTarget();
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -121,7 +151,15 @@ void Turret::SpawnBullet(Game* game, float initialAngle) {
 
 void Turret::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_Rect destRect = { drawX, drawY, width, height };
-    SDL_SetRenderDrawColor(renderer, 50, 50, 150, 255);
+
+    // リロード中は色を変えるなどの視覚効果
+    if (isReloading) {
+        SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 50, 50, 150, 255);
+    }
+
     SDL_RenderFillRect(renderer, &destRect);
 
     int turretCenterX = drawX + width / 2;

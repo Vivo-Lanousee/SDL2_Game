@@ -137,7 +137,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
             std::string title = "Editor";
             switch (currentConfigView) {
             case ConfigViewMode::PLAYER:  title += " [Player]"; break;
-            case ConfigViewMode::GUN:     title += " [Gun]";    break;
+            case ConfigViewMode::GUN:      title += " [Gun]";    break;
             case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
             case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
             default: return;
@@ -148,7 +148,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 ImGui::Separator();
                 switch (currentConfigView) {
                 case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
-                case ConfigViewMode::GUN:     DrawGunConfigPanel(params, renderer, currentScene); break;
+                case ConfigViewMode::GUN:      DrawGunConfigPanel(params, renderer, currentScene); break;
                 case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
                 default: break;
@@ -288,6 +288,12 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
         ImGui::InputInt("Damage", &params.gun.damage);
         ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg");
         ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20);
+
+        // ★リロード関連のUI
+        ImGui::Separator();
+        ImGui::Text("Magazine & Reload");
+        ImGui::SliderInt("Mag Size", &params.gun.magazineSize, 1, 200);
+        ImGui::SliderFloat("Reload Time", &params.gun.reloadTime, 0.1f, 10.0f, "%.1f sec");
 
         ImGui::Separator();
         ImGui::Text("Visual Offsets (Display)");

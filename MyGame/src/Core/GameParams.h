@@ -26,24 +26,27 @@ struct PlayerParams {
         };
     }
     friend void from_json(const json& j, PlayerParams& p) {
-        j.at("moveSpeed").get_to(p.moveSpeed);
-        j.at("jumpVelocity").get_to(p.jumpVelocity);
-        j.at("maxHealth").get_to(p.maxHealth);
+        if (j.contains("moveSpeed")) j.at("moveSpeed").get_to(p.moveSpeed);
+        if (j.contains("jumpVelocity")) j.at("jumpVelocity").get_to(p.jumpVelocity);
+        if (j.contains("maxHealth")) j.at("maxHealth").get_to(p.maxHealth);
     }
 };
 
 
-// --- 銃のパラメータ構造体 (同時発射数とオフセットを追加) ---
+// --- 銃のパラメータ構造体 (同時発射数、オフセット、弾倉、リロードを追加) ---
 struct GunParams {
     float fireRate = 0.2f;      // 発射間隔（秒）
     float bulletSpeed = 800.0f; // 弾の速度
     int damage = 10;            // 攻撃力
     float spreadAngle = 5.0f;   // 集弾率（拡散角度 0〜45度想定）
 
-    // ★追加パラメータ
     int shotCount = 1;          // 同時発射数（ショットガン等）
     float offsetX = 0.0f;       // 銃の表示位置オフセットX
     float offsetY = 0.0f;       // 銃の表示位置オフセットY
+
+    // ★追加パラメータ
+    int magazineSize = 30;      // 最大装弾数
+    float reloadTime = 1.5f;    // リロード時間（秒）
 
     std::string texturePath = "assets/images/guns/default_gun.png"; // 銃の画像パス
 
@@ -54,23 +57,30 @@ struct GunParams {
             {"bulletSpeed", p.bulletSpeed},
             {"damage", p.damage},
             {"spreadAngle", p.spreadAngle},
-            {"shotCount", p.shotCount},    // ★
-            {"offsetX", p.offsetX},        // ★
-            {"offsetY", p.offsetY},        // ★
+            {"shotCount", p.shotCount},
+            {"offsetX", p.offsetX},
+            {"offsetY", p.offsetY},
+            {"magazineSize", p.magazineSize}, // ★
+            {"reloadTime", p.reloadTime},     // ★
             {"texturePath", p.texturePath}
         };
     }
     // JSON デシリアライズ用関数
     friend void from_json(const json& j, GunParams& p) {
-        j.at("fireRate").get_to(p.fireRate);
-        j.at("bulletSpeed").get_to(p.bulletSpeed);
-        j.at("damage").get_to(p.damage);
+        if (j.contains("fireRate")) j.at("fireRate").get_to(p.fireRate);
+        if (j.contains("bulletSpeed")) j.at("bulletSpeed").get_to(p.bulletSpeed);
+        if (j.contains("damage")) j.at("damage").get_to(p.damage);
 
         // 追加された項目は contains で存在チェックを行うと古いJSONとの互換性が保てます
         if (j.contains("spreadAngle")) j.at("spreadAngle").get_to(p.spreadAngle);
-        if (j.contains("shotCount"))   j.at("shotCount").get_to(p.shotCount);   // ★
-        if (j.contains("offsetX"))     j.at("offsetX").get_to(p.offsetX);       // ★
-        if (j.contains("offsetY"))     j.at("offsetY").get_to(p.offsetY);       // ★
+        if (j.contains("shotCount"))   j.at("shotCount").get_to(p.shotCount);
+        if (j.contains("offsetX"))     j.at("offsetX").get_to(p.offsetX);
+        if (j.contains("offsetY"))     j.at("offsetY").get_to(p.offsetY);
+
+        // ★リロード関連のデシリアライズ
+        if (j.contains("magazineSize")) j.at("magazineSize").get_to(p.magazineSize);
+        if (j.contains("reloadTime"))   j.at("reloadTime").get_to(p.reloadTime);
+
         if (j.contains("texturePath")) j.at("texturePath").get_to(p.texturePath);
     }
 };
@@ -88,8 +98,8 @@ struct PhysicsParams {
         };
     }
     friend void from_json(const json& j, PhysicsParams& p) {
-        j.at("gravity").get_to(p.gravity);
-        j.at("terminalVelocity").get_to(p.terminalVelocity);
+        if (j.contains("gravity")) j.at("gravity").get_to(p.gravity);
+        if (j.contains("terminalVelocity")) j.at("terminalVelocity").get_to(p.terminalVelocity);
     }
 };
 
@@ -106,14 +116,15 @@ struct EnemyParams {
         };
     }
     friend void from_json(const json& j, EnemyParams& p) {
-        j.at("baseSpeed").get_to(p.baseSpeed);
-        j.at("baseHealth").get_to(p.baseHealth);
+        if (j.contains("baseSpeed")) j.at("baseSpeed").get_to(p.baseSpeed);
+        if (j.contains("baseHealth")) j.at("baseHealth").get_to(p.baseHealth);
     }
 };
 
 
 // 全てのパラメータを管理するシングルトン構造体
 struct GameParams {
+public:
     static GameParams& GetInstance() {
         static GameParams instance;
         return instance;
@@ -175,19 +186,6 @@ struct GameParams {
         p.applyActivePresets();
     }
 
-private:
-    GameParams() {
-        // 初期状態として「Default」プリセットを登録
-        playerPresets["Default"] = player;
-        activePlayerPresetName = "Default";
-
-        gunPresets["Default"] = gun;
-        activeGunPresetName = "Default";
-
-        enemyPresets["Default"] = enemy;
-        activeEnemyPresetName = "Default";
-    }
-
     void applyActivePresets() {
         // Player 適用
         if (playerPresets.count(activePlayerPresetName)) {
@@ -215,6 +213,19 @@ private:
             activeEnemyPresetName = "Default";
             if (enemyPresets.count("Default")) enemy = enemyPresets.at("Default");
         }
+    }
+
+private:
+    GameParams() {
+        // 初期状態として「Default」プリセットを登録
+        playerPresets["Default"] = player;
+        activePlayerPresetName = "Default";
+
+        gunPresets["Default"] = gun;
+        activeGunPresetName = "Default";
+
+        enemyPresets["Default"] = enemy;
+        activeEnemyPresetName = "Default";
     }
 
     GameParams(const GameParams&) = delete;

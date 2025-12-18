@@ -3,10 +3,26 @@
 #include <SDL.h>
 #include <vector>
 #include <memory>
-#include "../Weapons/WeaponConfig.h" 
+#include <string>
 
 class Enemy;
 class Game;
+
+// 武器の設定用構造体
+struct WeaponConfig {
+    std::string name;
+    float fireRate;      // 発射速度（秒間）
+    float bulletSpeed;
+    int damage;
+    float range;
+    float spreadAngle;
+    int bulletWidth;
+    int bulletHeight;
+
+    // ★リロード用に追加
+    int magazineSize;
+    float reloadTime;
+};
 
 class Turret : public GameObject {
 public:
@@ -23,6 +39,11 @@ private:
 
     Enemy* currentTarget;
     float rotationAngle;
+
+    // ★リロード管理用に追加
+    int currentAmmo;
+    float reloadTimer;
+    bool isReloading;
 
     void FindTarget(const std::vector<std::unique_ptr<GameObject>>& gameObjects);
     void RotateTowardTarget(float deltaTime);

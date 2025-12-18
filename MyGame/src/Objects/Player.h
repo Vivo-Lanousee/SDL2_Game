@@ -4,12 +4,16 @@
 #include "../Core/Animator.h"
 #include "../TextureManager.h"
 #include <memory>
+#include <string>
 
 // 前方宣言
 class Game;
 class Camera;
 class Bullet;
 struct SDL_Texture;
+
+// 共通のスマートポインタ定義（環境に合わせて調整してください）
+using SharedTexturePtr = std::shared_ptr<SDL_Texture>;
 
 struct UnitStatus {
     int hp;
@@ -42,11 +46,16 @@ private:
 
     double angle;
     SDL_Texture* bulletTexture;  // 弾のテクスチャ
-    SharedTexturePtr gunTexture; // ★追加: 銃本体のテクスチャ
+    SharedTexturePtr gunTexture; // 銃本体のテクスチャ
     Camera* camera;
 
-    float fireCooldown;          // ★追加: 連射間隔の管理用
+    float fireCooldown;          // 連射間隔の管理用
     float currentHealth;
+
+    // ★リロード管理用に追加
+    int currentAmmo;
+    float reloadTimer;
+    bool isReloading;
 
     std::unique_ptr<Animator> animator;
 

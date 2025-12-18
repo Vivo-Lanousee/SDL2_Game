@@ -9,6 +9,7 @@ enum class GameAction {
     MoveLeft,
     MoveRight,
     Shoot,
+    Reload,  // ★追加: リロードアクション
     Pause
 };
 
@@ -20,8 +21,10 @@ public:
         keyMap[GameAction::MoveDown] = SDL_SCANCODE_S;
         keyMap[GameAction::MoveLeft] = SDL_SCANCODE_A;
         keyMap[GameAction::MoveRight] = SDL_SCANCODE_D;
+        keyMap[GameAction::Reload] = SDL_SCANCODE_R;      // ★追加: Rキーをリロードに割り当て
         keyMap[GameAction::Pause] = SDL_SCANCODE_ESCAPE;
 
+        // --- マウス設定 ---
         mouseMap[GameAction::Shoot] = SDL_BUTTON_LEFT;
 
 
