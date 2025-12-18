@@ -4,7 +4,9 @@
 #include <memory>
 #include <SDL.h>
 #include "../Objects/GameObject.h"
+#include "../Objects/Player.h"
 #include "../Core/Camera.h"
+#include "../TextureManager.h"
 
 class Game;
 
@@ -16,15 +18,12 @@ public:
     void OnEnter(Game* game) override;
     void OnExit(Game* game) override;
 
-    // 引数を (Game* game, SDL_Event* event) に修正
     void HandleEvents(Game* game, SDL_Event* event) override;
     void Update(Game* game) override;
     void Render(Game* game) override;
 
-    // エディタシーンなので true を返す
     bool ShowImGui() const override { return true; };
 
-    // オブジェクトリストの実装
     std::vector<std::unique_ptr<GameObject>>& GetObjects() override { return gameObjects; }
 
     std::vector<SDL_FPoint>& GetEnemyPath() { return enemyPath; }
@@ -33,5 +32,13 @@ private:
     std::vector<std::unique_ptr<GameObject>> gameObjects;
     std::vector<SDL_FPoint> enemyPath;
     std::unique_ptr<Camera> camera;
-    GameObject* selectedObject;
+
+    // テストプレイ用のポインタ
+    Player* testPlayer = nullptr;
+
+    // エディタでもプレイヤーを表示するためのテクスチャ
+    SharedTexturePtr playerTexture;
+    SharedTexturePtr bulletTexture;
+
+    GameObject* selectedObject = nullptr;
 };

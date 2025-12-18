@@ -28,6 +28,9 @@ public:
     // 選択中のオブジェクト (Inspector連動用)
     static GameObject* selectedObject;
 
+    // --- 追加: テストモードの管理 ---
+    static bool isTestMode;
+
 private:
     // 内部描画関数
     static void DrawHierarchy(Scene* currentScene);

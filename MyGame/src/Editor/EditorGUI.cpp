@@ -16,6 +16,7 @@
 GameObject* EditorGUI::selectedObject = nullptr;
 EditorGUI::Mode EditorGUI::currentMode = EditorGUI::Mode::GAME;
 EditorGUI::ConfigViewMode EditorGUI::currentConfigView = EditorGUI::ConfigViewMode::NONE;
+bool EditorGUI::isTestMode = false;
 
 // --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
@@ -175,6 +176,15 @@ static void DrawPlayerConfigPanel(GameParams& params) {
         strncpy_s(nameBuf, params.activePlayerPresetName.c_str(), _TRUNCATE);
     }
 
+    // --- テストプレイボタンの実装 ---
+    ImGui::PushStyleColor(ImGuiCol_Button, EditorGUI::isTestMode ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+    std::string btnLabel = EditorGUI::isTestMode ? "🛑 STOP TEST" : "🚀 SPAWN TEST PLAYER";
+    if (ImGui::Button(btnLabel.c_str(), ImVec2(-1, 40))) {
+        EditorGUI::isTestMode = !EditorGUI::isTestMode;
+    }
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+
     if (ImGui::CollapsingHeader("Edit Active Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Speed", &params.player.moveSpeed, 50.0f, 600.0f, "%.1f");
         ImGui::SliderFloat("Jump", &params.player.jumpVelocity, 100.0f, 1000.0f, "%.1f");
@@ -214,7 +224,6 @@ static void DrawPlayerConfigPanel(GameParams& params) {
         }
 
         ImGui::Separator();
-        // ★ 修正箇所：newNameBuf から nameBuf に修正
         ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
         float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
         if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
