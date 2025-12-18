@@ -30,22 +30,22 @@ public:
     int GetHP() const { return (int)currentHealth; }
     int GetMaxHP() const;
 
-    // 現在のGameParamsに合わせて銃の見た目を更新する
-    void RefreshGunTexture(SDL_Renderer* renderer);
+    // エディタで画像が変更された際などに呼び出してテクスチャを再ロードする
+    void RefreshGunConfig(SDL_Renderer* renderer);
 
 public:
     UnitStatus status;
 
 private:
-    // unique_ptr<Bullet> を返すように変更
+    // 弾を生成して返す内部関数
     std::unique_ptr<Bullet> Shoot(float targetX, float targetY, SDL_Texture* bulletTex);
 
     double angle;
-    SDL_Texture* bulletTexture; // 弾のテクスチャ
-    SharedTexturePtr gunTexture; // 銃本体のテクスチャ
+    SDL_Texture* bulletTexture;  // 弾のテクスチャ
+    SharedTexturePtr gunTexture; // ★追加: 銃本体のテクスチャ
     Camera* camera;
 
-    float fireCooldown; // 連射管理用タイマー
+    float fireCooldown;          // ★追加: 連射間隔の管理用
     float currentHealth;
 
     std::unique_ptr<Animator> animator;

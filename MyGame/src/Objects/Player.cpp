@@ -28,8 +28,9 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
     animator = std::make_unique<Animator>();
     animator->LoadFromJson("assets/data/player.json");
 
-    // 初回の銃テクスチャ読み込み
-    // 実際の運用では Game::GetRenderer() などから renderer を渡す必要があります
+    // 初期化時に現在の設定で銃をロード
+    // ※この時点ではまだ renderer が確定していない場合があるため、
+    // 最初の描画やUpdate内で必要に応じて RefreshGunConfig が呼ばれるようにします。
 }
 
 void Player::Update(Game* game) {
@@ -38,10 +39,9 @@ void Player::Update(Game* game) {
 
     animator->Update();
 
-    // 1. 移動処理
+    // 1. 移動ロジック (GameParamsの数値を即時反映)
     float moveSpeed = params.player.moveSpeed;
     velX = 0;
-
     if (input->IsPressed(GameAction::MoveLeft)) {
         velX = -moveSpeed;
         isFlipLeft = true;
@@ -58,7 +58,7 @@ void Player::Update(Game* game) {
         animator->Play("Idle");
     }
 
-    // 2. ジャンプ処理
+    // 2. ジャンプロジック
     if (input->IsJustPressed(GameAction::MoveUp)) {
         if (isGrounded) {
             velY = -params.player.jumpVelocity;
@@ -66,24 +66,26 @@ void Player::Update(Game* game) {
         }
     }
 
-    // 3. 射撃タイマー更新
+    // 3. 銃のテクスチャが未ロード、またはパスが変更された場合に更新
+    if (!gunTexture) {
+        RefreshGunConfig(game->GetRenderer());
+    }
+
+    // 4. 連射クールダウンの更新
     if (fireCooldown > 0) {
         fireCooldown -= Time::deltaTime;
     }
 
-    // 4. マウス位置取得
+    // 5. 射撃処理
     int screenMouseX, screenMouseY;
     SDL_GetMouseState(&screenMouseX, &screenMouseY);
     SDL_FPoint worldMouse = camera->ScreenToWorld(screenMouseX, screenMouseY);
 
-    // 5. 射撃実行
-    // params.gun.fireRate (秒) を使用
     if (input->IsPressed(GameAction::Shoot) && fireCooldown <= 0.0f) {
         auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
-
         if (newBullet) {
             game->Instantiate(std::move(newBullet));
-            // 次の射撃までの待ち時間を設定
+            // GameParamsに設定された連射間隔を適用
             fireCooldown = params.gun.fireRate;
         }
     }
@@ -98,25 +100,29 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     if (texture) {
         SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, angle, NULL, flip);
     }
-    else {
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(renderer, &destRect);
+
+    // --- 銃の描画ロジック ---
+    if (gunTexture) {
+        int mx, my;
+        SDL_GetMouseState(&mx, &my);
+
+        // プレイヤーの中心（肩のあたり）を回転軸にする
+        float centerX = (float)drawX + (float)width / 2.0f;
+        float centerY = (float)drawY + (float)height / 2.0f;
+
+        // マウスへの角度計算
+        double gunAngle = atan2(my - (centerY - camera->y + camera->y), mx - (centerX - camera->x + camera->x)) * 180.0 / M_PI;
+
+        // 銃のサイズ（仮に 64x32 とする。必要ならGameParamsに持たせても良い）
+        int gunW = 64;
+        int gunH = 32;
+        SDL_Rect gunDest = { (int)centerX - gunW / 4, (int)centerY - gunH / 2, gunW, gunH };
+
+        // 銃が逆さまにならないようにフリップ処理
+        SDL_RendererFlip gunFlip = (gunAngle > 90 || gunAngle < -90) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
+
+        SDL_RenderCopyEx(renderer, gunTexture.get(), NULL, &gunDest, gunAngle, NULL, gunFlip);
     }
-
-    // --- 銃の描画ロジック (追加) ---
-    // マウスの方向を向く「銃」のビジュアルを作成
-    int mx, my;
-    SDL_GetMouseState(&mx, &my);
-
-    float centerX = (float)drawX + (float)width / 2.0f;
-    float centerY = (float)drawY + (float)height / 2.0f;
-    double gunAngle = atan2(my - (centerY - camera->y + camera->y), mx - (centerX - camera->x + camera->x)) * 180.0 / M_PI;
-
-    // 簡易的な銃のライン描画 (テクスチャがない場合の代わり)
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-    int lineEndX = (int)(centerX + cos(gunAngle * M_PI / 180.0) * 40);
-    int lineEndY = (int)(centerY + sin(gunAngle * M_PI / 180.0) * 40);
-    SDL_RenderDrawLine(renderer, (int)centerX, (int)centerY, lineEndX, lineEndY);
 }
 
 std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture* bulletTex) {
@@ -129,12 +135,14 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
     float dy = targetY - spawnY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 弾の速度ベクトルを計算 (GameParams の bulletSpeed を使用)
+    // 0除算防止
+    if (distance == 0) return nullptr;
+
+    // GameParams の bulletSpeed を使って弾の速度を決定
     float vx = (dx / distance) * params.gun.bulletSpeed;
     float vy = (dy / distance) * params.gun.bulletSpeed;
 
-    // Bullet のコンストラクタに合わせて生成
-    // (x, y, width, height, velX, velY, damage, texture)
+    // Bulletの生成 (x, y, w, h, vx, vy, damage, texture)
     return std::make_unique<Bullet>(
         spawnX - 5, spawnY - 5,
         10, 10,
@@ -145,7 +153,7 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
 }
 
 void Player::TakeDamage(int damage) {
-    currentHealth -= damage;
+    currentHealth -= (float)damage;
     float maxHp = GameParams::GetInstance().player.maxHealth;
     if (currentHealth < 0) currentHealth = 0;
     if (currentHealth > maxHp) currentHealth = maxHp;
@@ -155,7 +163,10 @@ int Player::GetMaxHP() const {
     return (int)GameParams::GetInstance().player.maxHealth;
 }
 
-void Player::RefreshGunTexture(SDL_Renderer* renderer) {
+void Player::RefreshGunConfig(SDL_Renderer* renderer) {
+    // GameParams に保存されているパスからテクスチャをロード
     std::string path = GameParams::GetInstance().gun.texturePath;
-    gunTexture = TextureManager::LoadTexture(path.c_str(), renderer);
+    if (!path.empty()) {
+        gunTexture = TextureManager::LoadTexture(path.c_str(), renderer);
+    }
 }
