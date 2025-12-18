@@ -103,6 +103,7 @@
     <ClInclude Include="src\Weapons\WeaponConfig.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\images\guns\GR1_c.png" />
     <Image Include="assets\images\player.png" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +196,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)libs\SDL2\include;$(SolutionDir)libs\SDL2_image\include;$(SolutionDir)libs\SDL2_ttf\include;$(ProjectDir)Objects;$(ProjectDir)include;$(SolutionDir)libs\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

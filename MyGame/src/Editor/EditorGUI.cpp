@@ -7,10 +7,17 @@
 #include <map>
 #include <algorithm> 
 #include <cstring> 
+#include <filesystem> // ★C++17必須
+#include <windows.h>  // ★ファイルダイアログ用
+#include <commdlg.h>  // ★ファイルダイアログ用
+
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
 #include "../Objects/GameObject.h"
 #include "../Core/ConfigManager.h" 
+
+// filesystemの名前空間を短縮
+namespace fs = std::filesystem;
 
 // 静的メンバ変数の実体
 GameObject* EditorGUI::selectedObject = nullptr;
@@ -20,7 +27,7 @@ bool EditorGUI::isTestMode = false;
 
 // --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
-static void DrawGunConfigPanel(GameParams& params); // ★追加
+static void DrawGunConfigPanel(GameParams& params);
 static void DrawEnemyConfigPanel(GameParams& params);
 static void DrawPhysicsConfigPanel(GameParams& params);
 
@@ -54,6 +61,51 @@ void EditorGUI::Clean() {
 
 void EditorGUI::SetMode(Mode newMode) {
     currentMode = newMode;
+}
+
+// ★追加: Windows標準のファイル選択ダイアログを開き、指定フォルダへコピーする関数
+std::string EditorGUI::ImportTexture() {
+    char szFile[260] = { 0 };
+    OPENFILENAMEA ofn;
+    SecureZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "PNG Files\0*.png\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+    if (GetOpenFileNameA(&ofn)) {
+        fs::path srcPath(szFile);
+
+        // 保存先ディレクトリ: assets/images/guns/
+        std::string destDir = "assets/images/guns/";
+
+        try {
+            // フォルダがなければ作成
+            if (!fs::exists(destDir)) {
+                fs::create_directories(destDir);
+            }
+
+            // ファイル名を取得してコピー先パスを作成
+            std::string fileName = srcPath.filename().string();
+            std::string destPath = destDir + fileName;
+
+            // ファイルを上書きコピー
+            fs::copy_file(srcPath, destPath, fs::copy_options::overwrite_existing);
+
+            std::cout << "Import Success: " << destPath << std::endl;
+            return destPath; // プロジェクト内相対パスを返す
+        }
+        catch (const fs::filesystem_error& e) {
+            std::cerr << "File system error: " << e.what() << std::endl;
+        }
+    }
+    return "";
 }
 
 void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
@@ -126,12 +178,12 @@ void EditorGUI::DrawInspector() {
 
 void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(200, 260), ImGuiCond_Once); // 高さを少し調整
+    ImGui::SetNextWindowSize(ImVec2(200, 260), ImGuiCond_Once);
 
     ImGui::Begin("🛠️ Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
     if (ImGui::Button("🏃 Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
-    if (ImGui::Button("🔫 Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN; // ★追加
+    if (ImGui::Button("🔫 Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
     if (ImGui::Button("👹 Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
     if (ImGui::Button("🌍 Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
 
@@ -152,7 +204,7 @@ void EditorGUI::DrawConfigEditorWindow() {
     std::string title = "⚙️ Editor";
     switch (currentConfigView) {
     case ConfigViewMode::PLAYER:  title += " [Player]"; break;
-    case ConfigViewMode::GUN:     title += " [Gun]";    break; // ★追加
+    case ConfigViewMode::GUN:     title += " [Gun]";    break;
     case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
     case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
     default: return;
@@ -163,7 +215,7 @@ void EditorGUI::DrawConfigEditorWindow() {
         ImGui::Separator();
         switch (currentConfigView) {
         case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
-        case ConfigViewMode::GUN:     DrawGunConfigPanel(params);     break; // ★追加
+        case ConfigViewMode::GUN:     DrawGunConfigPanel(params);     break;
         case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
         case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
         default: break;
@@ -195,113 +247,70 @@ static void DrawPlayerConfigPanel(GameParams& params) {
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled("Presets List:");
-        std::string toDelete = "";
-
         ImGui::BeginChild("PlayerPresetList", ImVec2(0, 120), true);
         for (auto it = params.playerPresets.begin(); it != params.playerPresets.end(); ++it) {
             const std::string& name = it->first;
-            const PlayerParams& data = it->second;
-
-            ImGui::PushID(name.c_str());
-            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
-            ImGui::SameLine();
-
-            bool isCurrent = (params.activePlayerPresetName == name);
-            if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                params.player = data;
+            if (ImGui::Selectable(name.c_str(), params.activePlayerPresetName == name)) {
+                params.player = it->second;
                 params.activePlayerPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
             }
-            if (isCurrent) ImGui::PopStyleColor();
-            ImGui::PopID();
         }
         ImGui::EndChild();
 
-        if (!toDelete.empty()) {
-            params.playerPresets.erase(toDelete);
-            if (params.activePlayerPresetName == toDelete) params.activePlayerPresetName = "";
-        }
-
-        ImGui::Separator();
         ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
-        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
-        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
-            params.playerPresets[nameBuf] = params.player;
-            params.activePlayerPresetName = nameBuf;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+        if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
             params.playerPresets[nameBuf] = params.player;
             params.activePlayerPresetName = nameBuf;
         }
     }
 }
 
-// ★追加: 銃のエディタパネル
 static void DrawGunConfigPanel(GameParams& params) {
     static char nameBuf[64] = "";
-    static char pathBuf[256] = ""; // 画像パス用バッファ
+    static char pathBuf[256] = "";
 
-    // 初期値セット
     if (nameBuf[0] == '\0' && !params.activeGunPresetName.empty()) {
         strncpy_s(nameBuf, params.activeGunPresetName.c_str(), _TRUNCATE);
     }
-    // テクスチャパスをバッファに同期
     strncpy_s(pathBuf, params.gun.texturePath.c_str(), _TRUNCATE);
 
     if (ImGui::CollapsingHeader("Edit Active Gun Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec");
-        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 150.0f, "%.0f");
+        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f");
         ImGui::InputInt("Damage", &params.gun.damage);
 
-        // ★銃の画像パス入力
-        if (ImGui::InputText("Texture Path", pathBuf, IM_ARRAYSIZE(pathBuf))) {
+        ImGui::Separator();
+        ImGui::Text("Appearance");
+        ImGui::Text("Current Path: %s", params.gun.texturePath.c_str());
+
+        // ★修正ポイント: ファイルインポートボタンの設置
+        if (ImGui::Button("📂 Import Gun Image", ImVec2(-1, 30))) {
+            std::string newPath = EditorGUI::ImportTexture();
+            if (!newPath.empty()) {
+                params.gun.texturePath = newPath;
+            }
+        }
+
+        if (ImGui::InputText("Texture Path (Manual)", pathBuf, IM_ARRAYSIZE(pathBuf))) {
             params.gun.texturePath = pathBuf;
         }
-        ImGui::TextDisabled("Example: assets/images/handgun.png");
     }
 
     if (ImGui::CollapsingHeader("Gun Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled("Gun Presets List:");
-        std::string toDelete = "";
-
         ImGui::BeginChild("GunPresetList", ImVec2(0, 120), true);
         for (auto it = params.gunPresets.begin(); it != params.gunPresets.end(); ++it) {
             const std::string& name = it->first;
-            const GunParams& data = it->second;
-
-            ImGui::PushID(name.c_str());
-            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
-            ImGui::SameLine();
-
-            bool isCurrent = (params.activeGunPresetName == name);
-            if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.7f, 1.0f));
-            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                params.gun = data;
+            if (ImGui::Selectable(name.c_str(), params.activeGunPresetName == name)) {
+                params.gun = it->second;
                 params.activeGunPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
             }
-            if (isCurrent) ImGui::PopStyleColor();
-            ImGui::PopID();
         }
         ImGui::EndChild();
 
-        if (!toDelete.empty()) {
-            params.gunPresets.erase(toDelete);
-            if (params.activeGunPresetName == toDelete) params.activeGunPresetName = "";
-        }
-
-        ImGui::Separator();
         ImGui::InputText("Preset Name", nameBuf, IM_ARRAYSIZE(nameBuf));
-        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
-        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
-            params.gunPresets[nameBuf] = params.gun;
-            params.activeGunPresetName = nameBuf;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+        if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
             params.gunPresets[nameBuf] = params.gun;
             params.activeGunPresetName = nameBuf;
         }
@@ -320,44 +329,19 @@ static void DrawEnemyConfigPanel(GameParams& params) {
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled("Presets List:");
-        std::string toDelete = "";
-
         ImGui::BeginChild("EnemyPresetList", ImVec2(0, 120), true);
         for (auto it = params.enemyPresets.begin(); it != params.enemyPresets.end(); ++it) {
             const std::string& name = it->first;
-            const EnemyParams& data = it->second;
-
-            ImGui::PushID(name.c_str());
-            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
-            ImGui::SameLine();
-
-            bool isCurrent = (params.activeEnemyPresetName == name);
-            if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.7f, 0.2f, 1.0f));
-            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                params.enemy = data;
+            if (ImGui::Selectable(name.c_str(), params.activeEnemyPresetName == name)) {
+                params.enemy = it->second;
                 params.activeEnemyPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
             }
-            if (isCurrent) ImGui::PopStyleColor();
-            ImGui::PopID();
         }
         ImGui::EndChild();
 
-        if (!toDelete.empty()) {
-            params.enemyPresets.erase(toDelete);
-            if (params.activeEnemyPresetName == toDelete) params.activeEnemyPresetName = "";
-        }
-
-        ImGui::Separator();
         ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
-        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
-        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
-            params.enemyPresets[nameBuf] = params.enemy;
-            params.activeEnemyPresetName = nameBuf;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+        if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
             params.enemyPresets[nameBuf] = params.enemy;
             params.activeEnemyPresetName = nameBuf;
         }

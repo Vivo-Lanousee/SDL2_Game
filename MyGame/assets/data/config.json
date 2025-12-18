@@ -16,14 +16,14 @@
         "bulletSpeed": 49.0,
         "damage": 10,
         "fireRate": 0.25999999046325684,
-        "texturePath": "assets/images/gun.png"
+        "texturePath": "assets/images/guns/GR1_c.png"
     },
     "GunPresets": {
         "Default": {
             "bulletSpeed": 49.0,
             "damage": 10,
             "fireRate": 0.25999999046325684,
-            "texturePath": "assets/images/gun.png"
+            "texturePath": "assets/images/guns/GR1_c.png"
         }
     },
     "Physics": {
@@ -31,7 +31,7 @@
         "terminalVelocity": 1537.0
     },
     "Player": {
-        "jumpVelocity": 733.5,
+        "jumpVelocity": 1000.0,
         "maxHealth": 100.0,
         "moveSpeed": 440.20001220703125
     },

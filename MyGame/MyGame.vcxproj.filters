@@ -204,6 +204,9 @@
     <Image Include="assets\images\player.png">
       <Filter>リソース ファイル</Filter>
     </Image>
+    <Image Include="assets\images\guns\GR1_c.png">
+      <Filter>リソース ファイル</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="assets\fonts\PixelMplus10.ttf" />
