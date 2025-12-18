@@ -20,6 +20,7 @@ bool EditorGUI::isTestMode = false;
 
 // --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
+static void DrawGunConfigPanel(GameParams& params); // ★追加
 static void DrawEnemyConfigPanel(GameParams& params);
 static void DrawPhysicsConfigPanel(GameParams& params);
 
@@ -125,11 +126,12 @@ void EditorGUI::DrawInspector() {
 
 void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(200, 220), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(200, 260), ImGuiCond_Once); // 高さを少し調整
 
     ImGui::Begin("🛠️ Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
     if (ImGui::Button("🏃 Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
+    if (ImGui::Button("🔫 Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN; // ★追加
     if (ImGui::Button("👹 Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
     if (ImGui::Button("🌍 Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
 
@@ -149,8 +151,9 @@ void EditorGUI::DrawConfigEditorWindow() {
 
     std::string title = "⚙️ Editor";
     switch (currentConfigView) {
-    case ConfigViewMode::PLAYER: title += " [Player]"; break;
-    case ConfigViewMode::ENEMY:  title += " [Enemy]"; break;
+    case ConfigViewMode::PLAYER:  title += " [Player]"; break;
+    case ConfigViewMode::GUN:     title += " [Gun]";    break; // ★追加
+    case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
     case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
     default: return;
     }
@@ -159,8 +162,9 @@ void EditorGUI::DrawConfigEditorWindow() {
         ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), title.c_str());
         ImGui::Separator();
         switch (currentConfigView) {
-        case ConfigViewMode::PLAYER: DrawPlayerConfigPanel(params); break;
-        case ConfigViewMode::ENEMY:  DrawEnemyConfigPanel(params); break;
+        case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
+        case ConfigViewMode::GUN:     DrawGunConfigPanel(params);     break; // ★追加
+        case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
         case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
         default: break;
         }
@@ -176,7 +180,6 @@ static void DrawPlayerConfigPanel(GameParams& params) {
         strncpy_s(nameBuf, params.activePlayerPresetName.c_str(), _TRUNCATE);
     }
 
-    // --- テストプレイボタンの実装 ---
     ImGui::PushStyleColor(ImGuiCol_Button, EditorGUI::isTestMode ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
     std::string btnLabel = EditorGUI::isTestMode ? "🛑 STOP TEST" : "🚀 SPAWN TEST PLAYER";
     if (ImGui::Button(btnLabel.c_str(), ImVec2(-1, 40))) {
@@ -192,7 +195,7 @@ static void DrawPlayerConfigPanel(GameParams& params) {
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled("Presets List (Click to Load):");
+        ImGui::TextDisabled("Presets List:");
         std::string toDelete = "";
 
         ImGui::BeginChild("PlayerPresetList", ImVec2(0, 120), true);
@@ -201,9 +204,7 @@ static void DrawPlayerConfigPanel(GameParams& params) {
             const PlayerParams& data = it->second;
 
             ImGui::PushID(name.c_str());
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
             if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
-            ImGui::PopStyleColor();
             ImGui::SameLine();
 
             bool isCurrent = (params.activePlayerPresetName == name);
@@ -238,6 +239,75 @@ static void DrawPlayerConfigPanel(GameParams& params) {
     }
 }
 
+// ★追加: 銃のエディタパネル
+static void DrawGunConfigPanel(GameParams& params) {
+    static char nameBuf[64] = "";
+    static char pathBuf[256] = ""; // 画像パス用バッファ
+
+    // 初期値セット
+    if (nameBuf[0] == '\0' && !params.activeGunPresetName.empty()) {
+        strncpy_s(nameBuf, params.activeGunPresetName.c_str(), _TRUNCATE);
+    }
+    // テクスチャパスをバッファに同期
+    strncpy_s(pathBuf, params.gun.texturePath.c_str(), _TRUNCATE);
+
+    if (ImGui::CollapsingHeader("Edit Active Gun Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec");
+        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 100.0f, 2000.0f, "%.0f");
+        ImGui::InputInt("Damage", &params.gun.damage);
+
+        // ★銃の画像パス入力
+        if (ImGui::InputText("Texture Path", pathBuf, IM_ARRAYSIZE(pathBuf))) {
+            params.gun.texturePath = pathBuf;
+        }
+        ImGui::TextDisabled("Example: assets/images/handgun.png");
+    }
+
+    if (ImGui::CollapsingHeader("Gun Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::TextDisabled("Gun Presets List:");
+        std::string toDelete = "";
+
+        ImGui::BeginChild("GunPresetList", ImVec2(0, 120), true);
+        for (auto it = params.gunPresets.begin(); it != params.gunPresets.end(); ++it) {
+            const std::string& name = it->first;
+            const GunParams& data = it->second;
+
+            ImGui::PushID(name.c_str());
+            if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
+            ImGui::SameLine();
+
+            bool isCurrent = (params.activeGunPresetName == name);
+            if (isCurrent) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.7f, 1.0f));
+            if (ImGui::Button(name.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                params.gun = data;
+                params.activeGunPresetName = name;
+                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
+            }
+            if (isCurrent) ImGui::PopStyleColor();
+            ImGui::PopID();
+        }
+        ImGui::EndChild();
+
+        if (!toDelete.empty()) {
+            params.gunPresets.erase(toDelete);
+            if (params.activeGunPresetName == toDelete) params.activeGunPresetName = "";
+        }
+
+        ImGui::Separator();
+        ImGui::InputText("Preset Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+        float btnW = ImGui::GetContentRegionAvail().x * 0.48f;
+        if (ImGui::Button("OVERWRITE", ImVec2(btnW, 30))) {
+            params.gunPresets[nameBuf] = params.gun;
+            params.activeGunPresetName = nameBuf;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("SAVE AS NEW", ImVec2(btnW, 30))) {
+            params.gunPresets[nameBuf] = params.gun;
+            params.activeGunPresetName = nameBuf;
+        }
+    }
+}
+
 static void DrawEnemyConfigPanel(GameParams& params) {
     static char nameBuf[64] = "";
     if (nameBuf[0] == '\0' && !params.activeEnemyPresetName.empty()) {
@@ -250,7 +320,7 @@ static void DrawEnemyConfigPanel(GameParams& params) {
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextDisabled("Presets List (Click to Load):");
+        ImGui::TextDisabled("Presets List:");
         std::string toDelete = "";
 
         ImGui::BeginChild("EnemyPresetList", ImVec2(0, 120), true);
@@ -259,9 +329,7 @@ static void DrawEnemyConfigPanel(GameParams& params) {
             const EnemyParams& data = it->second;
 
             ImGui::PushID(name.c_str());
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
             if (ImGui::Button("X", ImVec2(25, 0))) { toDelete = name; }
-            ImGui::PopStyleColor();
             ImGui::SameLine();
 
             bool isCurrent = (params.activeEnemyPresetName == name);
