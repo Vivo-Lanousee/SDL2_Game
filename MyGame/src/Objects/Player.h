@@ -12,7 +12,7 @@ class Camera;
 class Bullet;
 struct SDL_Texture;
 
-// 共通のスマートポインタ定義（環境に合わせて調整してください）
+// 共通のスマートポインタ定義
 using SharedTexturePtr = std::shared_ptr<SDL_Texture>;
 
 struct UnitStatus {
@@ -37,6 +37,10 @@ public:
     // エディタで画像が変更された際などに呼び出してテクスチャを再ロードする
     void RefreshGunConfig(SDL_Renderer* renderer);
 
+    // ★ EditorSceneから情報を取得するための関数を追加
+    int GetCurrentAmmo() const { return currentAmmo; }
+    bool GetIsReloading() const { return isReloading; }
+
 public:
     UnitStatus status;
 
@@ -52,7 +56,7 @@ private:
     float fireCooldown;          // 連射間隔の管理用
     float currentHealth;
 
-    // ★リロード管理用に追加
+    // リロード管理
     int currentAmmo;
     float reloadTimer;
     bool isReloading;

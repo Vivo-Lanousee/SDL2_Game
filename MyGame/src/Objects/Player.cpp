@@ -67,6 +67,8 @@ void Player::Update(Game* game) {
             isGrounded = false;
         }
     }
+
+    // 銃テクスチャがなければロードを試みる
     if (!gunTexture) {
         RefreshGunConfig(game->GetRenderer());
     }

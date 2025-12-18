@@ -6,9 +6,12 @@
 #include "../Editor/EditorGUI.h"
 #include "../Objects/Block.h"
 #include "../TextureManager.h"
+#include "../Core/GameParams.h"
+#include "../UI/TextRenderer.h"
 #include "imgui.h" 
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 EditorScene::EditorScene()
     : selectedObject(nullptr), testPlayer(nullptr)
@@ -83,7 +86,7 @@ void EditorScene::Update(Game* game) {
         camera->Follow(nullptr);
     }
 
-    // --- 2. 全オブジェクトの更新 (ここが抜けていたので弾が止まっていました) ---
+    // --- 2. 全オブジェクトの更新 ---
     for (auto& obj : gameObjects) {
         obj->Update(game);
 
@@ -124,15 +127,40 @@ void EditorScene::Render(Game* game) {
 
     // 経路描画
     SDL_SetRenderDrawColor(renderer, 255, 100, 0, 255);
-    for (size_t i = 0; i < enemyPath.size() > 1 ? enemyPath.size() - 1 : 0; ++i) {
-        SDL_RenderDrawLineF(renderer, enemyPath[i].x - camera->x, enemyPath[i].y - camera->y,
-            enemyPath[i + 1].x - camera->x, enemyPath[i + 1].y - camera->y);
+    if (enemyPath.size() > 1) {
+        for (size_t i = 0; i < enemyPath.size() - 1; ++i) {
+            SDL_RenderDrawLineF(renderer, enemyPath[i].x - camera->x, enemyPath[i].y - camera->y,
+                enemyPath[i + 1].x - camera->x, enemyPath[i + 1].y - camera->y);
+        }
     }
 
     // オブジェクト描画
     for (const auto& obj : gameObjects) {
         obj->RenderWithCamera(renderer, camera.get());
     }
+
+    // --- UI 描画 (弾数表示) ---
+    std::string ammoText = "Ammo: 0 / 0";
+    SDL_Color textColor = { 200, 200, 200, 255 }; // デフォルトはグレー
+
+    if (testPlayer && !testPlayer->isDead) {
+        int current = testPlayer->GetCurrentAmmo();
+        int max = GameParams::GetInstance().gun.magazineSize;
+        ammoText = "Ammo: " + std::to_string(current) + " / " + std::to_string(max);
+        textColor = { 255, 255, 255, 255 }; // プレイヤーがいる時は白
+
+        // リロード中の演出
+        if (testPlayer->GetIsReloading()) {
+            ammoText += " (RELOADING...)";
+            textColor = { 255, 255, 0, 255 }; // リロード中は黄色
+        }
+        else if (current == 0) {
+            textColor = { 255, 0, 0, 255 };   // 弾切れは赤
+        }
+    }
+
+    // 左下に描画 (x=20, y=画面下部から少し上)
+    TextRenderer::Draw(renderer, ammoText, 20, 550, textColor);
 
     EditorGUI::Render(renderer, this);
 }
