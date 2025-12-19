@@ -19,4 +19,8 @@ public:
 
     // マップの広さ制限
     int limitX, limitY;
+
+    // ターゲットの中心からのオフセット量
+    // 例: offsetX = 100 にすると、ターゲットより右側がより広く映るようになります
+    float offsetX, offsetY;
 };

@@ -10,7 +10,6 @@ struct WeaponConfig {
     float spreadAngle;      // 集弾性の角度 -0.0fで完全な精度。
     int   bulletWidth;      // 弾丸の幅
     int   bulletHeight;     // 弾丸の高さ
-    // 弾丸のテクスチャIDなどを追加する
 };
 
 // 武器のプロトタイプ定義例 

@@ -7,14 +7,14 @@
 #include <map>
 #include <algorithm> 
 #include <cstring> 
-#include <filesystem> // ★C++17必須
-#include <windows.h>  // ★ファイルダイアログ用
-#include <commdlg.h>  // ★ファイルダイアログ用
+#include <filesystem> 
+#include <windows.h>
+#include <commdlg.h> 
 
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
 #include "../Objects/GameObject.h"
-#include "../Objects/Player.h" // ★Playerの関数を呼ぶために追加
+#include "../Objects/Player.h"
 #include "../Core/ConfigManager.h" 
 
 // filesystemの名前空間を短縮
@@ -106,7 +106,6 @@ std::string EditorGUI::ImportTexture() {
     return "";
 }
 
-// ★ヘルパー関数: シーン内のプレイヤーを見つけて銃の設定をリロードさせる
 static void NotifyPlayerGunChanged(SDL_Renderer* renderer, Scene* currentScene) {
     if (!currentScene) return;
     auto& objects = currentScene->GetObjects();

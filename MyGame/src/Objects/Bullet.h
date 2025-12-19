@@ -8,10 +8,8 @@ class Enemy;
 
 class Bullet : public GameObject {
 public:
-    // ★★★ 修正箇所1: 4引数コンストラクタ (Playerなどレガシーコード用) を復活 ★★★
     Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex);
 
-    // ★★★ 修正箇所2: 8引数コンストラクタ (Turretシステム用) ★★★
     Bullet(float x, float y, int w, int h,
         float velX, float velY,
         int damage,

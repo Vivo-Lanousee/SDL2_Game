@@ -86,7 +86,7 @@ void EditorScene::Update(Game* game) {
         camera->Follow(nullptr);
     }
 
-    // --- 2. 全オブジェクトの更新 ---
+    // 全オブジェクトの更新 ---
     for (auto& obj : gameObjects) {
         obj->Update(game);
 
@@ -96,7 +96,7 @@ void EditorScene::Update(Game* game) {
         }
     }
 
-    // --- 3. 衝突解決 (テストプレイヤーのみ) ---
+    // 衝突解決(テストプレイヤ―
     if (testPlayer) {
         testPlayer->isGrounded = false;
         for (auto& obj : gameObjects) {
@@ -107,14 +107,14 @@ void EditorScene::Update(Game* game) {
         }
     }
 
-    // --- 4. 新しいオブジェクト（弾など）の回収 ---
+    // 新しいオブジェクト（弾など）の回収 ---
     std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
     for (auto& obj : newObjs) {
         gameObjects.push_back(std::move(obj));
     }
     game->ClearPendingObjects();
 
-    // --- 5. お掃除 ---
+    // お掃除 ---
     auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
         [](const std::unique_ptr<GameObject>& obj) { return obj->isDead; });
     gameObjects.erase(it, gameObjects.end());

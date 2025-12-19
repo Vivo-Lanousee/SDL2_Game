@@ -4,7 +4,8 @@
 // コンストラクタの実装
 Camera::Camera(int screenWidth, int screenHeight)
     : x(0), y(0), w(screenWidth), h(screenHeight),
-    limitX(2000), limitY(1000)
+    limitX(2000), limitY(1000),
+    offsetX(0.0f), offsetY(0.0f) // オフセットを0で初期化
 {
 }
 
@@ -12,17 +13,17 @@ Camera::Camera(int screenWidth, int screenHeight)
 void Camera::Follow(GameObject* target) {
     if (!target) return;
 
-    // ターゲットが画面のど真ん中に来るようにカメラ位置を計算
-    // カメラX = (プレイヤーX + プレイヤー半幅) - (画面半幅)
-    x = (target->x + target->width / 2) - (w / 2);
-    y = (target->y + target->height / 2) - (h / 2);
+    // ターゲットが画面のど真ん中に来る位置を基準に、offsetX/offsetYを加算
+    // カメラX = (ターゲットの中心) - (画面の中心) + オフセット
+    x = (target->x + target->width / 2.0f) - (w / 2.0f) + offsetX;
+    y = (target->y + target->height / 2.0f) - (h / 2.0f) + offsetY;
 
     // マップの外側を映さないように制限
     if (x < 0) x = 0;
     if (y < 0) y = 0;
 
-    if (x > limitX - w) x = limitX - w;
-    if (y > limitY - h) y = limitY - h;
+    if (x > (float)limitX - w) x = (float)limitX - w;
+    if (y > (float)limitY - h) y = (float)limitY - h;
 }
 
 SDL_FPoint Camera::ScreenToWorld(int screenX, int screenY) {
