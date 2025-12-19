@@ -393,7 +393,7 @@ static void DrawCameraConfigPanel(GameParams& params) {
 
     if (ImGui::CollapsingHeader("Map Limits", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::DragInt("Limit Width", &params.camera.limitX, 10, 800, 10000);
-        ImGui::DragInt("Limit Height", &params.camera.limitY, 10, 600, 10000);
+        ImGui::DragInt("Limit Height", &params.camera.limitY, 10, 0, 10000);
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {

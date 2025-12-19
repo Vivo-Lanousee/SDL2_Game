@@ -34,7 +34,7 @@ void Camera::Follow(GameObject* target) {
 
     // マップの外側を映さないように制限 (SyncWithParamsで更新されたlimitX/Yを使用)
     if (x < 0) x = 0;
-    if (y < 0) y = 0;
+    //if (y < 0) y = 0;
 
     if (x > (float)limitX - w) x = (float)limitX - w;
     if (y > (float)limitY - h) y = (float)limitY - h;

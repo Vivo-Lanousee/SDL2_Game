@@ -6,15 +6,15 @@
     "Camera": {
         "limitX": 2000,
         "limitY": 2600,
-        "offsetX": 0.0,
-        "offsetY": -219.0
+        "offsetX": 118.4000015258789,
+        "offsetY": -343.6000061035156
     },
     "CameraPresets": {
         "Default": {
             "limitX": 2000,
             "limitY": 2600,
-            "offsetX": 0.0,
-            "offsetY": -219.0
+            "offsetX": 118.4000015258789,
+            "offsetY": -343.6000061035156
         }
     },
     "Enemy": {
