@@ -26,11 +26,12 @@ EditorGUI::Mode EditorGUI::currentMode = EditorGUI::Mode::GAME;
 EditorGUI::ConfigViewMode EditorGUI::currentConfigView = EditorGUI::ConfigViewMode::NONE;
 bool EditorGUI::isTestMode = false;
 
-// --- 内部描画ヘルパー関数の宣言 (引数に renderer と scene を追加) ---
+// --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
 static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
 static void DrawEnemyConfigPanel(GameParams& params);
 static void DrawPhysicsConfigPanel(GameParams& params);
+static void DrawCameraConfigPanel(GameParams& params); // 追加
 
 // --------------------------------------------------------------------------------------
 
@@ -128,7 +129,6 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
         DrawParameters();
 
         if (currentConfigView != ConfigViewMode::NONE) {
-            // ★修正: renderer と currentScene を渡すように変更
             GameParams& params = GameParams::GetInstance();
             ImGui::SetNextWindowPos(ImVec2(890, 370), ImGuiCond_Once);
             ImGui::SetNextWindowSize(ImVec2(300, 420), ImGuiCond_Once);
@@ -139,6 +139,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
             case ConfigViewMode::GUN:      title += " [Gun]";    break;
             case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
             case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
+            case ConfigViewMode::CAMERA:  title += " [Camera]";  break; // 追加
             default: return;
             }
 
@@ -150,6 +151,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 case ConfigViewMode::GUN:      DrawGunConfigPanel(params, renderer, currentScene); break;
                 case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
+                case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break; // 追加
                 default: break;
                 }
                 ImGui::End();
@@ -212,14 +214,15 @@ void EditorGUI::DrawInspector() {
 
 void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(200, 260), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiCond_Once); // 高さを少し調整
 
     ImGui::Begin(" Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
     if (ImGui::Button(" Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
-    if (ImGui::Button("Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
-    if (ImGui::Button("Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
+    if (ImGui::Button("Gun", ImVec2(-1, 35)))     currentConfigView = ConfigViewMode::GUN;
+    if (ImGui::Button("Enemy", ImVec2(-1, 35)))   currentConfigView = ConfigViewMode::ENEMY;
     if (ImGui::Button("Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
+    if (ImGui::Button("Camera", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::CAMERA; // 追加
 
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.4f, 0.6f, 0.6f));
@@ -288,7 +291,6 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
         ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg");
         ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20);
 
-        // ★リロード関連のUI
         ImGui::Separator();
         ImGui::Text("Magazine & Reload");
         ImGui::SliderInt("Mag Size", &params.gun.magazineSize, 1, 200);
@@ -307,14 +309,12 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {
                 params.gun.texturePath = newPath;
-                // ★画像が新しくなったのでプレイヤーの表示を更新
                 NotifyPlayerGunChanged(renderer, currentScene);
             }
         }
 
         if (ImGui::InputText("Texture Path (Manual)", pathBuf, IM_ARRAYSIZE(pathBuf))) {
             params.gun.texturePath = pathBuf;
-            // ★手動入力時も更新
             NotifyPlayerGunChanged(renderer, currentScene);
         }
     }
@@ -327,7 +327,6 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
                 params.gun = it->second;
                 params.activeGunPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
-                // ★プリセットを切り替えたのでプレイヤーの表示を更新
                 NotifyPlayerGunChanged(renderer, currentScene);
             }
         }
@@ -376,5 +375,43 @@ static void DrawPhysicsConfigPanel(GameParams& params) {
     if (ImGui::CollapsingHeader("Global Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Gravity", &params.physics.gravity, 0.0f, 100.0f, "%.2f");
         ImGui::SliderFloat("Terminal Vel", &params.physics.terminalVelocity, 100.0f, 5000.0f, "%.0f");
+    }
+}
+
+// --- カメラ設定パネルの実装 (追加) ---
+static void DrawCameraConfigPanel(GameParams& params) {
+    static char nameBuf[64] = "";
+    if (nameBuf[0] == '\0' && !params.activeCameraPresetName.empty()) {
+        strncpy_s(nameBuf, params.activeCameraPresetName.c_str(), _TRUNCATE);
+    }
+
+    if (ImGui::CollapsingHeader("Camera Offsets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::Text("Offset from Screen Center");
+        ImGui::SliderFloat("Offset X", &params.camera.offsetX, -400.0f, 400.0f, "%.1f px");
+        ImGui::SliderFloat("Offset Y", &params.camera.offsetY, -500.0f, 300.0f, "%.1f px");
+    }
+
+    if (ImGui::CollapsingHeader("Map Limits", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::DragInt("Limit Width", &params.camera.limitX, 10, 800, 10000);
+        ImGui::DragInt("Limit Height", &params.camera.limitY, 10, 600, 10000);
+    }
+
+    if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ImGui::BeginChild("CameraPresetList", ImVec2(0, 120), true);
+        for (auto it = params.cameraPresets.begin(); it != params.cameraPresets.end(); ++it) {
+            const std::string& name = it->first;
+            if (ImGui::Selectable(name.c_str(), params.activeCameraPresetName == name)) {
+                params.camera = it->second;
+                params.activeCameraPresetName = name;
+                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
+            }
+        }
+        ImGui::EndChild();
+
+        ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+        if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
+            params.cameraPresets[nameBuf] = params.camera;
+            params.activeCameraPresetName = nameBuf;
+        }
     }
 }

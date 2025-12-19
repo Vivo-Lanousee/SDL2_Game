@@ -7,10 +7,21 @@ class Camera {
 public:
     Camera(int screenWidth, int screenHeight);
 
+    /**
+     * @brief ターゲットを追従する。
+     * 内部で GameParams から最新のオフセットとマップ制限を読み込みます。
+     */
     void Follow(GameObject* target);
+
+    /**
+     * @brief 最新のパラメータ設定を同期する
+     */
+    void SyncWithParams();
+
     SDL_Rect GetRect() const {
         return { (int)x, (int)y, w, h };
     }
+
     SDL_FPoint ScreenToWorld(int screenX, int screenY);
 
     // 座標プロパティ
@@ -21,6 +32,5 @@ public:
     int limitX, limitY;
 
     // ターゲットの中心からのオフセット量
-    // 例: offsetX = 100 にすると、ターゲットより右側がより広く映るようになります
     float offsetX, offsetY;
 };

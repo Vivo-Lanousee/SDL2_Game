@@ -33,7 +33,7 @@ struct PlayerParams {
 };
 
 
-// --- 銃のパラメータ構造体 (同時発射数、オフセット、弾倉、リロードを追加) ---
+// --- 銃のパラメータ構造体 ---
 struct GunParams {
     float fireRate = 0.2f;      // 発射間隔（秒）
     float bulletSpeed = 800.0f; // 弾の速度
@@ -44,7 +44,6 @@ struct GunParams {
     float offsetX = 0.0f;       // 銃の表示位置オフセットX
     float offsetY = 0.0f;       // 銃の表示位置オフセットY
 
-    // ★追加パラメータ
     int magazineSize = 30;      // 最大装弾数
     float reloadTime = 1.5f;    // リロード時間（秒）
 
@@ -60,8 +59,8 @@ struct GunParams {
             {"shotCount", p.shotCount},
             {"offsetX", p.offsetX},
             {"offsetY", p.offsetY},
-            {"magazineSize", p.magazineSize}, // ★
-            {"reloadTime", p.reloadTime},     // ★
+            {"magazineSize", p.magazineSize},
+            {"reloadTime", p.reloadTime},
             {"texturePath", p.texturePath}
         };
     }
@@ -71,13 +70,11 @@ struct GunParams {
         if (j.contains("bulletSpeed")) j.at("bulletSpeed").get_to(p.bulletSpeed);
         if (j.contains("damage")) j.at("damage").get_to(p.damage);
 
-        // 追加された項目は contains で存在チェックを行うと古いJSONとの互換性が保てます
         if (j.contains("spreadAngle")) j.at("spreadAngle").get_to(p.spreadAngle);
         if (j.contains("shotCount"))   j.at("shotCount").get_to(p.shotCount);
         if (j.contains("offsetX"))     j.at("offsetX").get_to(p.offsetX);
         if (j.contains("offsetY"))     j.at("offsetY").get_to(p.offsetY);
 
-        // ★リロード関連のデシリアライズ
         if (j.contains("magazineSize")) j.at("magazineSize").get_to(p.magazineSize);
         if (j.contains("reloadTime"))   j.at("reloadTime").get_to(p.reloadTime);
 
@@ -121,6 +118,29 @@ struct EnemyParams {
     }
 };
 
+// --- カメラのパラメータ構造体 (追加) ---
+struct CameraParams {
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+    int limitX = 2000;
+    int limitY = 1000;
+
+    friend void to_json(json& j, const CameraParams& p) {
+        j = json{
+            {"offsetX", p.offsetX},
+            {"offsetY", p.offsetY},
+            {"limitX", p.limitX},
+            {"limitY", p.limitY}
+        };
+    }
+    friend void from_json(const json& j, CameraParams& p) {
+        if (j.contains("offsetX")) j.at("offsetX").get_to(p.offsetX);
+        if (j.contains("offsetY")) j.at("offsetY").get_to(p.offsetY);
+        if (j.contains("limitX")) j.at("limitX").get_to(p.limitX);
+        if (j.contains("limitY")) j.at("limitY").get_to(p.limitY);
+    }
+};
+
 
 // 全てのパラメータを管理するシングルトン構造体
 struct GameParams {
@@ -135,6 +155,7 @@ public:
     GunParams gun;
     PhysicsParams physics;
     EnemyParams enemy;
+    CameraParams camera; // 追加
 
     // プリセット管理
     std::map<std::string, PlayerParams> playerPresets;
@@ -146,6 +167,9 @@ public:
     std::map<std::string, EnemyParams> enemyPresets;
     std::string activeEnemyPresetName;
 
+    std::map<std::string, CameraParams> cameraPresets; // 追加
+    std::string activeCameraPresetName;
+
 
     // GameParams全体を JSON に変換する関数
     friend void to_json(json& j, const GameParams& p) {
@@ -154,6 +178,7 @@ public:
             {"Gun", p.gun},
             {"Physics", p.physics},
             {"Enemy", p.enemy},
+            {"Camera", p.camera}, // 追加
 
             {"PlayerPresets", p.playerPresets},
             {"ActivePlayerPreset", p.activePlayerPresetName},
@@ -162,7 +187,10 @@ public:
             {"ActiveGunPreset", p.activeGunPresetName},
 
             {"EnemyPresets", p.enemyPresets},
-            {"ActiveEnemyPreset", p.activeEnemyPresetName}
+            {"ActiveEnemyPreset", p.activeEnemyPresetName},
+
+            {"CameraPresets", p.cameraPresets}, // 追加
+            {"ActiveCameraPreset", p.activeCameraPresetName} // 追加
         };
     }
 
@@ -172,6 +200,7 @@ public:
         if (j.contains("Gun")) j.at("Gun").get_to(p.gun);
         if (j.contains("Physics")) j.at("Physics").get_to(p.physics);
         if (j.contains("Enemy")) j.at("Enemy").get_to(p.enemy);
+        if (j.contains("Camera")) j.at("Camera").get_to(p.camera); // 追加
 
         if (j.contains("PlayerPresets")) j.at("PlayerPresets").get_to(p.playerPresets);
         if (j.contains("ActivePlayerPreset")) j.at("ActivePlayerPreset").get_to(p.activePlayerPresetName);
@@ -181,6 +210,9 @@ public:
 
         if (j.contains("EnemyPresets")) j.at("EnemyPresets").get_to(p.enemyPresets);
         if (j.contains("ActiveEnemyPreset")) j.at("ActiveEnemyPreset").get_to(p.activeEnemyPresetName);
+
+        if (j.contains("CameraPresets")) j.at("CameraPresets").get_to(p.cameraPresets); // 追加
+        if (j.contains("ActiveCameraPreset")) j.at("ActiveCameraPreset").get_to(p.activeCameraPresetName); // 追加
 
         // ロード後、アクティブなプリセットを現在のパラメータに適用
         p.applyActivePresets();
@@ -213,6 +245,15 @@ public:
             activeEnemyPresetName = "Default";
             if (enemyPresets.count("Default")) enemy = enemyPresets.at("Default");
         }
+
+        // Camera 適用 (追加)
+        if (cameraPresets.count(activeCameraPresetName)) {
+            camera = cameraPresets.at(activeCameraPresetName);
+        }
+        else {
+            activeCameraPresetName = "Default";
+            if (cameraPresets.count("Default")) camera = cameraPresets.at("Default");
+        }
     }
 
 private:
@@ -226,6 +267,9 @@ private:
 
         enemyPresets["Default"] = enemy;
         activeEnemyPresetName = "Default";
+
+        cameraPresets["Default"] = camera; // 追加
+        activeCameraPresetName = "Default"; // 追加
     }
 
     GameParams(const GameParams&) = delete;

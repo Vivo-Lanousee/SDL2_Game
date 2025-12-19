@@ -19,7 +19,8 @@ public:
         PLAYER,
         GUN,
         ENEMY,
-        PHYSICS
+        PHYSICS,
+        CAMERA // 追加
     };
 
     static void Init(SDL_Window* window, SDL_Renderer* renderer);
