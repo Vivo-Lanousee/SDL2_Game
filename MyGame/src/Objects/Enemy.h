@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "GameObject.h"
 #include "../Core/Animator.h"
+#include "../TextureManager.h"
 #include <vector>
 #include <memory> 
 #include <SDL.h>
@@ -47,6 +48,13 @@ private:
 
     // --- AI ステート ---
     bool isAttacking;
+
+    // --- 跳躍移動用 ---
+    float jumpTimer;
+    float jumpInterval;
+
+    // --- リソース ---
+    SharedTexturePtr bulletTexture;
 
     void MoveLogic();
     void AttackLogic(Game* game);

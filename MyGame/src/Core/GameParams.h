@@ -11,10 +11,17 @@ namespace PhysicsSettings {
     constexpr float GravityScale = 100.0f;
 }
 
-// 移動方法の定義
+// 移動モードの定義
 enum class MovementType {
     Linear = 0,    // 拠点（目標）へ向かって一直線
     PathFollow = 1 // ウェイポイント（経路）を辿る
+};
+
+// 移動スタイルの定義 (追加)
+enum class LocomotionType {
+    Ground = 0,  // 地上を歩く
+    Flying = 1,  // 空中を浮遊移動
+    Jumping = 2  // 跳ねながら移動
 };
 
 // 攻撃方法の定義
@@ -100,14 +107,16 @@ struct PhysicsParams {
 };
 
 struct EnemyParams {
-    int baseHealth = 100;           // 体力
-    int attackPower = 10;           // 攻撃力
-    float baseSpeed = 50.0f;        // 拠点に向かうまでの速度
-    float attackRange = 100.0f;      // 攻撃するのに必要な距離
-    float attackInterval = 1.5f;    // 攻撃速度（秒）
-    MovementType moveMethod = MovementType::Linear; // 移動方法
-    AttackType attackMethod = AttackType::Melee;    // 攻撃方法
-    std::string texturePath = "assets/images/enemies/default_enemy.png"; // 画像パス
+    int baseHealth = 100;
+    int attackPower = 10;
+    float baseSpeed = 50.0f;
+    float attackRange = 100.0f;
+    float attackInterval = 1.5f;
+    MovementType moveMethod = MovementType::Linear;
+    LocomotionType locomotionStyle = LocomotionType::Ground; // 追加
+    AttackType attackMethod = AttackType::Melee;
+    std::string texturePath = "assets/images/enemies/default_enemy.png";
+    std::string bulletTexturePath = "assets/images/enemies/enemy_bullet.png"; // 追加
 
     friend void to_json(json& j, const EnemyParams& p) {
         j = json{
@@ -117,8 +126,10 @@ struct EnemyParams {
             {"attackRange", p.attackRange},
             {"attackInterval", p.attackInterval},
             {"moveMethod", static_cast<int>(p.moveMethod)},
+            {"locomotionStyle", static_cast<int>(p.locomotionStyle)},
             {"attackMethod", static_cast<int>(p.attackMethod)},
-            {"texturePath", p.texturePath}
+            {"texturePath", p.texturePath},
+            {"bulletTexturePath", p.bulletTexturePath}
         };
     }
     friend void from_json(const json& j, EnemyParams& p) {
@@ -128,8 +139,10 @@ struct EnemyParams {
         if (j.contains("attackRange")) j.at("attackRange").get_to(p.attackRange);
         if (j.contains("attackInterval")) j.at("attackInterval").get_to(p.attackInterval);
         if (j.contains("moveMethod")) p.moveMethod = static_cast<MovementType>(j.at("moveMethod").get<int>());
+        if (j.contains("locomotionStyle")) p.locomotionStyle = static_cast<LocomotionType>(j.at("locomotionStyle").get<int>());
         if (j.contains("attackMethod")) p.attackMethod = static_cast<AttackType>(j.at("attackMethod").get<int>());
         if (j.contains("texturePath")) j.at("texturePath").get_to(p.texturePath);
+        if (j.contains("bulletTexturePath")) j.at("bulletTexturePath").get_to(p.bulletTexturePath);
     }
 };
 
@@ -155,7 +168,6 @@ struct CameraParams {
     }
 };
 
-// --- 拠点の初期パラメータ (追加) ---
 struct BaseParams {
     int maxHealth = 1000;
     float defense = 0.0f;
@@ -187,7 +199,7 @@ public:
     PhysicsParams physics;
     EnemyParams enemy;
     CameraParams camera;
-    BaseParams base; // 追加
+    BaseParams base;
 
     std::map<std::string, PlayerParams> playerPresets;
     std::string activePlayerPresetName;
@@ -208,7 +220,7 @@ public:
             {"Physics", p.physics},
             {"Enemy", p.enemy},
             {"Camera", p.camera},
-            {"Base", p.base}, // 追加
+            {"Base", p.base},
             {"PlayerPresets", p.playerPresets},
             {"ActivePlayerPreset", p.activePlayerPresetName},
             {"GunPresets", p.gunPresets},
@@ -226,7 +238,7 @@ public:
         if (j.contains("Physics")) j.at("Physics").get_to(p.physics);
         if (j.contains("Enemy")) j.at("Enemy").get_to(p.enemy);
         if (j.contains("Camera")) j.at("Camera").get_to(p.camera);
-        if (j.contains("Base")) j.at("Base").get_to(p.base); // 追加
+        if (j.contains("Base")) j.at("Base").get_to(p.base);
         if (j.contains("PlayerPresets")) j.at("PlayerPresets").get_to(p.playerPresets);
         if (j.contains("ActivePlayerPreset")) j.at("ActivePlayerPreset").get_to(p.activePlayerPresetName);
         if (j.contains("GunPresets")) j.at("GunPresets").get_to(p.gunPresets);
