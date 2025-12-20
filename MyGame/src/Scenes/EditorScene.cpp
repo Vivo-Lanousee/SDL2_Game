@@ -5,6 +5,7 @@
 #include "../Core/Physics.h"
 #include "../Editor/EditorGUI.h"
 #include "../Objects/Block.h"
+#include "../Objects/Enemy.h" // 追加
 #include "../TextureManager.h"
 #include "../Core/GameParams.h"
 #include "../UI/TextRenderer.h"
@@ -17,11 +18,14 @@ EditorScene::EditorScene()
     : selectedObject(nullptr), testPlayer(nullptr)
 {
     camera = std::make_unique<Camera>(800, 600);
+
+    // 経路の初期値
     enemyPath.push_back({ 100.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 500.0f });
+    enemyPath.push_back({ 100.0f, 500.0f });
 
-    auto ground = std::make_unique<Block>(0, 550, 1200, 50);
+    auto ground = std::make_unique<Block>(0, 550, 2000, 50);
     ground->name = "Editor Ground";
     gameObjects.push_back(std::move(ground));
 }
@@ -65,6 +69,22 @@ void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
     }
 }
 
+void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
+    if (enemyPath.empty()) return;
+
+    // パスの最初の地点に生成
+    float startX = enemyPath[0].x - 32; // 中央寄せ
+    float startY = enemyPath[0].y - 32;
+
+    auto enemy = std::make_unique<Enemy>(startX, startY, 64, 64, nullptr, enemyPath);
+    enemy->name = "Test Enemy";
+
+    // 最新の設定とテクスチャを強制反映
+    enemy->RefreshConfig(renderer);
+
+    gameObjects.push_back(std::move(enemy));
+}
+
 void EditorScene::Update(Game* game) {
     float deltaTime = Time::deltaTime;
 
@@ -90,13 +110,12 @@ void EditorScene::Update(Game* game) {
     for (auto& obj : gameObjects) {
         obj->Update(game);
 
-        // 物理適用 (プレイヤーや弾など重力・速度が必要なもの)
         if (obj->useGravity || std::abs(obj->velX) > 0 || std::abs(obj->velY) > 0) {
             Physics::ApplyPhysics(obj.get(), deltaTime);
         }
     }
 
-    // 衝突解決(テストプレイヤ―
+    // 衝突解決
     if (testPlayer) {
         testPlayer->isGrounded = false;
         for (auto& obj : gameObjects) {
@@ -107,14 +126,14 @@ void EditorScene::Update(Game* game) {
         }
     }
 
-    // 新しいオブジェクト（弾など）の回収 ---
+    // 新しいオブジェクト（弾など）の回収
     std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
     for (auto& obj : newObjs) {
         gameObjects.push_back(std::move(obj));
     }
     game->ClearPendingObjects();
 
-    // お掃除 ---
+    // お掃除
     auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
         [](const std::unique_ptr<GameObject>& obj) { return obj->isDead; });
     gameObjects.erase(it, gameObjects.end());
@@ -139,27 +158,25 @@ void EditorScene::Render(Game* game) {
         obj->RenderWithCamera(renderer, camera.get());
     }
 
-    // --- UI 描画 (弾数表示) ---
+    // UI 描画
     std::string ammoText = "Ammo: 0 / 0";
-    SDL_Color textColor = { 200, 200, 200, 255 }; // デフォルトはグレー
+    SDL_Color textColor = { 200, 200, 200, 255 };
 
     if (testPlayer && !testPlayer->isDead) {
         int current = testPlayer->GetCurrentAmmo();
         int max = GameParams::GetInstance().gun.magazineSize;
         ammoText = "Ammo: " + std::to_string(current) + " / " + std::to_string(max);
-        textColor = { 255, 255, 255, 255 }; // プレイヤーがいる時は白
+        textColor = { 255, 255, 255, 255 };
 
-        // リロード中の演出
         if (testPlayer->GetIsReloading()) {
             ammoText += " (RELOADING...)";
-            textColor = { 255, 255, 0, 255 }; // リロード中は黄色
+            textColor = { 255, 255, 0, 255 };
         }
         else if (current == 0) {
-            textColor = { 255, 0, 0, 255 };   // 弾切れは赤
+            textColor = { 255, 0, 0, 255 };
         }
     }
 
-    // 左下に描画 (x=20, y=画面下部から少し上)
     TextRenderer::Draw(renderer, ammoText, 20, 550, textColor);
 
     EditorGUI::Render(renderer, this);

@@ -20,7 +20,7 @@ public:
         GUN,
         ENEMY,
         PHYSICS,
-        CAMERA // 追加
+        CAMERA 
     };
 
     static void Init(SDL_Window* window, SDL_Renderer* renderer);

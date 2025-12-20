@@ -3,6 +3,7 @@
 #include "../Core/Time.h"
 #include "../Core/Physics.h"
 #include "../Core/GameParams.h" 
+#include "../TextureManager.h"
 #include "Bullet.h"
 #include <cmath>
 #include <iostream>
@@ -10,31 +11,42 @@
 
 const float DEFAULT_DISTANCE_TOLERANCE = 5.0f;
 
-// ★★★ コンストラクタ: Enemy.hでhp, maxHp, moveSpeedが定義されている前提 ★★★
 Enemy::Enemy(float x, float y, int w, int h, SDL_Texture* tex,
     const std::vector<SDL_FPoint>& path)
     : GameObject(x, y, w, h, tex),
     targetPath(path), currentWaypointIndex(0),
     distanceTolerance(DEFAULT_DISTANCE_TOLERANCE), goalReached(false)
 {
+    // 初期設定の反映
+    RefreshConfig(nullptr);
+
+    rewardValue = 10;
+    name = "Enemy";
+    isTrigger = false;
+    useGravity = false;
+}
+
+void Enemy::RefreshConfig(SDL_Renderer* renderer) {
     GameParams& params = GameParams::GetInstance();
 
+    // ステータス更新
     hp = params.enemy.baseHealth;
     maxHp = params.enemy.baseHealth;
     moveSpeed = params.enemy.baseSpeed;
 
-    rewardValue = 10;
-
-    name = "Enemy";
-    isTrigger = false;
-    useGravity = false;
-
-    // ... (アニメーターの初期化) ...
+    // テクスチャ更新 (rendererが渡された場合のみ読み込み)
+    if (renderer && !params.enemy.texturePath.empty()) {
+        SharedTexturePtr newTex = TextureManager::LoadTexture(params.enemy.texturePath, renderer);
+        if (newTex) {
+            texture = newTex.get();
+        }
+    }
 }
 
 void Enemy::Update(Game* game) {
     if (isDead) return;
 
+    // 実行中に動的に速度が変わるようにする場合
     GameParams& params = GameParams::GetInstance();
     moveSpeed = params.enemy.baseSpeed;
 
@@ -81,14 +93,14 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         SDL_RenderCopyEx(renderer, texture, NULL, &destRect, angle, NULL, SDL_FLIP_NONE);
     }
     else {
+        // テクスチャがない場合のフォールバック（緑の矩形）
         SDL_SetRenderDrawColor(renderer, 0, 150, 0, 255);
         SDL_RenderFillRect(renderer, &destRect);
     }
 
     // デバッグ情報: HPバーを描画
     int barHeight = 5;
-    // ★★★ 修正箇所: hpとmaxHpが int 型であることを前提にキャストを削除 ★★★
-    float hpRatio = (float)hp / maxHp;
+    float hpRatio = (maxHp > 0) ? (float)hp / maxHp : 0;
     SDL_Rect bgRect = { drawX, drawY - barHeight - 2, width, barHeight };
     SDL_Rect hpRect = { drawX, drawY - barHeight - 2, (int)(width * hpRatio), barHeight };
 
@@ -101,13 +113,13 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 
 void Enemy::OnTriggerEnter(GameObject* other) {
     if (other->name == "Bullet") {
-        int damage = 10;
+        // 本来はBullet側の攻撃力を参照する
+        int damage = GameParams::GetInstance().gun.damage;
         TakeDamage(damage);
         other->isDead = true;
     }
 }
 
-// ★★★ 修正箇所: TakeDamage関数は問題ない構文だが、念の為確認 ★★★
 void Enemy::TakeDamage(int damage) {
     hp -= damage;
     if (hp <= 0) {
@@ -115,4 +127,3 @@ void Enemy::TakeDamage(int damage) {
         isDead = true;
     }
 }
-// ★★★ 97行目付近に';'が欠けている場合、ここか直前の行で何かが閉じられていない可能性が高いです。 ★★★

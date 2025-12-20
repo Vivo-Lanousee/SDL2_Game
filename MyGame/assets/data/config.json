@@ -19,12 +19,14 @@
     },
     "Enemy": {
         "baseHealth": 100,
-        "baseSpeed": 50.0
+        "baseSpeed": 162.3000030517578,
+        "texturePath": "assets/images/enemies/AdvSoldier_c.png"
     },
     "EnemyPresets": {
         "Default": {
             "baseHealth": 100,
-            "baseSpeed": 50.0
+            "baseSpeed": 162.3000030517578,
+            "texturePath": "assets/images/enemies/AdvSoldier_c.png"
         }
     },
     "Gun": {

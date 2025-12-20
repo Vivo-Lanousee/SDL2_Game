@@ -28,6 +28,9 @@ public:
 
     std::vector<SDL_FPoint>& GetEnemyPath() { return enemyPath; }
 
+    // GUIから呼び出すための敵生成関数
+    void SpawnTestEnemy(SDL_Renderer* renderer);
+
 private:
     std::vector<std::unique_ptr<GameObject>> gameObjects;
     std::vector<SDL_FPoint> enemyPath;

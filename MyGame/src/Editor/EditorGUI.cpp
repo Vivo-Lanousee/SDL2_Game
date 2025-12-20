@@ -13,8 +13,10 @@
 
 #include "../Core/GameParams.h" 
 #include "../Scenes/Scene.h"
+#include "../Scenes/EditorScene.h"
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
+#include "../Objects/Enemy.h"
 #include "../Core/ConfigManager.h" 
 
 // filesystemの名前空間を短縮
@@ -29,9 +31,9 @@ bool EditorGUI::isTestMode = false;
 // --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
 static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
-static void DrawEnemyConfigPanel(GameParams& params);
+static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene); // 引数追加
 static void DrawPhysicsConfigPanel(GameParams& params);
-static void DrawCameraConfigPanel(GameParams& params); // 追加
+static void DrawCameraConfigPanel(GameParams& params);
 
 // --------------------------------------------------------------------------------------
 
@@ -65,7 +67,6 @@ void EditorGUI::SetMode(Mode newMode) {
     currentMode = newMode;
 }
 
-// Windows標準のファイル選択ダイアログを開き、指定フォルダへコピーする関数
 std::string EditorGUI::ImportTexture() {
     char szFile[260] = { 0 };
     OPENFILENAMEA ofn;
@@ -83,21 +84,13 @@ std::string EditorGUI::ImportTexture() {
 
     if (GetOpenFileNameA(&ofn)) {
         fs::path srcPath(szFile);
-
-        // 保存先ディレクトリ: assets/images/guns/
-        std::string destDir = "assets/images/guns/";
+        std::string destDir = "assets/images/enemies/"; // フォルダ分け
 
         try {
-            if (!fs::exists(destDir)) {
-                fs::create_directories(destDir);
-            }
-
+            if (!fs::exists(destDir)) fs::create_directories(destDir);
             std::string fileName = srcPath.filename().string();
             std::string destPath = destDir + fileName;
-
             fs::copy_file(srcPath, destPath, fs::copy_options::overwrite_existing);
-
-            std::cout << "Import Success: " << destPath << std::endl;
             return destPath;
         }
         catch (const fs::filesystem_error& e) {
@@ -114,6 +107,18 @@ static void NotifyPlayerGunChanged(SDL_Renderer* renderer, Scene* currentScene) 
         Player* player = dynamic_cast<Player*>(obj.get());
         if (player) {
             player->RefreshGunConfig(renderer);
+        }
+    }
+}
+
+// 敵の設定変更を通知するヘルパー
+static void NotifyEnemyConfigChanged(SDL_Renderer* renderer, Scene* currentScene) {
+    if (!currentScene) return;
+    auto& objects = currentScene->GetObjects();
+    for (auto& obj : objects) {
+        Enemy* enemy = dynamic_cast<Enemy*>(obj.get());
+        if (enemy) {
+            enemy->RefreshConfig(renderer);
         }
     }
 }
@@ -139,7 +144,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
             case ConfigViewMode::GUN:      title += " [Gun]";    break;
             case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
             case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
-            case ConfigViewMode::CAMERA:  title += " [Camera]";  break; // 追加
+            case ConfigViewMode::CAMERA:  title += " [Camera]";  break;
             default: return;
             }
 
@@ -149,9 +154,9 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 switch (currentConfigView) {
                 case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
                 case ConfigViewMode::GUN:      DrawGunConfigPanel(params, renderer, currentScene); break;
-                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params);   break;
+                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params, renderer, currentScene); break; // 引数追加
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
-                case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break; // 追加
+                case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break;
                 default: break;
                 }
                 ImGui::End();
@@ -214,15 +219,15 @@ void EditorGUI::DrawInspector() {
 
 void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiCond_Once); // 高さを少し調整
+    ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiCond_Once);
 
     ImGui::Begin(" Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
     if (ImGui::Button(" Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
-    if (ImGui::Button("Gun", ImVec2(-1, 35)))     currentConfigView = ConfigViewMode::GUN;
+    if (ImGui::Button("Gun", ImVec2(-1, 35)))      currentConfigView = ConfigViewMode::GUN;
     if (ImGui::Button("Enemy", ImVec2(-1, 35)))   currentConfigView = ConfigViewMode::ENEMY;
     if (ImGui::Button("Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
-    if (ImGui::Button("Camera", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::CAMERA; // 追加
+    if (ImGui::Button("Camera", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::CAMERA;
 
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.4f, 0.6f, 0.6f));
@@ -232,8 +237,6 @@ void EditorGUI::DrawParameters() {
     ImGui::PopStyleColor();
     ImGui::End();
 }
-
-// --- 内部描画関数 ---
 
 static void DrawPlayerConfigPanel(GameParams& params) {
     static char nameBuf[64] = "";
@@ -340,15 +343,46 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
     }
 }
 
-static void DrawEnemyConfigPanel(GameParams& params) {
+// 敵設定パネルの更新
+static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene) {
     static char nameBuf[64] = "";
+    static char pathBuf[256] = "";
+
     if (nameBuf[0] == '\0' && !params.activeEnemyPresetName.empty()) {
         strncpy_s(nameBuf, params.activeEnemyPresetName.c_str(), _TRUNCATE);
     }
+    strncpy_s(pathBuf, params.enemy.texturePath.c_str(), _TRUNCATE);
+
+    // テスト用の敵生成ボタン（EditorScene限定）
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
+    if (ImGui::Button("SPAWN TEST ENEMY", ImVec2(-1, 40))) {
+        EditorScene* edScene = dynamic_cast<EditorScene*>(currentScene);
+        if (edScene) {
+            edScene->SpawnTestEnemy(renderer);
+        }
+    }
+    ImGui::PopStyleColor();
+    ImGui::Separator();
 
     if (ImGui::CollapsingHeader("Edit Active Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::SliderFloat("Speed", &params.enemy.baseSpeed, 10.0f, 300.0f, "%.1f");
-        ImGui::InputInt("Health", &params.enemy.baseHealth, 10, 500);
+        if (ImGui::SliderFloat("Speed", &params.enemy.baseSpeed, 10.0f, 300.0f, "%.1f")) {
+            NotifyEnemyConfigChanged(renderer, currentScene);
+        }
+        if (ImGui::InputInt("Health", &params.enemy.baseHealth, 10, 500)) {
+            NotifyEnemyConfigChanged(renderer, currentScene);
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Appearance");
+        ImGui::TextWrapped("Path: %s", params.enemy.texturePath.c_str());
+
+        if (ImGui::Button("📂 Import Enemy Image", ImVec2(-1, 30))) {
+            std::string newPath = EditorGUI::ImportTexture();
+            if (!newPath.empty()) {
+                params.enemy.texturePath = newPath;
+                NotifyEnemyConfigChanged(renderer, currentScene);
+            }
+        }
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -359,6 +393,7 @@ static void DrawEnemyConfigPanel(GameParams& params) {
                 params.enemy = it->second;
                 params.activeEnemyPresetName = name;
                 strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
+                NotifyEnemyConfigChanged(renderer, currentScene);
             }
         }
         ImGui::EndChild();
@@ -378,7 +413,6 @@ static void DrawPhysicsConfigPanel(GameParams& params) {
     }
 }
 
-// --- カメラ設定パネルの実装 (追加) ---
 static void DrawCameraConfigPanel(GameParams& params) {
     static char nameBuf[64] = "";
     if (nameBuf[0] == '\0' && !params.activeCameraPresetName.empty()) {
