@@ -5,7 +5,7 @@
 #include <SDL.h>
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
-#include "../Objects/Base.h" // 拠点クラスの追加
+#include "../Objects/Base.h"
 #include "../Core/Camera.h"
 #include "../TextureManager.h"
 
@@ -20,8 +20,10 @@ public:
     void OnExit(Game* game) override;
 
     void HandleEvents(Game* game, SDL_Event* event) override;
-    void Update(Game* game) override;
     void Render(Game* game) override;
+
+    // 基底クラス Scene::Update から呼ばれる、このシーン独自のロジック
+    void OnUpdate(Game* game) override;
 
     bool ShowImGui() const override { return true; };
 

@@ -8,14 +8,20 @@
 #include <memory>
 #include "../TextureManager.h"
 
+class Game;
+
 class PlayScene : public Scene {
 public:
+    PlayScene() = default;
+    ~PlayScene() override = default;
+
     void OnEnter(Game* game) override;
     void OnExit(Game* game) override;
-    void Update(Game* game) override;
-    void Render(Game* game) override;
 
-    // 引数を (Game* game, SDL_Event* event) に修正
+    // 基底クラス Scene::Update から呼び出される固有ロジック
+    void OnUpdate(Game* game) override;
+
+    void Render(Game* game) override;
     void HandleEvents(Game* game, SDL_Event* event) override;
 
     // プレイシーンでは ImGui を使わない
@@ -28,7 +34,7 @@ public:
     SDL_Texture* GetBulletTexturePtr() const { return bulletTexture.get(); }
 
 private:
-    Player* player;
+    Player* player = nullptr;
     std::vector<std::unique_ptr<GameObject>> gameObjects;
     std::unique_ptr<Camera> camera;
     SharedTexturePtr playerTexture;

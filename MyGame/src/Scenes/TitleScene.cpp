@@ -5,6 +5,7 @@
 #include "../UI/TextRenderer.h"
 #include "../UI/Button.h" 
 #include "../Editor/EditorGUI.h"
+#include <iostream>
 
 TitleScene::TitleScene() {
 }
@@ -14,56 +15,70 @@ TitleScene::~TitleScene() {
 }
 
 void TitleScene::OnEnter(Game* game) {
-    // --- ボタンの生成 ---
+    std::cout << "Entering TitleScene..." << std::endl;
+
+    // --- ボタンの生成と配置 ---
     startButton = std::make_unique<Button>(300, 300, 200, 50, "GAME START");
     exitButton = std::make_unique<Button>(300, 400, 200, 50, "EXIT GAME");
+    debugButton = std::make_unique<Button>(300, 470, 200, 50, "DEBUG EDITOR");
 
-    // ボタンに機能を登録
+    // --- ボタンクリック時の挙動登録 ---
+
+    // ゲーム本編へ遷移
     startButton->OnClick = [game]() {
         game->ChangeScene(new PlayScene());
         };
 
+    // ゲーム終了
     exitButton->OnClick = [game]() {
         game->Quit();
         };
 
-    debugButton = std::make_unique<Button>(300, 460, 200, 50, "DEBUG EDITOR");
+    // エディターシーンへ遷移
     debugButton->OnClick = [game]() {
-        // EditorScene への遷移
-        // モードの変更は EditorScene::OnEnter で行う設計にするとより安全です
         game->ChangeScene(new EditorScene());
         };
 }
 
 void TitleScene::OnExit(Game* game) {
-    // ボタンの unique_ptr は自動解放されます
+    std::cout << "Exiting TitleScene..." << std::endl;
+    // unique_ptr および vector がクリアされ、メモリが解放されます
+    gameObjects.clear();
 }
 
-// ★修正ポイント: 引数を (Game* game, SDL_Event* event) に変更し、ループを削除
 void TitleScene::HandleEvents(Game* game, SDL_Event* event) {
-    // Game::HandleEvents 側で SDL_PollEvent が回っており、
-    // 発生したイベントが一つずつこの関数に渡されてきます。
+    // 基底の Scene クラスにはイベント処理の自動化は含まれていないため、
+    // ここで個別にボタンへイベントを流す必要があります。
 
     if (event->type == SDL_QUIT) {
         game->Quit();
         return;
     }
 
-    // 各ボタンにイベントを渡して判定（Button::HandleEvents が SDL_Event* を受ける前提）
+    // ボタンのイベント判定
     if (startButton && startButton->HandleEvents(event)) return;
     if (exitButton && exitButton->HandleEvents(event)) return;
     if (debugButton && debugButton->HandleEvents(event)) return;
 }
 
-void TitleScene::Update(Game* game) {
-    // 必要なら更新ロジックを記述
+void TitleScene::OnUpdate(Game* game) {
+    // 現在のタイトル画面には物理オブジェクトが存在しないため、特別な処理は不要です。
+    // 背景アニメーションなどを作成する場合はここに記述します。
 }
 
 void TitleScene::Render(Game* game) {
-    SDL_Color white = { 255, 255, 255, 255 };
-    TextRenderer::Draw(game->GetRenderer(), "SHOOTING GAME", 300, 150, white);
+    SDL_Renderer* renderer = game->GetRenderer();
 
-    if (startButton) startButton->Render(game->GetRenderer());
-    if (exitButton) exitButton->Render(game->GetRenderer());
-    if (debugButton) debugButton->Render(game->GetRenderer());
+    // 背景の塗りつぶし（暗い紺色）
+    SDL_SetRenderDrawColor(renderer, 20, 20, 40, 255);
+    SDL_RenderClear(renderer);
+
+    // タイトルロゴの描画
+    SDL_Color white = { 255, 255, 255, 255 };
+    TextRenderer::Draw(renderer, "MELTED DEFENSE", 280, 150, white);
+
+    // ボタンの描画
+    if (startButton) startButton->Render(renderer);
+    if (exitButton) exitButton->Render(renderer);
+    if (debugButton) debugButton->Render(renderer);
 }

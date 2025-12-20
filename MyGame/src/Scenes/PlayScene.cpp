@@ -9,6 +9,7 @@
 #include "../Core/Physics.h"
 #include "../Core/Camera.h"
 #include "../UI/TextRenderer.h"
+#include "../Core/GameSession.h"
 
 void PlayScene::OnEnter(Game* game) {
     std::cout << "Entering PlayScene..." << std::endl;
@@ -16,14 +17,10 @@ void PlayScene::OnEnter(Game* game) {
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
 
-    if (!playerTexture || !bulletTexture) {
-        std::cout << "Failed to load textures!" << std::endl;
-    }
-
     // カメラ生成
     camera = std::make_unique<Camera>(800, 600);
-    camera->limitX = 2000;
-    camera->limitY = 1000;
+    camera->limitX = 5000;
+    camera->limitY = 2000;
 
     // プレイヤー生成
     auto playerPtr = std::make_unique<Player>(
@@ -33,122 +30,52 @@ void PlayScene::OnEnter(Game* game) {
         bulletTexture.get(),
         camera.get()
     );
-
     playerPtr->name = "Player";
     player = playerPtr.get();
     gameObjects.push_back(std::move(playerPtr));
 
-    // ブロック生成
-    auto ground = std::make_unique<Block>(0, 500, 800, 50);
+    // 地面生成
+    auto ground = std::make_unique<Block>(0, 500, 5000, 50);
     ground->name = "Ground";
     gameObjects.push_back(std::move(ground));
 
-    auto platform1 = std::make_unique<Block>(200, 350, 200, 30);
-    platform1->name = "Platform 1";
-    gameObjects.push_back(std::move(platform1));
-
-    auto platform2 = std::make_unique<Block>(500, 250, 150, 30);
-    platform2->name = "Platform 2";
-    gameObjects.push_back(std::move(platform2));
-
-    auto platform3 = std::make_unique<Block>(1000, 400, 200, 30);
-    platform3->name = "Platform 3";
-    gameObjects.push_back(std::move(platform3));
+    // セッション初期化
+    GameSession::GetInstance().ResetSession();
 }
 
 void PlayScene::OnExit(Game* game) {
-    std::cout << "Exiting PlayScene..." << std::endl;
+    player = nullptr;
     gameObjects.clear();
 }
 
-void PlayScene::Update(Game* game) {
-    float deltaTime = Time::deltaTime; // Physics::ApplyPhysics に必要
-
-    // 1. プレイヤーの更新
-    if (player) {
-        player->Update(game);
-
-        Physics::ApplyPhysics(player, deltaTime);
-        player->isGrounded = false;
-
+void PlayScene::OnUpdate(Game* game) {
+    // GameObject::Update は Scene::Update 内で自動実行されるため、
+    // ここではカメラの追従のみを行います。
+    if (player && !player->isDead) {
         if (camera) {
             camera->Follow(player);
         }
     }
-
-    for (auto& obj : gameObjects) {
-        if (obj.get() != player) {
-            obj->Update(game);
-            // player以外の重力を持つオブジェクトにも Physics を適用
-            Physics::ApplyPhysics(obj.get(), deltaTime);
-        }
+    else {
+        player = nullptr;
     }
-
-    for (auto& obj : gameObjects) {
-        if (obj->isTrigger) {
-            for (auto& target : gameObjects) {
-                if (obj.get() == target.get()) continue;
-
-                if (Physics::CheckAABB(obj.get(), target.get())) {
-                    obj->OnTriggerEnter(target.get());
-                }
-            }
-        }
-    }
-
-    // 4. プレイヤーの物理衝突解決
-    if (player) {
-        for (auto& obj : gameObjects) {
-            if (obj.get() == player) continue;
-            if (obj->isTrigger) continue;
-
-            if (Physics::ResolveCollision(player, obj.get())) {
-                player->isGrounded = true;
-            }
-        }
-    }
-
-    // 5. お掃除タイム
-    auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
-        [](const std::unique_ptr<GameObject>& obj) {
-            return obj->isDead;
-        });
-
-    for (auto it2 = it; it2 != gameObjects.end(); ++it2) {
-        if (it2->get() == player) {
-            player = nullptr;
-        }
-    }
-
-    gameObjects.erase(it, gameObjects.end());
-
-    // 新しく生まれたオブジェクトを回収
-    std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
-
-    for (auto& obj : newObjs) {
-        gameObjects.push_back(std::move(obj));
-    }
-
-    game->ClearPendingObjects();
-}
-
-void PlayScene::Render(Game* game) {
-    for (auto& obj : gameObjects) {
-        obj->RenderWithCamera(game->GetRenderer(), camera.get());
-    }
-
-    SDL_Color white = { 255, 255, 255, 255 };
-    TextRenderer::Draw(game->GetRenderer(), "WASD: Move | Mouse: Adjust Params", 10, 10, white);
 }
 
 void PlayScene::HandleEvents(Game* game, SDL_Event* event) {
-    // Game::HandleEvents の PollEvent ループから 1 つずつイベントが渡されます。
-
     if (event->type == SDL_QUIT) {
         game->Quit();
-        return;
+    }
+}
+
+void PlayScene::Render(Game* game) {
+    SDL_Renderer* renderer = game->GetRenderer();
+    SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
+    SDL_RenderClear(renderer);
+
+    for (auto& obj : gameObjects) {
+        obj->RenderWithCamera(renderer, camera.get());
     }
 
-    if (player) {
-    }
+    SDL_Color white = { 255, 255, 255, 255 };
+    TextRenderer::Draw(renderer, "WASD: Move | Mouse: Shoot", 10, 10, white);
 }

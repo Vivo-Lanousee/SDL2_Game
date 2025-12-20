@@ -40,6 +40,7 @@
     <ClCompile Include="src\Objects\Turret.cpp" />
     <ClCompile Include="src\Scenes\EditorScene.cpp" />
     <ClCompile Include="src\Scenes\PlayScene.cpp" />
+    <ClCompile Include="src\Scenes\Scene.cpp" />
     <ClCompile Include="src\Scenes\TitleScene.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
     <ClCompile Include="src\UI\Button.cpp" />
