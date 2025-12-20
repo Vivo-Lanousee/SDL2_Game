@@ -27,7 +27,7 @@ EditorScene::EditorScene()
     enemyPath.push_back({ 700.0f, 500.0f });
     enemyPath.push_back({ 100.0f, 500.0f });
 
-    // --- 拠点の生成 (マルフーシャ風に左側に配置) ---
+    // 拠点の生成
     auto baseObj = std::make_unique<Base>(80, 300, 80, 250);
     baseObj->name = "Base Gate";
     gameObjects.push_back(std::move(baseObj));

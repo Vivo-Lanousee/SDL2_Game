@@ -24,7 +24,7 @@ public:
     void Render(Game* game) override;
     void HandleEvents(Game* game, SDL_Event* event) override;
 
-    // プレイシーンでは ImGui を使わない
+
     bool ShowImGui() const override { return false; };
 
     std::vector<std::unique_ptr<GameObject>>& GetObjects() override {

@@ -12,9 +12,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// -----------------------------------------------------
-// コンストラクタ 1: 角度指定版 (Playerなど)
-// -----------------------------------------------------
+//  角度指定 (Playerなど)
 Bullet::Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex)
     : GameObject(startX, startY, 10, 10, tex),
     damageValue(10)
@@ -31,9 +29,7 @@ Bullet::Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex
     name = "Bullet"; // デフォルトはプレイヤーの弾
 }
 
-// -----------------------------------------------------
-// コンストラクタ 2: 詳細指定版 (Turret/Enemyなど)
-// -----------------------------------------------------
+// 詳細指定 (Turret/Enemyなど)
 Bullet::Bullet(float x, float y, int w, int h,
     float velX, float velY,
     int damage,
@@ -65,7 +61,7 @@ void Bullet::Update(Game* game) {
 void Bullet::OnTriggerEnter(GameObject* other) {
     if (isDead || other->isDead) return;
 
-    // 1. 自身が「プレイヤーの弾(Bullet)」の場合
+    // 自身が「プレイヤーの弾(Bullet)
     if (this->name == "Bullet") {
         // エネミーに当たった
         if (other->name == "Enemy" || other->name == "Test Enemy") {
@@ -80,7 +76,7 @@ void Bullet::OnTriggerEnter(GameObject* other) {
             isDead = true;
         }
     }
-    // 2. 自身が「エネミーの弾(EnemyBullet)」の場合
+    // エネミーの弾(EnemyBullet)」の場合
     else if (this->name == "EnemyBullet") {
         // プレイヤーに当たった
         if (other->name == "Player" || other->name == "TestPlayer") {

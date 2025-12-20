@@ -6,13 +6,11 @@
 #include <memory>
 #include <string>
 
-// 前方宣言
 class Game;
 class Camera;
 class Bullet;
 struct SDL_Texture;
 
-// 共通のスマートポインタ定義
 using SharedTexturePtr = std::shared_ptr<SDL_Texture>;
 
 struct UnitStatus {

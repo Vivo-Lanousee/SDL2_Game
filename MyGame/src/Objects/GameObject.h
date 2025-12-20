@@ -1,15 +1,12 @@
 ﻿#pragma once
 #include <SDL.h>
 #include <string>
-#include "../Core/Camera.h" // Camera クラスの宣言が既に存在
+#include "../Core/Camera.h"
 
-// 前方宣言
 class Game;
 
-// すべてのゲーム内オブジェクトの親
 class GameObject {
 public:
-    // コンストラクタ (変更なし)
     GameObject(float x, float y, int w, int h, SDL_Texture* tex = nullptr)
         : x(x), y(y), width(w), height(h), texture(tex), angle(0),
         velX(0), velY(0), accX(0), accY(0),

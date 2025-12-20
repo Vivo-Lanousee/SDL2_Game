@@ -6,15 +6,12 @@
 class Game;
 class Enemy;
 
-/**
- * @brief 弾丸クラス
- */
 class Bullet : public GameObject {
 public:
-    // コンストラクタ 1: 角度指定版
+    //角度指定
     Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex);
 
-    // コンストラクタ 2: 詳細指定版
+    // 詳細指定
     Bullet(float x, float y, int w, int h,
         float velX, float velY,
         int damage,

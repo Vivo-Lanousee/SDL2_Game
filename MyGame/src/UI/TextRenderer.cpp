@@ -1,9 +1,7 @@
 ﻿#include "TextRenderer.h"
 
-// static変数の実体を定義
 TTF_Font* TextRenderer::font = nullptr;
 
-// ★修正: ヘッダーに合わせて引数 (path, size) を追加
 bool TextRenderer::Init(const char* fontPath, int fontSize) {
     // 文字システムの初期化
     if (TTF_Init() == -1) {
@@ -12,7 +10,6 @@ bool TextRenderer::Init(const char* fontPath, int fontSize) {
     }
 
     // フォント読み込み
-    // ★修正: 引数で渡されたパスとサイズを使う
     font = TTF_OpenFont(fontPath, fontSize);
 
     if (!font) {
@@ -31,13 +28,11 @@ void TextRenderer::Clean() {
     TTF_Quit();
 }
 
-// ★修正: ヘッダーに合わせて std::string に変更
 void TextRenderer::Draw(SDL_Renderer* renderer, std::string text, int x, int y, SDL_Color color) {
     if (!font || !renderer) return;
-    if (text.empty()) return; // 空文字チェック
+    if (text.empty()) return; 
 
     // 文字からサーフェスを作成
-    // ★修正: std::string を C言語形式の文字列に変換するために .c_str() を使う
     SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), color);
     if (!surface) return;
 

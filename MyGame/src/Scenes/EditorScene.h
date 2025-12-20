@@ -22,7 +22,6 @@ public:
     void HandleEvents(Game* game, SDL_Event* event) override;
     void Render(Game* game) override;
 
-    // 基底クラス Scene::Update から呼ばれる、このシーン独自のロジック
     void OnUpdate(Game* game) override;
 
     bool ShowImGui() const override { return true; };

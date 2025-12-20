@@ -1,4 +1,4 @@
-#include "Base.h"
+ï»¿#include "Base.h"
 #include "../Core/Game.h"
 #include "../Core/GameParams.h"
 #include "../Core/GameSession.h"
@@ -16,7 +16,7 @@ Base::Base(float x, float y, int w, int h, SDL_Texture* tex)
 void Base::RefreshConfig(SDL_Renderer* renderer) {
     GameParams& params = GameParams::GetInstance();
 
-    // 8. ‰æ‘œƒpƒX‚ÉŠî‚Ã‚¢‚½ƒeƒNƒXƒ`ƒƒ“Ç‚Ýž‚Ý
+    //  ç”»åƒãƒ‘ã‚¹ã«åŸºã¥ã„ãŸãƒ†ã‚¯ã‚¹ãƒãƒ£èª­ã¿è¾¼ã¿
     if (renderer && !params.base.texturePath.empty()) {
         SharedTexturePtr newTex = TextureManager::LoadTexture(params.base.texturePath, renderer);
         if (newTex) {
@@ -27,14 +27,14 @@ void Base::RefreshConfig(SDL_Renderer* renderer) {
 
 void Base::Update(Game* game) {
     if (damageFlashTimer > 0) {
-        damageFlashTimer -= 0.1f; // ŠÈˆÕ“I‚È”í’e‰‰oƒ^ƒCƒ}[
+        damageFlashTimer -= 0.1f; // ç°¡æ˜“çš„ãªè¢«å¼¾æ¼”å‡ºã‚¿ã‚¤ãƒžãƒ¼
     }
 }
 
 void Base::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_Rect destRect = { drawX, drawY, width, height };
 
-    // ƒ_ƒ[ƒW‚ðŽó‚¯‚½Žž‚É­‚µÔ‚­‚·‚é‰‰oiŠÈˆÕ”Åj
+    // ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚’å—ã‘ãŸæ™‚ã«å°‘ã—èµ¤ãã™ã‚‹æ¼”å‡ºï¼ˆç°¡æ˜“ç‰ˆï¼‰
     if (damageFlashTimer > 0) {
         SDL_SetTextureColorMod(texture, 255, 100, 100);
     }
@@ -46,12 +46,12 @@ void Base::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         SDL_RenderCopyEx(renderer, texture, NULL, &destRect, angle, NULL, SDL_FLIP_NONE);
     }
     else {
-        // ƒeƒNƒXƒ`ƒƒ‚ª‚È‚¢ê‡‚ÍŠæä‚»‚¤‚È“S”àF
+        // ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒãªã„å ´åˆã¯é ‘ä¸ˆãã†ãªé‰„æ‰‰è‰²
         SDL_SetRenderDrawColor(renderer, 80, 80, 90, 255);
         SDL_RenderFillRect(renderer, &destRect);
     }
 
-    // --- ‹’“_HPƒo[‚Ì•`‰æ (ƒ}ƒ‹ƒt[ƒVƒƒ•—‚É‹’“_’¼ã‚É•\Ž¦‚·‚éê‡) ---
+    // --- æ‹ ç‚¹HPãƒãƒ¼ã®æç”» (ãƒžãƒ«ãƒ•ãƒ¼ã‚·ãƒ£é¢¨ã«æ‹ ç‚¹ç›´ä¸Šã«è¡¨ç¤ºã™ã‚‹å ´åˆ) ---
     GameSession& session = GameSession::GetInstance();
     float hpRatio = (session.maxBaseHP > 0) ? (float)session.currentBaseHP / session.maxBaseHP : 0;
 
@@ -63,7 +63,7 @@ void Base::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
     SDL_RenderFillRect(renderer, &bg);
 
-    // HP—Ê‚É‰ž‚¶‚ÄF‚ð•Ï‚¦‚é (—Î -> ‰© -> Ô)
+    // HPé‡ã«å¿œã˜ã¦è‰²ã‚’å¤‰ãˆã‚‹ (ç·‘ -> é»„ -> èµ¤)
     if (hpRatio > 0.5f) SDL_SetRenderDrawColor(renderer, 0, 255, 120, 255);
     else if (hpRatio > 0.2f) SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
     else SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);

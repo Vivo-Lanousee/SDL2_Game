@@ -39,7 +39,6 @@ void PlayScene::OnEnter(Game* game) {
     ground->name = "Ground";
     gameObjects.push_back(std::move(ground));
 
-    // セッション初期化
     GameSession::GetInstance().ResetSession();
 }
 
@@ -49,8 +48,6 @@ void PlayScene::OnExit(Game* game) {
 }
 
 void PlayScene::OnUpdate(Game* game) {
-    // GameObject::Update は Scene::Update 内で自動実行されるため、
-    // ここではカメラの追従のみを行います。
     if (player && !player->isDead) {
         if (camera) {
             camera->Follow(player);

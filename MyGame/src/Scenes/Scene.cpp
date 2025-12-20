@@ -1,4 +1,4 @@
-#include "Scene.h"
+ï»¿#include "Scene.h"
 #include "../Objects/GameObject.h"
 #include "../Core/Game.h"
 #include "../Core/Physics.h"
@@ -10,16 +10,12 @@ void Scene::Update(Game* game) {
     float dt = Time::deltaTime;
     auto& objects = GetObjects();
 
-    // 1. ƒV[ƒ““Æ©‚ÌXVƒƒWƒbƒNÀsiƒXƒ|[ƒ“ˆ—‚È‚Çj
     OnUpdate(game);
-
-    // 2. ‘SƒIƒuƒWƒFƒNƒg‚ÌŒÂ•ÊUpdate‚ğÀsiš‚±‚±‚Å“ü—Í‚ğó‚¯æ‚è‚Ü‚·j
     for (auto& obj : objects) {
         if (obj->isDead) continue;
         obj->Update(game);
     }
 
-    // 3. •¨—‰‰Z‚Ì“K—piUpdate‚Åİ’è‚³‚ê‚½‘¬“x‚ğÀ•W‚É”½‰fj
     for (auto& obj : objects) {
         if (obj->isDead) continue;
         if (obj->useGravity || std::abs(obj->velX) > 0 || std::abs(obj->velY) > 0) {
@@ -27,12 +23,11 @@ void Scene::Update(Game* game) {
         }
     }
 
-    // 4. Õ“Ë‰ğŒˆ‚ÆƒgƒŠƒK[”»’è
     for (size_t i = 0; i < objects.size(); ++i) {
         auto& a = objects[i];
         if (a->isDead) continue;
 
-        // Ú’n”»’è‚È‚Ç‚Ì•¨—Õ“ËiSolid“¯mj
+        // æ¥åœ°åˆ¤å®šãªã©ã®ç‰©ç†è¡çª
         if (a->name == "Player" || a->name == "TestPlayer" || a->name == "Enemy" || a->name == "Test Enemy") {
             a->isGrounded = false;
             for (auto& b : objects) {
@@ -43,7 +38,7 @@ void Scene::Update(Game* game) {
             }
         }
 
-        // ƒgƒŠƒK[”»’èid‚È‚èƒ`ƒFƒbƒNj
+        // ãƒˆãƒªã‚¬ãƒ¼åˆ¤å®šï¼ˆé‡ãªã‚Šãƒã‚§ãƒƒã‚¯ï¼‰
         for (size_t j = i + 1; j < objects.size(); ++j) {
             auto& b = objects[j];
             if (b->isDead) continue;
@@ -57,14 +52,14 @@ void Scene::Update(Game* game) {
         }
     }
 
-    // 5. V‹K¶¬‚³‚ê‚½ƒIƒuƒWƒFƒNƒg‚Ì‰ñû
+    // æ–°è¦ç”Ÿæˆã•ã‚ŒãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å›å
     std::vector<std::unique_ptr<GameObject>>& newObjs = game->GetPendingObjects();
     for (auto& obj : newObjs) {
         objects.push_back(std::move(obj));
     }
     game->ClearPendingObjects();
 
-    // 6. €–Sƒtƒ‰ƒO‚ª—§‚Á‚½ƒIƒuƒWƒFƒNƒg‚Ìíœ
+    // 6. æ­»äº¡ãƒ•ãƒ©ã‚°ãŒç«‹ã£ãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å‰Šé™¤
     auto it = std::remove_if(objects.begin(), objects.end(),
         [](const std::unique_ptr<GameObject>& obj) { return obj->isDead; });
     objects.erase(it, objects.end());

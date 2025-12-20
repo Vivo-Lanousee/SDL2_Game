@@ -1,6 +1,6 @@
 ﻿#include "Button.h"
 #include "TextRenderer.h"
-#include "imgui.h" // ★★★ 修正箇所 1: ImGuiのステータスチェックに必要 ★★★
+#include "imgui.h"
 
 // コンストラクタ
 Button::Button(int x, int y, int w, int h, std::string label)
@@ -10,10 +10,6 @@ Button::Button(int x, int y, int w, int h, std::string label)
 
 // イベント処理
 bool Button::HandleEvents(SDL_Event* event) {
-
-    // ★★★ 修正箇所 2: ImGuiがマウスを掴んでいるかチェック ★★★
-    // ImGuiがマウスをキャプチャしている（つまり、ImGuiウィンドウ上でクリックやドラッグが行われている）場合、
-    // SDLのUI要素のイベント処理はスキップし、イベントを消費しない（falseを返す）。
     ImGuiIO& io = ImGui::GetIO();
     if (io.WantCaptureMouse) {
         // マウスが動いていても、ImGuiが優先されるため、isHoveredの更新も行いません。

@@ -37,7 +37,7 @@ Turret::Turret(float x, float y, const WeaponConfig& config, SDL_Texture* tex)
 void Turret::Update(Game* game) {
     if (isDead) return;
 
-    // --- リロードタイマーの更新 ---
+    // リロードタイマーの更新
     if (isReloading) {
         reloadTimer -= Time::deltaTime;
         if (reloadTimer <= 0) {

@@ -41,16 +41,16 @@ void Player::Update(Game* game) {
 
     animator->Update();
 
-    // 1. 移動ロジック (GameParamsの数値を即時反映)
+    //移動ロジック (GameParamsの数値を即時反映)
     float moveSpeed = params.player.moveSpeed;
     velX = 0;
     if (input->IsPressed(GameAction::MoveLeft)) {
         velX = -moveSpeed;
-        isFlipLeft = true;
+        isFlipLeft = false;
     }
     if (input->IsPressed(GameAction::MoveRight)) {
         velX = moveSpeed;
-        isFlipLeft = false;
+        isFlipLeft = true;
     }
 
     if (velX != 0) {
@@ -131,7 +131,7 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, angle, NULL, flip);
     }
 
-    // --- 銃の描画ロジック ---
+    // 銃の描画
     if (gunTexture) {
         GameParams& params = GameParams::GetInstance();
         int mx, my;

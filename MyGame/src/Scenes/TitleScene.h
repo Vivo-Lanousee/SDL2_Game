@@ -7,9 +7,7 @@
 class Game;
 class GameObject;
 
-/**
- * @brief ゲームのタイトル画面シーン
- */
+
 class TitleScene : public Scene {
 public:
     TitleScene();

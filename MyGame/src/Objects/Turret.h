@@ -18,8 +18,6 @@ struct WeaponConfig {
     float spreadAngle;
     int bulletWidth;
     int bulletHeight;
-
-    // ★リロード用に追加
     int magazineSize;
     float reloadTime;
 };
@@ -40,7 +38,6 @@ private:
     Enemy* currentTarget;
     float rotationAngle;
 
-    // ★リロード管理用に追加
     int currentAmmo;
     float reloadTimer;
     bool isReloading;
