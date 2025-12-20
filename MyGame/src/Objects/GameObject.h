@@ -23,11 +23,6 @@ public:
     virtual ~GameObject() {}
     virtual void Update(Game* game) = 0;
 
-    // 描画メソッド (既存の Render は Camera を必要とするため、RenderWithCameraに統合します)
-    // 既存の Render 関数が、EditorScene.cpp の RenderWithCamera の代わりとなるため、
-    // 関数名をRenderWithCameraに変更するか、Renderをそのまま利用します。
-
-    // ★★★ 修正箇所 1: Render の名前を RenderWithCamera に変更し、EditorSceneの呼び出しに合わせる ★★★
     void RenderWithCamera(SDL_Renderer* renderer, Camera* camera) {
         int drawX = (int)x;
         int drawY = (int)y;
@@ -42,13 +37,6 @@ public:
     // 衝突時のコールバック
     virtual void OnTriggerEnter(GameObject* other) {
     }
-
-    // ★★★ 修正箇所 2: ApplyPhysics の削除 (Physics クラスに委譲するため) ★★★
-    /*
-    void ApplyPhysics() {
-        // ... このロジックは Physics クラスへ移動する ...
-    }
-    */
 
     void SetPos(float newX, float newY) {
         x = newX;

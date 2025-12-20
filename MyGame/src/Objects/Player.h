@@ -36,8 +36,6 @@ public:
 
     // エディタで画像が変更された際などに呼び出してテクスチャを再ロードする
     void RefreshGunConfig(SDL_Renderer* renderer);
-
-    // ★ EditorSceneから情報を取得するための関数を追加
     int GetCurrentAmmo() const { return currentAmmo; }
     bool GetIsReloading() const { return isReloading; }
 

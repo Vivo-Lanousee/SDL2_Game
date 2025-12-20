@@ -3,6 +3,11 @@
     "ActiveEnemyPreset": "Default",
     "ActiveGunPreset": "test",
     "ActivePlayerPreset": "Defa",
+    "Base": {
+        "defense": 0.0,
+        "maxHealth": 1012,
+        "texturePath": "assets/images/base/gate.png"
+    },
     "Camera": {
         "limitX": 2000,
         "limitY": 2600,
@@ -18,14 +23,24 @@
         }
     },
     "Enemy": {
+        "attackInterval": 1.5,
+        "attackMethod": 0,
+        "attackPower": 18,
+        "attackRange": 134.0,
         "baseHealth": 100,
-        "baseSpeed": 162.3000030517578,
+        "baseSpeed": 378.6000061035156,
+        "moveMethod": 1,
         "texturePath": "assets/images/enemies/AdvSoldier_c.png"
     },
     "EnemyPresets": {
         "Default": {
+            "attackInterval": 1.5,
+            "attackMethod": 0,
+            "attackPower": 10,
+            "attackRange": 134.0,
             "baseHealth": 100,
-            "baseSpeed": 162.3000030517578,
+            "baseSpeed": 176.0,
+            "moveMethod": 1,
             "texturePath": "assets/images/enemies/AdvSoldier_c.png"
         }
     },

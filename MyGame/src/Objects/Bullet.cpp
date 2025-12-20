@@ -1,47 +1,27 @@
 ﻿#include "Bullet.h"
 #include "../Core/Game.h"
-#include "../Core/Physics.h" // M_PI, std::atan2 のために必要
-#include "Enemy.h" // Enemy クラスにアクセスするため
+#include "../Core/Physics.h"
+#include "Enemy.h"
 #include <cmath>
 #include <iostream>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // -----------------------------------------------------
-// コンストラクタ 1: 4引数版 (Playerなどレガシーコード用)
+// コンストラクタ 1: 角度指定版
 // -----------------------------------------------------
 Bullet::Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex)
-// 既存の Player の弾丸サイズ (10x10) とデフォルトダメージ (10) を設定
     : GameObject(startX, startY, 10, 10, tex),
-    damageValue(10) // ★修正: デフォルトのダメージ値を設定
+    damageValue(10)
 {
-    // ラジアンに変換
     double radian = angleDegrees * M_PI / 180.0;
-    float speed = 10.0f;
+    float speed = 15.0f;
 
-    // 親クラス(GameObject)の変数 velX, velY を使う
     this->velX = std::cos(radian) * speed;
     this->velY = std::sin(radian) * speed;
-
     this->angle = angleDegrees;
-
-    // 設定
-    isTrigger = true;
-    name = "Bullet";
-}
-
-// -----------------------------------------------------
-// コンストラクタ 2: 8引数版 (Turretシステム用)
-// -----------------------------------------------------
-Bullet::Bullet(float x, float y, int w, int h,
-    float velX, float velY,
-    int damage,
-    SDL_Texture* tex)
-    : GameObject(x, y, w, h, tex),
-    damageValue(damage) // ★修正: ダメージ値をメンバに格納
-{
-    this->velX = velX;
-    this->velY = velY;
-
-    this->angle = std::atan2(velY, velX) * 180.0 / M_PI;
 
     isTrigger = true;
     useGravity = false;
@@ -49,38 +29,62 @@ Bullet::Bullet(float x, float y, int w, int h,
 }
 
 // -----------------------------------------------------
-// Update
+// コンストラクタ 2: 詳細指定版
 // -----------------------------------------------------
+Bullet::Bullet(float x, float y, int w, int h,
+    float velX, float velY,
+    int damage,
+    SDL_Texture* tex)
+    : GameObject(x, y, w, h, tex),
+    damageValue(damage)
+{
+    this->velX = velX;
+    this->velY = velY;
+    this->angle = std::atan2(velY, velX) * 180.0 / M_PI;
+
+    isTrigger = true;
+    useGravity = false;
+    name = "Bullet";
+}
 
 void Bullet::Update(Game* game) {
-    // 速度を適用して移動
+    if (isDead) return;
+
     x += velX;
     y += velY;
-}
 
-// -----------------------------------------------------
-// 衝突処理
-// -----------------------------------------------------
+    // 画面外判定
+    if (x < -500 || x > 5000 || y < -500 || y > 5000) {
+        isDead = true;
+    }
+}
 
 void Bullet::OnTriggerEnter(GameObject* other) {
-    // プレイヤー自身や他のトリガーには当たらない
-    if (other->name == "Player" || other->isTrigger) return;
+    if (isDead) return;
 
-    // 弾が消滅
-    isDead = true;
-
-    // Enemyに当たった場合
-    Enemy* enemy = dynamic_cast<Enemy*>(other);
-    if (enemy) {
-        // Enemyの TakeDamage メソッドを呼び出す
-        enemy->TakeDamage(damageValue);
+    // トリガーや死んでいるオブジェクトには当たらない
+    if (other->isTrigger || other->isDead) {
+        return;
     }
-    // Blockなどのソリッドオブジェクトに当たった場合も isDead = true で消滅する
-}
 
-// -----------------------------------------------------
-// Render
-// -----------------------------------------------------
+    // プレイヤーが発射した弾がプレイヤー自身に当たるのを防ぐ
+    if (other->name == "Player" || other->name == "TestPlayer") {
+        return;
+    }
+
+    // 敵に当たった場合
+    if (other->name == "Enemy" || other->name == "Test Enemy") {
+        Enemy* enemy = dynamic_cast<Enemy*>(other);
+        if (enemy) {
+            enemy->TakeDamage(damageValue);
+            isDead = true;
+        }
+    }
+    // 壁などに当たった場合
+    else if (other->name == "Block" || other->name == "Editor Ground") {
+        isDead = true;
+    }
+}
 
 void Bullet::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_Rect destRect = { drawX, drawY, width, height };
@@ -89,7 +93,6 @@ void Bullet::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         SDL_RenderCopyEx(renderer, texture, NULL, &destRect, angle, NULL, SDL_FLIP_NONE);
     }
     else {
-        // 画像がない場合黄色い四角に
         SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
         SDL_RenderFillRect(renderer, &destRect);
     }

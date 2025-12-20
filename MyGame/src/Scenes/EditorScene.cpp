@@ -5,9 +5,11 @@
 #include "../Core/Physics.h"
 #include "../Editor/EditorGUI.h"
 #include "../Objects/Block.h"
-#include "../Objects/Enemy.h" // 追加
+#include "../Objects/Enemy.h"
+#include "../Objects/Base.h" // 拠点クラス
 #include "../TextureManager.h"
 #include "../Core/GameParams.h"
+#include "../Core/GameSession.h" // セッション管理
 #include "../UI/TextRenderer.h"
 #include "imgui.h" 
 #include <iostream>
@@ -19,13 +21,20 @@ EditorScene::EditorScene()
 {
     camera = std::make_unique<Camera>(800, 600);
 
-    // 経路の初期値
+    // 経路の初期値（Linear移動の目標地点などに使用可能）
     enemyPath.push_back({ 100.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 500.0f });
     enemyPath.push_back({ 100.0f, 500.0f });
 
-    auto ground = std::make_unique<Block>(0, 550, 2000, 50);
+    // --- 拠点の生成 (マルフーシャ風に左側に配置) ---
+    // エネミーの目標地点 (x=150) の少し後ろに配置
+    auto baseObj = std::make_unique<Base>(80, 300, 80, 250);
+    baseObj->name = "Base Gate";
+    gameObjects.push_back(std::move(baseObj));
+
+    // 地面の生成 (幅を広めに設定)
+    auto ground = std::make_unique<Block>(0, 550, 5000, 50);
     ground->name = "Editor Ground";
     gameObjects.push_back(std::move(ground));
 }
@@ -37,6 +46,15 @@ void EditorScene::OnEnter(Game* game) {
 
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
+
+    // 拠点のテクスチャなどをパラメータから反映
+    for (auto& obj : gameObjects) {
+        Base* b = dynamic_cast<Base*>(obj.get());
+        if (b) b->RefreshConfig(game->GetRenderer());
+    }
+
+    // ゲームセッション（動的ステータス）の初期化
+    GameSession::GetInstance().ResetSession();
 }
 
 void EditorScene::OnExit(Game* game) {
@@ -70,16 +88,15 @@ void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
 }
 
 void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
-    if (enemyPath.empty()) return;
+    // --- エネミーの生成位置を調整 ---
+    // カメラの右端の外側 (x + 850) かつ 空中 (y=100) に生成
+    float spawnX = camera->x + 850.0f;
+    float spawnY = 100.0f;
 
-    // パスの最初の地点に生成
-    float startX = enemyPath[0].x - 32; // 中央寄せ
-    float startY = enemyPath[0].y - 32;
-
-    auto enemy = std::make_unique<Enemy>(startX, startY, 64, 64, nullptr, enemyPath);
+    auto enemy = std::make_unique<Enemy>(spawnX, spawnY, 64, 64, nullptr, enemyPath);
     enemy->name = "Test Enemy";
 
-    // 最新の設定とテクスチャを強制反映
+    // エネミー内部で useGravity = true と RefreshConfig が呼ばれることを想定
     enemy->RefreshConfig(renderer);
 
     gameObjects.push_back(std::move(enemy));
@@ -91,7 +108,8 @@ void EditorScene::Update(Game* game) {
     // --- 1. テストモードの管理 ---
     if (EditorGUI::isTestMode) {
         if (!testPlayer) {
-            auto pPtr = std::make_unique<Player>(100, 100, playerTexture.get(), bulletTexture.get(), camera.get());
+            // プレイヤーも空中から落とす位置にスポーン
+            auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
             pPtr->name = "TestPlayer";
             testPlayer = pPtr.get();
             gameObjects.push_back(std::move(pPtr));
@@ -106,22 +124,31 @@ void EditorScene::Update(Game* game) {
         camera->Follow(nullptr);
     }
 
-    // 全オブジェクトの更新 ---
+    // --- 2. 全オブジェクトの更新と物理適用 ---
     for (auto& obj : gameObjects) {
         obj->Update(game);
 
+        // 重力が有効、または速度がある場合に物理演算（移動と落下の計算）を適用
         if (obj->useGravity || std::abs(obj->velX) > 0 || std::abs(obj->velY) > 0) {
             Physics::ApplyPhysics(obj.get(), deltaTime);
         }
     }
 
-    // 衝突解決
-    if (testPlayer) {
-        testPlayer->isGrounded = false;
-        for (auto& obj : gameObjects) {
-            if (obj.get() == testPlayer || obj->isTrigger) continue;
-            if (Physics::ResolveCollision(testPlayer, obj.get())) {
-                testPlayer->isGrounded = true;
+    // --- 3. 衝突解決 (接地判定) ---
+    // プレイヤーとエネミー、両方に対して地面との当たり判定を行う
+    for (auto& obj : gameObjects) {
+        // 対象はテストプレイヤー、またはエネミー
+        if (obj->name == "TestPlayer" || obj->name == "Enemy" || obj->name == "Test Enemy") {
+            obj->isGrounded = false; // 判定前に一度空中状態にする
+
+            for (auto& target : gameObjects) {
+                // 自分自身やトリガーオブジェクト（弾など）とは衝突しない
+                if (obj.get() == target.get() || target->isTrigger) continue;
+
+                // 物理エンジンで衝突を解決し、押し戻しが発生したら接地とする
+                if (Physics::ResolveCollision(obj.get(), target.get())) {
+                    obj->isGrounded = true;
+                }
             }
         }
     }
@@ -133,7 +160,7 @@ void EditorScene::Update(Game* game) {
     }
     game->ClearPendingObjects();
 
-    // お掃除
+    // 死亡フラグの掃除
     auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
         [](const std::unique_ptr<GameObject>& obj) { return obj->isDead; });
     gameObjects.erase(it, gameObjects.end());
@@ -158,7 +185,29 @@ void EditorScene::Render(Game* game) {
         obj->RenderWithCamera(renderer, camera.get());
     }
 
-    // UI 描画
+    // --- 拠点の総合HPバー描画 (画面上部固定) ---
+    GameSession& session = GameSession::GetInstance();
+    float hpRatio = (session.maxBaseHP > 0) ? (float)session.currentBaseHP / session.maxBaseHP : 0;
+
+    int barWidth = 400;
+    int barHeight = 20;
+    int screenW = 800;
+    SDL_Rect barBG = { (screenW - barWidth) / 2, 20, barWidth, barHeight };
+    SDL_Rect barFG = { (screenW - barWidth) / 2, 20, (int)(barWidth * hpRatio), barHeight };
+
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255); // 背景
+    SDL_RenderFillRect(renderer, &barBG);
+
+    // HPに応じて色を変更
+    if (hpRatio > 0.5f) SDL_SetRenderDrawColor(renderer, 0, 200, 50, 255);
+    else if (hpRatio > 0.2f) SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
+    else SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+
+    SDL_RenderFillRect(renderer, &barFG);
+
+    TextRenderer::Draw(renderer, "GATE STATUS", barBG.x, barBG.y - 15, { 255, 255, 255, 255 });
+
+    // --- UI 描画 (弾数) ---
     std::string ammoText = "Ammo: 0 / 0";
     SDL_Color textColor = { 200, 200, 200, 255 };
 

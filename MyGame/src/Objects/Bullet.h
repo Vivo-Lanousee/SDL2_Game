@@ -1,15 +1,20 @@
 ﻿#pragma once
 #include "GameObject.h"
 #include <cmath>
-#include <SDL.h> // SDL_Texture のために必要
+#include <SDL.h>
 
-class Game; // Game クラスの前方宣言
+class Game;
 class Enemy;
 
+/**
+ * @brief 弾丸クラス
+ */
 class Bullet : public GameObject {
 public:
+    // コンストラクタ 1: 角度指定版
     Bullet(float startX, float startY, double angleDegrees, SDL_Texture* tex);
 
+    // コンストラクタ 2: 詳細指定版
     Bullet(float x, float y, int w, int h,
         float velX, float velY,
         int damage,
@@ -18,14 +23,11 @@ public:
     virtual ~Bullet() {}
 
     void Update(Game* game) override;
-
     void OnTriggerEnter(GameObject* other) override;
-
     void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override;
 
-    // 弾のダメージを取得できるようにする
     int GetDamage() const { return damageValue; }
 
 private:
-    int damageValue; // 弾丸の攻撃力
+    int damageValue;
 };

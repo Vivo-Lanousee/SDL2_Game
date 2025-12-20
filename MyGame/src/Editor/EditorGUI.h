@@ -4,9 +4,8 @@
 #include "../Objects/GameObject.h"
 #include <string>
 
-/**
- * @brief エディタ用のGUIを管理する静的クラス
- */
+// エディタ用のGUIを管理する静的クラス
+
 class EditorGUI {
 public:
     enum class Mode {
@@ -20,7 +19,8 @@ public:
         GUN,
         ENEMY,
         PHYSICS,
-        CAMERA 
+        CAMERA,
+        BASE 
     };
 
     static void Init(SDL_Window* window, SDL_Renderer* renderer);

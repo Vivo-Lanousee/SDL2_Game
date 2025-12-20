@@ -12,11 +12,13 @@
 #include <commdlg.h> 
 
 #include "../Core/GameParams.h" 
+#include "../Core/GameSession.h"
 #include "../Scenes/Scene.h"
 #include "../Scenes/EditorScene.h"
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
 #include "../Objects/Enemy.h"
+#include "../Objects/Base.h"
 #include "../Core/ConfigManager.h" 
 
 // filesystemの名前空間を短縮
@@ -31,9 +33,10 @@ bool EditorGUI::isTestMode = false;
 // --- 内部描画ヘルパー関数の宣言 ---
 static void DrawPlayerConfigPanel(GameParams& params);
 static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
-static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene); // 引数追加
+static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
 static void DrawPhysicsConfigPanel(GameParams& params);
 static void DrawCameraConfigPanel(GameParams& params);
+static void DrawBaseConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
 
 // --------------------------------------------------------------------------------------
 
@@ -84,7 +87,7 @@ std::string EditorGUI::ImportTexture() {
 
     if (GetOpenFileNameA(&ofn)) {
         fs::path srcPath(szFile);
-        std::string destDir = "assets/images/enemies/"; // フォルダ分け
+        std::string destDir = "assets/images/editor_imports/";
 
         try {
             if (!fs::exists(destDir)) fs::create_directories(destDir);
@@ -111,7 +114,6 @@ static void NotifyPlayerGunChanged(SDL_Renderer* renderer, Scene* currentScene) 
     }
 }
 
-// 敵の設定変更を通知するヘルパー
 static void NotifyEnemyConfigChanged(SDL_Renderer* renderer, Scene* currentScene) {
     if (!currentScene) return;
     auto& objects = currentScene->GetObjects();
@@ -121,6 +123,19 @@ static void NotifyEnemyConfigChanged(SDL_Renderer* renderer, Scene* currentScene
             enemy->RefreshConfig(renderer);
         }
     }
+}
+
+static void NotifyBaseConfigChanged(SDL_Renderer* renderer, Scene* currentScene) {
+    if (!currentScene) return;
+    auto& objects = currentScene->GetObjects();
+    for (auto& obj : objects) {
+        Base* b = dynamic_cast<Base*>(obj.get());
+        if (b) {
+            b->RefreshConfig(renderer);
+        }
+    }
+    // 最大HPの設定が変更された場合、セッションの最大値も同期させる
+    GameSession::GetInstance().maxBaseHP = GameParams::GetInstance().base.maxHealth;
 }
 
 void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
@@ -145,6 +160,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
             case ConfigViewMode::ENEMY:   title += " [Enemy]";  break;
             case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
             case ConfigViewMode::CAMERA:  title += " [Camera]";  break;
+            case ConfigViewMode::BASE:    title += " [Base]";    break;
             default: return;
             }
 
@@ -154,9 +170,10 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 switch (currentConfigView) {
                 case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
                 case ConfigViewMode::GUN:      DrawGunConfigPanel(params, renderer, currentScene); break;
-                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params, renderer, currentScene); break; // 引数追加
+                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params, renderer, currentScene); break;
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
                 case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break;
+                case ConfigViewMode::BASE:    DrawBaseConfigPanel(params, renderer, currentScene); break;
                 default: break;
                 }
                 ImGui::End();
@@ -219,13 +236,14 @@ void EditorGUI::DrawInspector() {
 
 void EditorGUI::DrawParameters() {
     ImGui::SetNextWindowPos(ImVec2(240, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(200, 350), ImGuiCond_Once);
 
     ImGui::Begin(" Launcher", nullptr, ImGuiWindowFlags_NoCollapse);
     ImGui::TextDisabled("Category Select:");
-    if (ImGui::Button(" Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
-    if (ImGui::Button("Gun", ImVec2(-1, 35)))      currentConfigView = ConfigViewMode::GUN;
-    if (ImGui::Button("Enemy", ImVec2(-1, 35)))   currentConfigView = ConfigViewMode::ENEMY;
+    if (ImGui::Button("Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
+    if (ImGui::Button("Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
+    if (ImGui::Button("Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
+    if (ImGui::Button("Base", ImVec2(-1, 35)))   currentConfigView = ConfigViewMode::BASE;
     if (ImGui::Button("Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
     if (ImGui::Button("Camera", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::CAMERA;
 
@@ -288,37 +306,20 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
     strncpy_s(pathBuf, params.gun.texturePath.c_str(), _TRUNCATE);
 
     if (ImGui::CollapsingHeader("Edit Active Gun Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec");
-        ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f");
-        ImGui::InputInt("Damage", &params.gun.damage);
+        if (ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec")) NotifyPlayerGunChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f")) NotifyPlayerGunChanged(renderer, currentScene);
+        if (ImGui::InputInt("Damage", &params.gun.damage)) NotifyPlayerGunChanged(renderer, currentScene);
         ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg");
         ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20);
 
         ImGui::Separator();
-        ImGui::Text("Magazine & Reload");
-        ImGui::SliderInt("Mag Size", &params.gun.magazineSize, 1, 200);
-        ImGui::SliderFloat("Reload Time", &params.gun.reloadTime, 0.1f, 10.0f, "%.1f sec");
-
-        ImGui::Separator();
-        ImGui::Text("Visual Offsets (Display)");
-        ImGui::DragFloat("Offset X", &params.gun.offsetX, 0.5f, -100.0f, 100.0f, "%.1f px");
-        ImGui::DragFloat("Offset Y", &params.gun.offsetY, 0.5f, -100.0f, 100.0f, "%.1f px");
-
-        ImGui::Separator();
         ImGui::Text("Appearance");
-        ImGui::Text("Current Path: %s", params.gun.texturePath.c_str());
-
         if (ImGui::Button("📂 Import Gun Image", ImVec2(-1, 30))) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {
                 params.gun.texturePath = newPath;
                 NotifyPlayerGunChanged(renderer, currentScene);
             }
-        }
-
-        if (ImGui::InputText("Texture Path (Manual)", pathBuf, IM_ARRAYSIZE(pathBuf))) {
-            params.gun.texturePath = pathBuf;
-            NotifyPlayerGunChanged(renderer, currentScene);
         }
     }
 
@@ -343,39 +344,45 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
     }
 }
 
-// 敵設定パネルの更新
 static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene) {
     static char nameBuf[64] = "";
-    static char pathBuf[256] = "";
-
     if (nameBuf[0] == '\0' && !params.activeEnemyPresetName.empty()) {
         strncpy_s(nameBuf, params.activeEnemyPresetName.c_str(), _TRUNCATE);
     }
-    strncpy_s(pathBuf, params.enemy.texturePath.c_str(), _TRUNCATE);
 
-    // テスト用の敵生成ボタン（EditorScene限定）
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
     if (ImGui::Button("SPAWN TEST ENEMY", ImVec2(-1, 40))) {
         EditorScene* edScene = dynamic_cast<EditorScene*>(currentScene);
-        if (edScene) {
-            edScene->SpawnTestEnemy(renderer);
-        }
+        if (edScene) edScene->SpawnTestEnemy(renderer);
     }
     ImGui::PopStyleColor();
     ImGui::Separator();
 
-    if (ImGui::CollapsingHeader("Edit Active Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (ImGui::SliderFloat("Speed", &params.enemy.baseSpeed, 10.0f, 300.0f, "%.1f")) {
-            NotifyEnemyConfigChanged(renderer, currentScene);
-        }
-        if (ImGui::InputInt("Health", &params.enemy.baseHealth, 10, 500)) {
+    if (ImGui::CollapsingHeader("Status (ステータス)", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::InputInt("Health", &params.enemy.baseHealth, 10, 100)) NotifyEnemyConfigChanged(renderer, currentScene);
+        if (ImGui::InputInt("Attack", &params.enemy.attackPower, 1, 50)) NotifyEnemyConfigChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Speed", &params.enemy.baseSpeed, 10.0f, 500.0f, "%.1f px/s")) NotifyEnemyConfigChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Range", &params.enemy.attackRange, 0.0f, 1000.0f, "%.0f px")) NotifyEnemyConfigChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Interval", &params.enemy.attackInterval, 0.1f, 10.0f, "%.2f sec")) NotifyEnemyConfigChanged(renderer, currentScene);
+    }
+
+    if (ImGui::CollapsingHeader("Behavior (行動設定)", ImGuiTreeNodeFlags_DefaultOpen)) {
+        const char* moveMethods[] = { "Linear", "PathFollow" };
+        int currentMove = static_cast<int>(params.enemy.moveMethod);
+        if (ImGui::Combo("Move Method", &currentMove, moveMethods, IM_ARRAYSIZE(moveMethods))) {
+            params.enemy.moveMethod = static_cast<MovementType>(currentMove);
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
 
-        ImGui::Separator();
-        ImGui::Text("Appearance");
-        ImGui::TextWrapped("Path: %s", params.enemy.texturePath.c_str());
+        const char* attackMethods[] = { "Melee", "Ranged", "Kamikaze" };
+        int currentAtk = static_cast<int>(params.enemy.attackMethod);
+        if (ImGui::Combo("Attack Method", &currentAtk, attackMethods, IM_ARRAYSIZE(attackMethods))) {
+            params.enemy.attackMethod = static_cast<AttackType>(currentAtk);
+            NotifyEnemyConfigChanged(renderer, currentScene);
+        }
+    }
 
+    if (ImGui::CollapsingHeader("Appearance", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::Button("📂 Import Enemy Image", ImVec2(-1, 30))) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {
@@ -386,23 +393,48 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
     }
 
     if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::BeginChild("EnemyPresetList", ImVec2(0, 120), true);
+        ImGui::BeginChild("EnemyPresetList", ImVec2(0, 100), true);
         for (auto it = params.enemyPresets.begin(); it != params.enemyPresets.end(); ++it) {
-            const std::string& name = it->first;
-            if (ImGui::Selectable(name.c_str(), params.activeEnemyPresetName == name)) {
+            if (ImGui::Selectable(it->first.c_str(), params.activeEnemyPresetName == it->first)) {
                 params.enemy = it->second;
-                params.activeEnemyPresetName = name;
-                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
+                params.activeEnemyPresetName = it->first;
+                strncpy_s(nameBuf, it->first.c_str(), _TRUNCATE);
                 NotifyEnemyConfigChanged(renderer, currentScene);
             }
         }
         ImGui::EndChild();
 
-        ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
+        ImGui::InputText("Preset Name", nameBuf, IM_ARRAYSIZE(nameBuf));
         if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
             params.enemyPresets[nameBuf] = params.enemy;
             params.activeEnemyPresetName = nameBuf;
         }
+    }
+}
+
+static void DrawBaseConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene) {
+    // 拠点の全回復ボタン
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.1f, 0.6f, 0.4f, 1.0f));
+    if (ImGui::Button("RESTORE BASE HP", ImVec2(-1, 45))) {
+        GameSession::GetInstance().currentBaseHP = params.base.maxHealth;
+    }
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+
+    if (ImGui::CollapsingHeader("Base Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::InputInt("Max Health", &params.base.maxHealth)) NotifyBaseConfigChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Defense", &params.base.defense, 0.0f, 100.0f)) NotifyBaseConfigChanged(renderer, currentScene);
+    }
+
+    if (ImGui::CollapsingHeader("Appearance", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (ImGui::Button("📂 Import Base Image", ImVec2(-1, 30))) {
+            std::string newPath = EditorGUI::ImportTexture();
+            if (!newPath.empty()) {
+                params.base.texturePath = newPath;
+                NotifyBaseConfigChanged(renderer, currentScene);
+            }
+        }
+        ImGui::TextWrapped("Current Path: %s", params.base.texturePath.c_str());
     }
 }
 
@@ -414,38 +446,9 @@ static void DrawPhysicsConfigPanel(GameParams& params) {
 }
 
 static void DrawCameraConfigPanel(GameParams& params) {
-    static char nameBuf[64] = "";
-    if (nameBuf[0] == '\0' && !params.activeCameraPresetName.empty()) {
-        strncpy_s(nameBuf, params.activeCameraPresetName.c_str(), _TRUNCATE);
-    }
-
-    if (ImGui::CollapsingHeader("Camera Offsets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Offset from Screen Center");
+    if (ImGui::CollapsingHeader("Camera Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::SliderFloat("Offset X", &params.camera.offsetX, -400.0f, 400.0f, "%.1f px");
         ImGui::SliderFloat("Offset Y", &params.camera.offsetY, -500.0f, 300.0f, "%.1f px");
-    }
-
-    if (ImGui::CollapsingHeader("Map Limits", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::DragInt("Limit Width", &params.camera.limitX, 10, 800, 10000);
-        ImGui::DragInt("Limit Height", &params.camera.limitY, 10, 0, 10000);
-    }
-
-    if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::BeginChild("CameraPresetList", ImVec2(0, 120), true);
-        for (auto it = params.cameraPresets.begin(); it != params.cameraPresets.end(); ++it) {
-            const std::string& name = it->first;
-            if (ImGui::Selectable(name.c_str(), params.activeCameraPresetName == name)) {
-                params.camera = it->second;
-                params.activeCameraPresetName = name;
-                strncpy_s(nameBuf, name.c_str(), _TRUNCATE);
-            }
-        }
-        ImGui::EndChild();
-
-        ImGui::InputText("Name", nameBuf, IM_ARRAYSIZE(nameBuf));
-        if (ImGui::Button("SAVE PRESET", ImVec2(-1, 0))) {
-            params.cameraPresets[nameBuf] = params.camera;
-            params.activeCameraPresetName = nameBuf;
-        }
     }
 }

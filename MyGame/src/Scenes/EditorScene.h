@@ -5,6 +5,7 @@
 #include <SDL.h>
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
+#include "../Objects/Base.h" // 拠点クラスの追加
 #include "../Core/Camera.h"
 #include "../TextureManager.h"
 
