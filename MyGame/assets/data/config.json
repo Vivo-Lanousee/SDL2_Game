@@ -29,6 +29,8 @@
         "attackRange": 40.0,
         "baseHealth": 100,
         "baseSpeed": 271.79998779296875,
+        "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+        "locomotionStyle": 1,
         "moveMethod": 1,
         "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
     },
@@ -40,6 +42,8 @@
             "attackRange": 134.0,
             "baseHealth": 100,
             "baseSpeed": 176.0,
+            "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+            "locomotionStyle": 0,
             "moveMethod": 1,
             "texturePath": "assets/images/enemies/AdvSoldier_c.png"
         },
@@ -50,6 +54,8 @@
             "attackRange": 40.0,
             "baseHealth": 100,
             "baseSpeed": 271.79998779296875,
+            "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+            "locomotionStyle": 1,
             "moveMethod": 1,
             "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
         }

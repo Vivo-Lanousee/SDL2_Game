@@ -10,7 +10,6 @@ class Game;
 
 class Physics {
 public:
-    // ★★★ 修正箇所 1: ApplyPhysics の宣言を追加 ★★★
     // 物理演算の適用（重力と終端速度の計算を含む）
     static void ApplyPhysics(GameObject* obj, float deltaTime);
 

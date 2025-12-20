@@ -36,6 +36,7 @@ public:
 
     // 衝突時のコールバック
     virtual void OnTriggerEnter(GameObject* other) {
+
     }
 
     void SetPos(float newX, float newY) {

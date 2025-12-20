@@ -1,16 +1,13 @@
 ﻿#include "Physics.h"
 #include "../Objects/GameObject.h"
 #include "../Core/Time.h"
-#include "../Core/GameParams.h" // PhysicsSettings::GravityScale を使用するため
-
+#include "../Core/GameParams.h" 
 void Physics::ApplyPhysics(GameObject* obj, float deltaTime) {
     if (!obj) return;
 
     GameParams& params = GameParams::GetInstance();
 
-    // 1. 重力と終端速度の適用 (デバッグGUIで調整可能)
     if (obj->useGravity) {
-        // ★★★ 修正箇所: スケーリング係数を乗算して適用 ★★★
         // gravity (9.8) * GravityScale (100.0) = 980.0 px/s^2 相当となる
         float effectiveGravity = params.physics.gravity * PhysicsSettings::GravityScale;
 
