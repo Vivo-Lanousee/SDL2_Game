@@ -51,18 +51,23 @@ void Enemy::Update(Game* game) {
     float targetX = 150.0f;
     float distToTarget = std::abs(x - targetX);
 
-    // 射程内であれば移動を止めて攻撃、それ以外は進軍
+    // --- 攻撃範囲判定と初撃即時発動ロジック ---
     if (distToTarget <= attackRange) {
-        isAttacking = true;
-        velX = 0; // 攻撃中は止まる
+        // 今まで移動中で、今このフレームで攻撃範囲に入った場合
+        if (!isAttacking) {
+            isAttacking = true;
+            velX = 0; // 足を止める
+            // タイマーをインターバル分溜まった状態にすることで、
+            // この後の AttackLogic 内で即座に1回目の攻撃を実行させる
+            attackTimer = attackInterval;
+        }
+
+        AttackLogic(game);
     }
     else {
+        // 攻撃範囲外なら進軍
         isAttacking = false;
         MoveLogic();
-    }
-
-    if (isAttacking) {
-        AttackLogic(game);
     }
 }
 
@@ -81,31 +86,31 @@ void Enemy::MoveLogic() {
     else if (params.enemy.moveMethod == MovementType::PathFollow) {
         // パス追従
         if (currentWaypointIndex >= targetPath.size()) {
-            isAttacking = true;
+            // パス終了時に攻撃範囲外ならその場で攻撃待機へ（またはisAttacking判定へ）
             return;
         }
 
         SDL_FPoint target = targetPath[currentWaypointIndex];
         float dx = target.x - (x + width / 2.0f);
-        // PathFollow時はyも制御（飛行ユニットなどの想定）
-        float dy = target.y - (y + height / 2.0f);
-        float distance = std::sqrt(dx * dx + dy * dy);
+        float distance = std::abs(dx); // マルフーシャ風に横移動のみを考慮する場合
 
         if (distance < distanceTolerance) {
             currentWaypointIndex++;
         }
         else {
-            x += (dx / distance) * moveSpeed * dt;
-            // ウェイポイント追従中のみ、重力の影響を無視してyを動かす場合はここを有効化
-            // y += (dy / distance) * moveSpeed * dt; 
+            float dir = (dx > 0) ? 1.0f : -1.0f;
+            x += dir * moveSpeed * dt;
         }
     }
 }
 
 void Enemy::AttackLogic(Game* game) {
+    // 時間経過を加算（Time::deltaTimeを使用）
     attackTimer += Time::deltaTime;
 
+    // インターバルに達したら攻撃実行
     if (attackTimer >= attackInterval) {
+        // インターバルをリセット（超過分を引くことで精度を保つ、または単純に0にする）
         attackTimer = 0.0f;
 
         GameParams& params = GameParams::GetInstance();
@@ -114,15 +119,16 @@ void Enemy::AttackLogic(Game* game) {
         // 拠点にダメージを与える
         session.DamageBase(attackPower);
 
+        // 攻撃方法に応じた処理
         switch (params.enemy.attackMethod) {
         case AttackType::Melee:
-            std::cout << "[Melee Attack] Base Damaged!" << std::endl;
+            std::cout << "[Immediate/Cycle Melee] Base Damaged by " << attackPower << std::endl;
             break;
         case AttackType::Ranged:
-            std::cout << "[Ranged Attack] Base Shot!" << std::endl;
+            std::cout << "[Immediate/Cycle Ranged] Base Shot by " << attackPower << std::endl;
             break;
         case AttackType::Kamikaze:
-            std::cout << "[Kamikaze] Exploded!" << std::endl;
+            std::cout << "[Immediate Kamikaze] Exploded!" << std::endl;
             isDead = true;
             break;
         }
@@ -153,6 +159,7 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 }
 
 void Enemy::OnTriggerEnter(GameObject* other) {
+    // 必要に応じて実装
 }
 
 void Enemy::TakeDamage(int damage) {

@@ -10,7 +10,6 @@ struct SDL_FPoint;
 
 /**
  * @brief エネミーの挙動を管理するクラス
- * 設定された8つのパラメータに基づき、進軍と攻撃を行う
  */
 class Enemy : public GameObject {
 public:
@@ -22,7 +21,7 @@ public:
     void Update(Game* game) override;
     void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override;
 
-    // 設定を最新の GameParams から反映させる（画像パスの更新含む）
+    // 設定を最新の GameParams から反映させる
     void RefreshConfig(SDL_Renderer* renderer);
 
     // --- ゲームロジック用メソッド ---
@@ -32,26 +31,26 @@ public:
     float GetCurrentHP() const { return (float)hp; }
 
 private:
-    // --- 1-5. ステータス (数値系) ---
+    // --- ステータス ---
     int hp;
     int maxHp;
     int attackPower;
     float moveSpeed;
     float attackRange;
-    float attackInterval; // 攻撃の速さ
+    float attackInterval;
     float attackTimer;
 
-    // --- 経路情報 ---
+    // --- パス追従ロジック ---
     const std::vector<SDL_FPoint> targetPath;
     int currentWaypointIndex;
     float distanceTolerance;
 
-    // --- 6-7. AI ステート (移動・攻撃方法) ---
+    // --- AI ステート ---
     bool isAttacking;
 
     void MoveLogic();
     void AttackLogic(Game* game);
 
-    // --- 8. その他 (外見・アニメーション) ---
+    // --- その他 ---
     std::unique_ptr<Animator> animator;
 };

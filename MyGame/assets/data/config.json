@@ -1,6 +1,6 @@
 {
     "ActiveCameraPreset": "Default",
-    "ActiveEnemyPreset": "Default",
+    "ActiveEnemyPreset": "Missile",
     "ActiveGunPreset": "test",
     "ActivePlayerPreset": "Defa",
     "Base": {
@@ -24,13 +24,13 @@
     },
     "Enemy": {
         "attackInterval": 1.5,
-        "attackMethod": 0,
-        "attackPower": 18,
-        "attackRange": 134.0,
+        "attackMethod": 2,
+        "attackPower": 10,
+        "attackRange": 40.0,
         "baseHealth": 100,
-        "baseSpeed": 378.6000061035156,
+        "baseSpeed": 271.79998779296875,
         "moveMethod": 1,
-        "texturePath": "assets/images/enemies/AdvSoldier_c.png"
+        "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
     },
     "EnemyPresets": {
         "Default": {
@@ -42,6 +42,16 @@
             "baseSpeed": 176.0,
             "moveMethod": 1,
             "texturePath": "assets/images/enemies/AdvSoldier_c.png"
+        },
+        "Missile": {
+            "attackInterval": 1.5,
+            "attackMethod": 2,
+            "attackPower": 10,
+            "attackRange": 40.0,
+            "baseHealth": 100,
+            "baseSpeed": 271.79998779296875,
+            "moveMethod": 1,
+            "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
         }
     },
     "Gun": {
