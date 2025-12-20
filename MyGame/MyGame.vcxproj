@@ -46,6 +46,7 @@
     <ClCompile Include="src\UI\Button.cpp" />
     <ClCompile Include="src\UI\TextRenderer.cpp" />
     <ClCompile Include="src\Core\Time.cpp" />
+    <ClCompile Include="src\GameLogic\WaveManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libavif-16.dll" />
@@ -106,6 +107,7 @@
     <ClInclude Include="src\UI\TextRenderer.h" />
     <ClInclude Include="src\Core\Time.h" />
     <ClInclude Include="src\Weapons\WeaponConfig.h" />
+    <ClInclude Include="src\GameLogic\WaveManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\images\guns\AdvLMG1_c.png" />

@@ -55,7 +55,7 @@ public:
 
     SDL_Texture* GetBulletTexture();
 
-    // 3. テキスト描画
+    //  テキスト描画
     void DrawText(const char* text, int x, int y, SDL_Color color);
 
 private:
