@@ -2,33 +2,30 @@
 
 #include <nlohmann/json.hpp> 
 #include <map>
+#include <vector>
 #include <string>
 
 using json = nlohmann::json;
 
 namespace PhysicsSettings {
-    // GUIに表示される値を内部のピクセル値に変換するための係数
     constexpr float GravityScale = 100.0f;
 }
 
-// 移動モードの定義
 enum class MovementType {
-    Linear = 0,    // 拠点（目標）へ向かって一直線
-    PathFollow = 1 // ウェイポイント（経路）を辿る
+    Linear = 0,
+    PathFollow = 1
 };
 
-// 移動スタイルの定義 (追加)
 enum class LocomotionType {
-    Ground = 0,  // 地上を歩く
-    Flying = 1,  // 空中を浮遊移動
-    Jumping = 2  // 跳ねながら移動
+    Ground = 0,
+    Flying = 1,
+    Jumping = 2
 };
 
-// 攻撃方法の定義
 enum class AttackType {
-    Melee = 0,    // 近接（接触攻撃）
-    Ranged = 1,   // 遠距離（弾を発射）
-    Kamikaze = 2  // 自爆
+    Melee = 0,
+    Ranged = 1,
+    Kamikaze = 2
 };
 
 struct PlayerParams {
@@ -113,10 +110,10 @@ struct EnemyParams {
     float attackRange = 100.0f;
     float attackInterval = 1.5f;
     MovementType moveMethod = MovementType::Linear;
-    LocomotionType locomotionStyle = LocomotionType::Ground; // 追加
+    LocomotionType locomotionStyle = LocomotionType::Ground;
     AttackType attackMethod = AttackType::Melee;
     std::string texturePath = "assets/images/enemies/default_enemy.png";
-    std::string bulletTexturePath = "assets/images/enemies/enemy_bullet.png"; // 追加
+    std::string bulletTexturePath = "assets/images/enemies/enemy_bullet.png";
 
     friend void to_json(json& j, const EnemyParams& p) {
         j = json{
@@ -187,6 +184,41 @@ struct BaseParams {
     }
 };
 
+struct EnemySpawnEntry {
+    std::string enemyPresetName = "Default";
+    int count = 1;
+
+    friend void to_json(json& j, const EnemySpawnEntry& p) {
+        j = json{ {"preset", p.enemyPresetName}, {"count", p.count} };
+    }
+    friend void from_json(const json& j, EnemySpawnEntry& p) {
+        if (j.contains("preset")) j.at("preset").get_to(p.enemyPresetName);
+        if (j.contains("count")) j.at("count").get_to(p.count);
+    }
+};
+
+struct WaveParams {
+    std::vector<EnemySpawnEntry> spawns;
+
+    friend void to_json(json& j, const WaveParams& p) {
+        j = json{ {"spawns", p.spawns} };
+    }
+    friend void from_json(const json& j, WaveParams& p) {
+        if (j.contains("spawns")) j.at("spawns").get_to(p.spawns);
+    }
+};
+
+struct LevelParams {
+    std::vector<WaveParams> waves;
+
+    friend void to_json(json& j, const LevelParams& p) {
+        j = json{ {"waves", p.waves} };
+    }
+    friend void from_json(const json& j, LevelParams& p) {
+        if (j.contains("waves")) j.at("waves").get_to(p.waves);
+    }
+};
+
 struct GameParams {
 public:
     static GameParams& GetInstance() {
@@ -213,6 +245,8 @@ public:
     std::map<std::string, CameraParams> cameraPresets;
     std::string activeCameraPresetName;
 
+    std::map<int, LevelParams> levelConfigs;
+
     friend void to_json(json& j, const GameParams& p) {
         j = json{
             {"Player", p.player},
@@ -228,7 +262,8 @@ public:
             {"EnemyPresets", p.enemyPresets},
             {"ActiveEnemyPreset", p.activeEnemyPresetName},
             {"CameraPresets", p.cameraPresets},
-            {"ActiveCameraPreset", p.activeCameraPresetName}
+            {"ActiveCameraPreset", p.activeCameraPresetName},
+            {"Levels", p.levelConfigs}
         };
     }
 
@@ -247,6 +282,7 @@ public:
         if (j.contains("ActiveEnemyPreset")) j.at("ActiveEnemyPreset").get_to(p.activeEnemyPresetName);
         if (j.contains("CameraPresets")) j.at("CameraPresets").get_to(p.cameraPresets);
         if (j.contains("ActiveCameraPreset")) j.at("ActiveCameraPreset").get_to(p.activeCameraPresetName);
+        if (j.contains("Levels")) j.at("Levels").get_to(p.levelConfigs);
         p.applyActivePresets();
     }
 
@@ -267,6 +303,8 @@ private:
         activeEnemyPresetName = "Default";
         cameraPresets["Default"] = camera;
         activeCameraPresetName = "Default";
+
+        levelConfigs[1] = LevelParams();
     }
     GameParams(const GameParams&) = delete;
     GameParams& operator=(const GameParams&) = delete;

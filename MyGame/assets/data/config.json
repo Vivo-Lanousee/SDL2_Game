@@ -98,6 +98,49 @@
             "texturePath": "assets/images/guns/AdvLMG1_c.png"
         }
     },
+    "Levels": [
+        [
+            1,
+            {
+                "waves": [
+                    {
+                        "spawns": [
+                            {
+                                "count": 1,
+                                "preset": "Missile"
+                            },
+                            {
+                                "count": 1,
+                                "preset": "Default"
+                            }
+                        ]
+                    },
+                    {
+                        "spawns": []
+                    }
+                ]
+            }
+        ],
+        [
+            2,
+            {
+                "waves": [
+                    {
+                        "spawns": [
+                            {
+                                "count": 1,
+                                "preset": "Default"
+                            },
+                            {
+                                "count": 1,
+                                "preset": "Missile"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    ],
     "Physics": {
         "gravity": 24.020000457763672,
         "terminalVelocity": 1537.0

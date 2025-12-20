@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <algorithm> 
 #include <cstring> 
 #include <filesystem> 
@@ -160,6 +161,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
             case ConfigViewMode::PHYSICS: title += " [Physics]"; break;
             case ConfigViewMode::CAMERA:  title += " [Camera]";  break;
             case ConfigViewMode::BASE:    title += " [Base]";    break;
+            case ConfigViewMode::WAVE:    title += " [Wave]";    break;
             default: return;
             }
 
@@ -173,6 +175,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
                 case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break;
                 case ConfigViewMode::BASE:    DrawBaseConfigPanel(params, renderer, currentScene); break;
+                case ConfigViewMode::WAVE:    DrawWaveConfigPanel(params); break;
                 default: break;
                 }
                 ImGui::End();
@@ -242,9 +245,10 @@ void EditorGUI::DrawParameters() {
     if (ImGui::Button("Player", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PLAYER;
     if (ImGui::Button("Gun", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::GUN;
     if (ImGui::Button("Enemy", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::ENEMY;
-    if (ImGui::Button("Base", ImVec2(-1, 35)))   currentConfigView = ConfigViewMode::BASE;
+    if (ImGui::Button("Base", ImVec2(-1, 35)))    currentConfigView = ConfigViewMode::BASE;
     if (ImGui::Button("Physics", ImVec2(-1, 35))) currentConfigView = ConfigViewMode::PHYSICS;
     if (ImGui::Button("Camera", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::CAMERA;
+    if (ImGui::Button("Wave", ImVec2(-1, 35)))  currentConfigView = ConfigViewMode::WAVE;
 
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.4f, 0.6f, 0.6f));
@@ -253,6 +257,82 @@ void EditorGUI::DrawParameters() {
     }
     ImGui::PopStyleColor();
     ImGui::End();
+}
+
+void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
+    static int selectedLevel = 1;
+    ImGui::InputInt("Level ID", &selectedLevel);
+    if (selectedLevel < 1) selectedLevel = 1;
+
+    // もし指定したレベルがなければ作成
+    if (params.levelConfigs.find(selectedLevel) == params.levelConfigs.end()) {
+        if (ImGui::Button("Create Level Config")) {
+            params.levelConfigs[selectedLevel] = LevelParams();
+        }
+        return;
+    }
+
+    LevelParams& level = params.levelConfigs[selectedLevel];
+
+    if (ImGui::Button("Add New Wave", ImVec2(-1, 30))) {
+        level.waves.push_back(WaveParams());
+    }
+
+    ImGui::Separator();
+
+    for (size_t w = 0; w < level.waves.size(); ++w) {
+        ImGui::PushID(static_cast<int>(w));
+        std::string waveHeader = "Wave " + std::to_string(w + 1);
+        if (ImGui::CollapsingHeader(waveHeader.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+            WaveParams& wave = level.waves[w];
+
+            for (size_t e = 0; e < wave.spawns.size(); ++e) {
+                ImGui::PushID(static_cast<int>(e));
+
+                // 敵プリセットの選択用コンボボックス
+                if (ImGui::BeginCombo("Preset", wave.spawns[e].enemyPresetName.c_str())) {
+                    for (auto const& [name, p] : params.enemyPresets) {
+                        bool isSelected = (wave.spawns[e].enemyPresetName == name);
+                        if (ImGui::Selectable(name.c_str(), isSelected)) {
+                            wave.spawns[e].enemyPresetName = name;
+                        }
+                        if (isSelected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(60);
+                ImGui::DragInt("Qty", &wave.spawns[e].count, 1, 1, 100);
+
+                ImGui::SameLine();
+                if (ImGui::Button("X")) {
+                    wave.spawns.erase(wave.spawns.begin() + e);
+                    ImGui::PopID();
+                    break;
+                }
+
+                ImGui::PopID();
+            }
+
+            if (ImGui::Button("+ Add Enemy Entry")) {
+                EnemySpawnEntry newEntry;
+                newEntry.enemyPresetName = "Default";
+                newEntry.count = 1;
+                wave.spawns.push_back(newEntry);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+            if (ImGui::Button("Remove This Wave")) {
+                level.waves.erase(level.waves.begin() + w);
+                ImGui::PopStyleColor();
+                ImGui::PopID();
+                break;
+            }
+            ImGui::PopStyleColor();
+        }
+        ImGui::PopID();
+    }
 }
 
 static void DrawPlayerConfigPanel(GameParams& params) {
@@ -303,10 +383,10 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
 
     if (ImGui::CollapsingHeader("Edit Active Gun Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::SliderFloat("Fire Rate", &params.gun.fireRate, 0.05f, 1.0f, "%.2f sec")) NotifyPlayerGunChanged(renderer, currentScene);
-        if (ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 2000.0f, "%.0f")) NotifyPlayerGunChanged(renderer, currentScene);
+        if (ImGui::SliderFloat("Bullet Speed", &params.gun.bulletSpeed, 10.0f, 100.0f, "%.0f")) NotifyPlayerGunChanged(renderer, currentScene);
         if (ImGui::InputInt("Damage", &params.gun.damage)) NotifyPlayerGunChanged(renderer, currentScene);
-        ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg");
-        ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20);
+        if (ImGui::SliderFloat("Spread", &params.gun.spreadAngle, 0.0f, 90.0f, "%.1f deg")) NotifyPlayerGunChanged(renderer, currentScene);
+        if (ImGui::SliderInt("Shot Count", &params.gun.shotCount, 1, 20)) NotifyPlayerGunChanged(renderer, currentScene);
 
         ImGui::Separator();
         ImGui::Text("Appearance");
@@ -363,7 +443,6 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
     }
 
     if (ImGui::CollapsingHeader("Behavior Style", ImGuiTreeNodeFlags_DefaultOpen)) {
-        // A. Move Mode
         const char* moveMethods[] = { "Linear", "PathFollow" };
         int currentMove = static_cast<int>(params.enemy.moveMethod);
         if (ImGui::Combo("Move Mode", &currentMove, moveMethods, IM_ARRAYSIZE(moveMethods))) {
@@ -371,7 +450,6 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
 
-        // B. Locomotion Style
         const char* locomotionStyles[] = { "Ground", "Flying", "Jumping" };
         int currentLoco = static_cast<int>(params.enemy.locomotionStyle);
         if (ImGui::Combo("Locomotion", &currentLoco, locomotionStyles, IM_ARRAYSIZE(locomotionStyles))) {
@@ -379,7 +457,6 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
 
-        // C. Attack Type
         const char* attackMethods[] = { "Melee", "Ranged", "Kamikaze" };
         int currentAtk = static_cast<int>(params.enemy.attackMethod);
         if (ImGui::Combo("Attack Type", &currentAtk, attackMethods, IM_ARRAYSIZE(attackMethods))) {

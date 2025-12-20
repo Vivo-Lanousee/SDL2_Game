@@ -20,7 +20,8 @@ public:
         ENEMY,
         PHYSICS,
         CAMERA,
-        BASE 
+        BASE,
+        WAVE
     };
 
     static void Init(SDL_Window* window, SDL_Renderer* renderer);
@@ -30,7 +31,6 @@ public:
 
     static void SetMode(Mode newMode);
 
-    // 画像ファイルをプロジェクト内に取り込むユーティリティ
     static std::string ImportTexture();
 
     static GameObject* selectedObject;
@@ -41,6 +41,9 @@ private:
     static void DrawInspector();
     static void DrawParameters();
     static void DrawConfigEditorWindow();
+
+    // 追加: ウェーブ設定用パネル
+    static void DrawWaveConfigPanel(class GameParams& params);
 
     static ConfigViewMode currentConfigView;
     static Mode currentMode;

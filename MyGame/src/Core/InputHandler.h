@@ -9,7 +9,7 @@ enum class GameAction {
     MoveLeft,
     MoveRight,
     Shoot,
-    Reload,  // ★追加: リロードアクション
+    Reload, 
     Pause
 };
 
@@ -21,7 +21,7 @@ public:
         keyMap[GameAction::MoveDown] = SDL_SCANCODE_S;
         keyMap[GameAction::MoveLeft] = SDL_SCANCODE_A;
         keyMap[GameAction::MoveRight] = SDL_SCANCODE_D;
-        keyMap[GameAction::Reload] = SDL_SCANCODE_R;      // ★追加: Rキーをリロードに割り当て
+        keyMap[GameAction::Reload] = SDL_SCANCODE_R;
         keyMap[GameAction::Pause] = SDL_SCANCODE_ESCAPE;
 
         // --- マウス設定 ---
@@ -50,7 +50,7 @@ public:
 
         // マウス更新
         prevMouseState = currentMouseState;
-        currentMouseState = SDL_GetMouseState(NULL, NULL); // 座標は不要なのでNULL
+        currentMouseState = SDL_GetMouseState(NULL, NULL);
     }
 
     // 押しっぱなし判定
