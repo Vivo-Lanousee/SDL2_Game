@@ -31,10 +31,13 @@ public:
 
     static void SetMode(Mode newMode);
 
+    // 画像ファイルをプロジェクト内に取り込むユーティリティ
     static std::string ImportTexture();
 
     static GameObject* selectedObject;
-    static bool isTestMode;
+    static bool isTestMode;       // プレイヤーのテスト操作
+    static bool isWaveSimMode;    // ウェーブのシミュレーション実行中フラグ
+    static int simLevelID;        // シミュレーション対象のレベルID
 
 private:
     static void DrawHierarchy(Scene* currentScene);
@@ -42,7 +45,7 @@ private:
     static void DrawParameters();
     static void DrawConfigEditorWindow();
 
-    // 追加: ウェーブ設定用パネル
+    // ウェーブ設定用パネル
     static void DrawWaveConfigPanel(class GameParams& params);
 
     static ConfigViewMode currentConfigView;

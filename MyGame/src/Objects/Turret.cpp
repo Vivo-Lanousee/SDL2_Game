@@ -138,12 +138,14 @@ void Turret::SpawnBullet(Game* game, float initialAngle) {
     float velX = weaponConfig.bulletSpeed * cos(angleRad);
     float velY = weaponConfig.bulletSpeed * sin(angleRad);
 
+    // BulletSide::Player を追加
     auto bullet = std::make_unique<Bullet>(
         startX, startY,
         weaponConfig.bulletWidth, weaponConfig.bulletHeight,
         velX, velY,
         weaponConfig.damage,
-        game->GetBulletTexture()
+        game->GetBulletTexture(),
+        BulletSide::Player
     );
 
     game->Instantiate(std::move(bullet));

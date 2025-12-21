@@ -8,6 +8,7 @@
 #include "../Objects/Base.h"
 #include "../Core/Camera.h"
 #include "../TextureManager.h"
+#include "../GameLogic/WaveManager.h" 
 
 class Game;
 
@@ -37,6 +38,10 @@ private:
     std::vector<std::unique_ptr<GameObject>> gameObjects;
     std::vector<SDL_FPoint> enemyPath;
     std::unique_ptr<Camera> camera;
+
+    // ウェーブ管理用
+    WaveManager waveManager;
+    bool isSimulating = false;
 
     // テストプレイ用のポインタ
     Player* testPlayer = nullptr;

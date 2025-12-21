@@ -30,6 +30,8 @@ GameObject* EditorGUI::selectedObject = nullptr;
 EditorGUI::Mode EditorGUI::currentMode = EditorGUI::Mode::GAME;
 EditorGUI::ConfigViewMode EditorGUI::currentConfigView = EditorGUI::ConfigViewMode::NONE;
 bool EditorGUI::isTestMode = false;
+bool EditorGUI::isWaveSimMode = false;
+int EditorGUI::simLevelID = 1;
 
 // --- Forward declarations of helper functions ---
 static void DrawPlayerConfigPanel(GameParams& params);
@@ -272,6 +274,20 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
         return;
     }
 
+    // --- シミュレートボタンの追加 ---
+    ImGui::Separator();
+    ImGui::PushStyleColor(ImGuiCol_Button, isWaveSimMode ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
+    std::string simLabel = isWaveSimMode ? "STOP SIMULATION" : "SIMULATE THIS LEVEL";
+    if (ImGui::Button(simLabel.c_str(), ImVec2(-1, 40))) {
+        isWaveSimMode = !isWaveSimMode;
+        if (isWaveSimMode) {
+            simLevelID = selectedLevel;
+            isTestMode = true; // プレイヤーも自動的に出す
+        }
+    }
+    ImGui::PopStyleColor();
+    ImGui::Separator();
+
     LevelParams& level = params.levelConfigs[selectedLevel];
 
     if (ImGui::Button("Add New Wave", ImVec2(-1, 30))) {
@@ -289,7 +305,6 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
             for (size_t e = 0; e < wave.spawns.size(); ++e) {
                 ImGui::PushID(static_cast<int>(e));
 
-                // 敵プリセットの選択用コンボボックス
                 if (ImGui::BeginCombo("Preset", wave.spawns[e].enemyPresetName.c_str())) {
                     for (auto const& [name, p] : params.enemyPresets) {
                         bool isSelected = (wave.spawns[e].enemyPresetName == name);

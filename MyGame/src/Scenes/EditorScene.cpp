@@ -17,7 +17,7 @@
 #include <string>
 
 EditorScene::EditorScene()
-    : selectedObject(nullptr), testPlayer(nullptr)
+    : selectedObject(nullptr), testPlayer(nullptr), isSimulating(false)
 {
     camera = std::make_unique<Camera>(800, 600);
 
@@ -42,6 +42,8 @@ void EditorScene::OnEnter(Game* game) {
     std::cout << "Entering Editor Scene." << std::endl;
     EditorGUI::SetMode(EditorGUI::Mode::EDITOR);
     EditorGUI::isTestMode = false;
+    EditorGUI::isWaveSimMode = false;
+    isSimulating = false;
 
     playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
     bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
@@ -97,6 +99,31 @@ void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
 
 void EditorScene::OnUpdate(Game* game) {
 
+    // --- ウェーブシミュレーションの更新ロジック ---
+    if (EditorGUI::isWaveSimMode) {
+        if (!isSimulating) {
+            // シミュレーション開始の瞬間
+            GameSession::GetInstance().ResetSession();
+            waveManager.Init(EditorGUI::simLevelID);
+            isSimulating = true;
+            std::cout << "Starting Wave Simulation for Level " << EditorGUI::simLevelID << std::endl;
+        }
+        // マネージャーの更新（敵の生成など）
+        waveManager.Update(game);
+    }
+    else {
+        if (isSimulating) {
+            // シミュレーション停止時：画面上の敵を一掃する
+            for (auto& obj : gameObjects) {
+                if (dynamic_cast<Enemy*>(obj.get())) {
+                    obj->isDead = true;
+                }
+            }
+            isSimulating = false;
+        }
+    }
+
+    // --- プレイヤー（テストプレイ）の制御 ---
     if (EditorGUI::isTestMode) {
         if (!testPlayer) {
             auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
@@ -161,5 +188,12 @@ void EditorScene::Render(Game* game) {
     }
 
     TextRenderer::Draw(renderer, ammoText, 20, 550, textColor);
+
+    // シミュレーション中であることを示すラベル
+    if (isSimulating) {
+        std::string simInfo = "SIMULATING LEVEL " + std::to_string(EditorGUI::simLevelID) + " - WAVE " + std::to_string(waveManager.GetCurrentWaveNumber());
+        TextRenderer::Draw(renderer, simInfo, 20, 20, { 255, 100, 100, 255 });
+    }
+
     EditorGUI::Render(renderer, this);
 }

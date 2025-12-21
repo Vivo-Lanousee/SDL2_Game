@@ -195,7 +195,8 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
         10, 10,
         vx, vy,
         params.gun.damage,
-        bulletTex
+        bulletTex,
+        BulletSide::Player
     );
 }
 

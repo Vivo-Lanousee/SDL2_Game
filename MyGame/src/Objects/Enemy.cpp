@@ -131,7 +131,8 @@ void Enemy::AttackLogic(Game* game) {
         {
             float spawnX = x - 10.0f;
             float spawnY = y + height / 2.0f;
-            auto bullet = std::make_unique<Bullet>(spawnX, spawnY, 180.0, bulletTexture ? bulletTexture.get() : nullptr);
+            // BulletSide::Enemy を追加
+            auto bullet = std::make_unique<Bullet>(spawnX, spawnY, 180.0, bulletTexture ? bulletTexture.get() : nullptr, BulletSide::Enemy);
             bullet->name = "EnemyBullet";
             game->GetPendingObjects().push_back(std::move(bullet));
         }
@@ -167,10 +168,8 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 void Enemy::OnTriggerEnter(GameObject* other) {
     if (isDead || other->isDead) return;
 
-    // プレイヤーの弾丸に当たった場合（二重判定防止のためBullet側と同期）
-    if (other->name == "Bullet") {
-        // Bullet側がTakeDamageを呼ぶため、ここでは何もしない。
-        // もし、エネミー側で「弾を弾く」などの特殊な処理をしたい場合はここに書く。
+    Bullet* b = dynamic_cast<Bullet*>(other);
+    if (b && b->GetSide() == BulletSide::Player) {
     }
 }
 
