@@ -7,7 +7,7 @@ project(MeltedDefense)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- パスの定義 ---
+# パスの定義
 set(LIBS_DIR "${CMAKE_SOURCE_DIR}/libs")
 set(PROJECT_DIR "${CMAKE_SOURCE_DIR}/MyGame")
 set(ARCH "x64")
@@ -15,7 +15,7 @@ set(ARCH "x64")
 message(STATUS "Build Mode: Manual library configuration")
 message(STATUS "Root Directory: ${CMAKE_SOURCE_DIR}")
 
-# --- 1. SDL2 手動設定 ---
+#SDL2 手動設定 
 set(SDL2_INCLUDE_DIR "${LIBS_DIR}/SDL2/include")
 set(SDL2_LIBRARY     "${LIBS_DIR}/SDL2/lib/${ARCH}/SDL2.lib")
 set(SDL2MAIN_LIBRARY "${LIBS_DIR}/SDL2/lib/${ARCH}/SDL2main.lib")
@@ -31,7 +31,7 @@ set_target_properties(SDL2::SDL2main PROPERTIES
     IMPORTED_LOCATION "${SDL2MAIN_LIBRARY}"
 )
 
-# --- 2. SDL2_image 手動設定 ---
+#  SDL2_image 手動設定 ---
 set(SDL2_IMAGE_INCLUDE_DIR "${LIBS_DIR}/SDL2_image/include")
 set(SDL2_IMAGE_LIBRARY     "${LIBS_DIR}/SDL2_image/lib/${ARCH}/SDL2_image.lib")
 
@@ -42,7 +42,7 @@ set_target_properties(SDL2_image::SDL2_image PROPERTIES
     INTERFACE_LINK_LIBRARIES SDL2::SDL2
 )
 
-# --- 3. SDL2_ttf 手動設定 ---
+#  SDL2_ttf 手動設定 ---
 set(SDL2_TTF_INCLUDE_DIR "${LIBS_DIR}/SDL2_ttf/include")
 set(SDL2_TTF_LIBRARY     "${LIBS_DIR}/SDL2_ttf/lib/${ARCH}/SDL2_ttf.lib")
 

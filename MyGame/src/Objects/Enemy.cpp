@@ -17,6 +17,7 @@ Enemy::Enemy(float x, float y, int w, int h, SDL_Texture* tex,
     isAttacking(false), attackTimer(0.0f),
     jumpTimer(0.0f), jumpInterval(1.5f)
 {
+    // 初期化時は仮のサイズ（w, h）が入るが、RefreshConfig で画像サイズに上書きされる
     RefreshConfig(nullptr);
     this->name = "Enemy";
     this->isTrigger = true;
@@ -40,10 +41,21 @@ void Enemy::RefreshConfig(SDL_Renderer* renderer) {
     }
 
     if (renderer) {
+        // 画像のロード
         if (!params.enemy.texturePath.empty()) {
             SharedTexturePtr newTex = TextureManager::LoadTexture(params.enemy.texturePath, renderer);
-            if (newTex) texture = newTex.get();
+            if (newTex) {
+                texture = newTex.get();
+
+                // 【追加】テクスチャの実際のサイズを取得して反映
+                int realW, realH;
+                if (SDL_QueryTexture(texture, NULL, NULL, &realW, &realH) == 0) {
+                    this->width = realW;
+                    this->height = realH;
+                }
+            }
         }
+
         if (!params.enemy.bulletTexturePath.empty()) {
             bulletTexture = TextureManager::LoadTexture(params.enemy.bulletTexturePath, renderer);
         }
@@ -65,7 +77,7 @@ void Enemy::Update(Game* game) {
             isAttacking = true;
             velX = 0;
             velY = 0;
-            attackTimer = attackInterval; 
+            attackTimer = attackInterval;
         }
         AttackLogic(game);
     }
@@ -79,7 +91,7 @@ void Enemy::MoveLogic() {
     GameParams& params = GameParams::GetInstance();
     float dt = Time::deltaTime;
     float targetX = 150.0f;
-    float targetY = 450.0f; // 飛行型が目指す高さ（ゲートの中央付近）
+    float targetY = 450.0f; // 飛行型が目指す高さ
 
     if (params.enemy.locomotionStyle == LocomotionType::Jumping) {
         if (isGrounded) {
@@ -91,7 +103,7 @@ void Enemy::MoveLogic() {
                 isGrounded = false;
             }
             else {
-                velX = 0; // 待機中は止まる
+                velX = 0;
             }
         }
         return;
@@ -132,7 +144,7 @@ void Enemy::AttackLogic(Game* game) {
             float spawnY = y + height / 2.0f;
             auto bullet = std::make_unique<Bullet>(spawnX, spawnY, 180.0, bulletTexture ? bulletTexture.get() : nullptr, BulletSide::Enemy);
             bullet->name = "EnemyBullet";
-            game->GetPendingObjects().push_back(std::move(bullet));
+            game->Instantiate(std::move(bullet));
         }
         break;
         case AttackType::Kamikaze:
@@ -167,7 +179,6 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
 void Enemy::OnTriggerEnter(GameObject* other) {
     if (isDead || other->isDead) return;
 
-    // 地面判定
     if (other->name == "Block" || other->name == "Editor Ground") {
         isGrounded = true;
         velY = 0;

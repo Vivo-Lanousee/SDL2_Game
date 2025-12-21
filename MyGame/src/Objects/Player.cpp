@@ -24,12 +24,7 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
     angle = 0;
     useGravity = true;
 
-    // --- 物理挙動の設定 ---
-    // Physics::ResolveCollision 内の aIsCharacter 判定にヒットさせるため "Player" を含めます
     this->name = "Player";
-
-    // isTrigger を false にすることで、地面（Block）に対しては物理的に衝突（着地）します。
-    // キャラクター同士の通り抜けは Physics 側のロジックで自動的に行われます。
     this->isTrigger = true;
 
     this->bulletTexture = bulletTex;

@@ -22,18 +22,15 @@ EditorScene::EditorScene()
 {
     camera = std::make_unique<Camera>(800, 600);
 
-    // 経路の初期値
     enemyPath.push_back({ 100.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 100.0f });
     enemyPath.push_back({ 700.0f, 500.0f });
     enemyPath.push_back({ 100.0f, 500.0f });
 
-    // 拠点の生成
     auto baseObj = std::make_unique<Base>(80, 300, 80, 250);
     baseObj->name = "Base Gate";
     gameObjects.push_back(std::move(baseObj));
 
-    // 地面の生成
     auto ground = std::make_unique<Block>(0, 550, 5000, 50);
     ground->name = "Editor Ground";
     gameObjects.push_back(std::move(ground));
@@ -91,27 +88,24 @@ void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
     }
 }
 
-// GUIから呼ばれる関数：直接 push_back せず Instantiate を使う
 void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer, Game* game) {
     float spawnX = camera->x + 850.0f;
     float spawnY = 100.0f;
 
+    // 64, 64 はプレースホルダー。RefreshConfig で画像サイズに補正される。
     auto enemy = std::make_unique<Enemy>(spawnX, spawnY, 64, 64, nullptr, enemyPath);
     enemy->name = "Enemy";
     enemy->RefreshConfig(renderer);
 
-    // 描画ループ中のコンテナ破壊（_Parent_proxyエラー）を防ぐため、予約リスト経由で追加する
     game->Instantiate(std::move(enemy));
 }
 
 void EditorScene::OnUpdate(Game* game) {
-    // 1. タイトルシーンへの遷移
     if (game->GetInput()->IsJustPressed(GameAction::Pause)) {
         game->ChangeScene(new TitleScene());
-        return; // シーン遷移後はこのインスタンスへのアクセスを停止する
+        return;
     }
 
-    // 2. ウェーブシミュレーション
     if (EditorGUI::isWaveSimMode) {
         if (!isSimulating) {
             GameSession::GetInstance().ResetSession();
@@ -131,13 +125,11 @@ void EditorScene::OnUpdate(Game* game) {
         }
     }
 
-    // 3. テストプレイヤー
     if (EditorGUI::isTestMode) {
         if (!testPlayer) {
             auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
             pPtr->name = "TestPlayer";
             testPlayer = pPtr.get();
-            // 直接追加せず、Instantiate を使用して安全なタイミングでリストへ合流させる
             game->Instantiate(std::move(pPtr));
         }
         camera->Follow(testPlayer);
@@ -149,8 +141,6 @@ void EditorScene::OnUpdate(Game* game) {
         camera->Follow(nullptr);
     }
 
-    // 4. ダングリングポインタ（無効なメモリ参照）対策
-    // Scene::Update の削除処理が走る前に、破棄予定のオブジェクトへのポインタをリセットする
     if (selectedObject && selectedObject->isDead) {
         selectedObject = nullptr;
         EditorGUI::selectedObject = nullptr;
@@ -200,6 +190,5 @@ void EditorScene::Render(Game* game) {
         TextRenderer::Draw(renderer, simInfo, 20, 20, { 255, 100, 100, 255 });
     }
 
-    // 第3引数に game ポインタを渡して呼び出し
     EditorGUI::Render(renderer, this, game);
 }

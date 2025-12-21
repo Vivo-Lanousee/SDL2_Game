@@ -8,9 +8,6 @@
 class Game;
 struct SDL_Renderer;
 
-/**
- * @brief ウェーブの進行状況と敵のスポーンを管理するクラス
- */
 class WaveManager {
 public:
     enum class State {
@@ -24,15 +21,8 @@ public:
     WaveManager();
     ~WaveManager() = default;
 
-    /**
-     * @brief 指定したレベルのデータでマネージャーを初期化する
-     */
     void Init(int levelID);
 
-    /**
-     * @brief 毎フレームの更新処理
-     * @param game Gameクラスへのポインタ（InstantiateやRendererへのアクセス用）
-     */
     void Update(Game* game);
 
     // 状態取得用
@@ -41,14 +31,7 @@ public:
     int GetTotalWaves() const { return totalWaves; }
 
 private:
-    /**
-     * @brief 次のウェーブを開始する準備をする
-     */
     void NextWave();
-
-    /**
-     * @brief 実際に敵をゲームに生成する
-     */
     void SpawnEnemy(const std::string& presetName, Game* game);
 
     // 進行状態

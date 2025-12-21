@@ -11,7 +11,6 @@ struct SDL_FPoint;
 
 class Enemy : public GameObject {
 public:
-    // パスの引数は削除せず、互換性のために残していますが内部では無視します
     Enemy(float x, float y, int w, int h, SDL_Texture* tex,
         const std::vector<SDL_FPoint>& path);
 

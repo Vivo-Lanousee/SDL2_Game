@@ -69,7 +69,6 @@ void Bullet::OnTriggerEnter(GameObject* other) {
     // --- 陣営(BulletSide)による条件分岐 ---
 
     if (this->side == BulletSide::Player) {
-        // 【プレイヤー側の弾】
 
         // 敵への判定
         Enemy* enemy = dynamic_cast<Enemy*>(other);

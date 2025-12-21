@@ -42,13 +42,10 @@ void TitleScene::OnEnter(Game* game) {
 
 void TitleScene::OnExit(Game* game) {
     std::cout << "Exiting TitleScene..." << std::endl;
-    // unique_ptr および vector がクリアされ、メモリが解放されます
     gameObjects.clear();
 }
 
 void TitleScene::HandleEvents(Game* game, SDL_Event* event) {
-    // 基底の Scene クラスにはイベント処理の自動化は含まれていないため、
-    // ここで個別にボタンへイベントを流す必要があります。
 
     if (event->type == SDL_QUIT) {
         game->Quit();
@@ -62,8 +59,6 @@ void TitleScene::HandleEvents(Game* game, SDL_Event* event) {
 }
 
 void TitleScene::OnUpdate(Game* game) {
-    // 現在のタイトル画面には物理オブジェクトが存在しないため、特別な処理は不要です。
-    // 背景アニメーションなどを作成する場合はここに記述します。
 }
 
 void TitleScene::Render(Game* game) {

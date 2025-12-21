@@ -113,38 +113,23 @@ void WaveManager::SpawnEnemy(const std::string& presetName, Game* game) {
     auto& params = GameParams::GetInstance();
 
     if (params.enemyPresets.count(presetName)) {
-        // 現在のアクティブ設定をプリセットに切り替え
         params.enemy = params.enemyPresets[presetName];
         params.activeEnemyPresetName = presetName;
 
         static std::random_device rd;
         static std::mt19937 gen(rd());
 
-        // 地面(550px)より高い位置(50~300px)にスポーンさせる
-        std::uniform_real_distribution<float> disY(50.0f, 300.0f);
-
-        float startX = 1300.0f; // 画面右側
+        // スポーン位置の決定（画面右端の外側）
+        std::uniform_real_distribution<float> disY(50.0f, 400.0f);
+        float startX = 1300.0f;
         float startY = disY(gen);
-        int width = 64;
-        int height = 64;
 
-        SDL_Texture* tex = nullptr;
-        if (!params.enemy.texturePath.empty()) {
-            SharedTexturePtr sharedTex = TextureManager::LoadTexture(params.enemy.texturePath, game->GetRenderer());
-            if (sharedTex) tex = sharedTex.get();
-        }
 
-        // 移動パス（シミュレーション時は基本空だが構造上必要）
-        std::vector<SDL_FPoint> path;
-
-        // SpawnTestEnemyと同様の仕組みでEnemyを実体化
-        auto newEnemy = std::make_unique<Enemy>(startX, startY, width, height, tex, path);
-
-        // パラメータを最新の設定でリフレッシュ
+        std::vector<SDL_FPoint> dummyPath;
+        auto newEnemy = std::make_unique<Enemy>(startX, startY, 64, 64, nullptr, dummyPath);
         newEnemy->RefreshConfig(game->GetRenderer());
-        newEnemy->name = "Enemy"; // PhysicsのOnTriggerEnter判定用に統一
+        newEnemy->name = "Enemy";
 
-        // game経由でpendingObjectsへ追加。これをEditorScene::OnUpdateで回収する。
         game->Instantiate(std::move(newEnemy));
     }
     else {
