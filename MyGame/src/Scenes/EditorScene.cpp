@@ -86,36 +86,32 @@ void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
     }
 }
 
+// GUIの「SPAWN TEST ENEMY」ボタンから呼ばれる関数
 void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
     float spawnX = camera->x + 850.0f;
     float spawnY = 100.0f;
 
+    // 名前を「Enemy」にして Physics の衝突対象にする
     auto enemy = std::make_unique<Enemy>(spawnX, spawnY, 64, 64, nullptr, enemyPath);
-    enemy->name = "Test Enemy";
+    enemy->name = "Enemy";
     enemy->RefreshConfig(renderer);
 
+    // gameObjectsへ直接追加（この瞬間にリストに入る）
     gameObjects.push_back(std::move(enemy));
 }
 
-
-
 void EditorScene::OnUpdate(Game* game) {
-
-    // --- ウェーブシミュレーションの更新ロジック ---
+    // --- ウェーブシミュレーションの開始・停止管理 ---
     if (EditorGUI::isWaveSimMode) {
         if (!isSimulating) {
-            // シミュレーション開始の瞬間
             GameSession::GetInstance().ResetSession();
             waveManager.Init(EditorGUI::simLevelID);
             isSimulating = true;
-            std::cout << "Starting Wave Simulation for Level " << EditorGUI::simLevelID << std::endl;
         }
-        // マネージャーの更新（敵の生成など）
         waveManager.Update(game);
     }
     else {
         if (isSimulating) {
-            // シミュレーション停止時：画面上の敵を一掃する
             for (auto& obj : gameObjects) {
                 if (dynamic_cast<Enemy*>(obj.get())) {
                     obj->isDead = true;
@@ -125,7 +121,7 @@ void EditorScene::OnUpdate(Game* game) {
         }
     }
 
-    // --- プレイヤー（テストプレイ）の制御 ---
+    // --- テストプレイヤーの生成と削除 ---
     if (EditorGUI::isTestMode) {
         if (!testPlayer) {
             auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
@@ -153,28 +149,22 @@ void EditorScene::Render(Game* game) {
         obj->RenderWithCamera(renderer, camera.get());
     }
 
-    // 拠点HPバーの描画
+    // HPバーなどの描画
     GameSession& session = GameSession::GetInstance();
     float hpRatio = (session.maxBaseHP > 0) ? (float)session.currentBaseHP / session.maxBaseHP : 0;
-
     SDL_Rect barBG = { 200, 20, 400, 20 };
     SDL_Rect barFG = { 200, 20, (int)(400 * hpRatio), 20 };
-
     SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
     SDL_RenderFillRect(renderer, &barBG);
-
     if (hpRatio > 0.5f) SDL_SetRenderDrawColor(renderer, 0, 200, 50, 255);
     else if (hpRatio > 0.2f) SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
     else SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-
     SDL_RenderFillRect(renderer, &barFG);
-
     TextRenderer::Draw(renderer, "GATE STATUS", barBG.x, barBG.y - 15, { 255, 255, 255, 255 });
 
-    // UI (弾数)
+    // 弾数表示
     std::string ammoText = "Ammo: 0 / 0";
     SDL_Color textColor = { 200, 200, 200, 255 };
-
     if (testPlayer && !testPlayer->isDead) {
         int current = testPlayer->GetCurrentAmmo();
         int max = GameParams::GetInstance().gun.magazineSize;
@@ -184,14 +174,9 @@ void EditorScene::Render(Game* game) {
             ammoText += " (RELOADING...)";
             textColor = { 255, 255, 0, 255 };
         }
-        else if (current == 0) {
-            textColor = { 255, 0, 0, 255 };
-        }
     }
-
     TextRenderer::Draw(renderer, ammoText, 20, 550, textColor);
 
-    // シミュレーション中であることを示すラベル
     if (isSimulating) {
         std::string simInfo = "SIMULATING LEVEL " + std::to_string(EditorGUI::simLevelID) + " - WAVE " + std::to_string(waveManager.GetCurrentWaveNumber());
         TextRenderer::Draw(renderer, simInfo, 20, 20, { 255, 100, 100, 255 });

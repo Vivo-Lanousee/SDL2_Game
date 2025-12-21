@@ -113,14 +113,14 @@ void WaveManager::SpawnEnemy(const std::string& presetName, Game* game) {
     auto& params = GameParams::GetInstance();
 
     if (params.enemyPresets.count(presetName)) {
-        // 現在のパラメータをプリセットで上書き（RefreshConfig用）
+        // 現在のアクティブ設定をプリセットに切り替え
         params.enemy = params.enemyPresets[presetName];
         params.activeEnemyPresetName = presetName;
 
         static std::random_device rd;
         static std::mt19937 gen(rd());
 
-        // 地面(550px)より十分高い位置(50~300px)にスポーンさせる
+        // 地面(550px)より高い位置(50~300px)にスポーンさせる
         std::uniform_real_distribution<float> disY(50.0f, 300.0f);
 
         float startX = 1300.0f; // 画面右側
@@ -134,15 +134,17 @@ void WaveManager::SpawnEnemy(const std::string& presetName, Game* game) {
             if (sharedTex) tex = sharedTex.get();
         }
 
-        // シミュレーション用には空のパスを渡すが、Updateループが回れば物理で着地する
+        // 移動パス（シミュレーション時は基本空だが構造上必要）
         std::vector<SDL_FPoint> path;
 
+        // SpawnTestEnemyと同様の仕組みでEnemyを実体化
         auto newEnemy = std::make_unique<Enemy>(startX, startY, width, height, tex, path);
-        newEnemy->RefreshConfig(game->GetRenderer());
-        newEnemy->name = "Enemy_" + presetName;
 
-        // 重要: SceneのgameObjectsに直接追加するか、game->Instantiate経由で追加されることを保証する
-        // EditorSceneでは game->Instantiate が gameObjects リストに反映される設計である必要があります。
+        // パラメータを最新の設定でリフレッシュ
+        newEnemy->RefreshConfig(game->GetRenderer());
+        newEnemy->name = "Enemy"; // PhysicsのOnTriggerEnter判定用に統一
+
+        // game経由でpendingObjectsへ追加。これをEditorScene::OnUpdateで回収する。
         game->Instantiate(std::move(newEnemy));
     }
     else {
