@@ -11,6 +11,7 @@
 #include "../Core/GameParams.h"
 #include "../Core/GameSession.h" 
 #include "../UI/TextRenderer.h"
+#include "TitleScene.h" 
 #include "imgui.h" 
 #include <iostream>
 #include <algorithm>
@@ -77,31 +78,40 @@ void EditorScene::HandleEvents(Game* game, SDL_Event* event) {
                 if (mouseX >= obj->x && mouseX <= obj->x + obj->width &&
                     mouseY >= obj->y && mouseY <= obj->y + obj->height) {
                     EditorGUI::selectedObject = obj.get();
+                    selectedObject = obj.get();
                     found = true;
                     break;
                 }
             }
-            if (!found) EditorGUI::selectedObject = nullptr;
+            if (!found) {
+                EditorGUI::selectedObject = nullptr;
+                selectedObject = nullptr;
+            }
         }
     }
 }
 
-// GUIの「SPAWN TEST ENEMY」ボタンから呼ばれる関数
-void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
+// GUIから呼ばれる関数：直接 push_back せず Instantiate を使う
+void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer, Game* game) {
     float spawnX = camera->x + 850.0f;
     float spawnY = 100.0f;
 
-    // 名前を「Enemy」にして Physics の衝突対象にする
     auto enemy = std::make_unique<Enemy>(spawnX, spawnY, 64, 64, nullptr, enemyPath);
     enemy->name = "Enemy";
     enemy->RefreshConfig(renderer);
 
-    // gameObjectsへ直接追加（この瞬間にリストに入る）
-    gameObjects.push_back(std::move(enemy));
+    // 描画ループ中のコンテナ破壊（_Parent_proxyエラー）を防ぐため、予約リスト経由で追加する
+    game->Instantiate(std::move(enemy));
 }
 
 void EditorScene::OnUpdate(Game* game) {
-    // --- ウェーブシミュレーションの開始・停止管理 ---
+    // 1. タイトルシーンへの遷移
+    if (game->GetInput()->IsJustPressed(GameAction::Pause)) {
+        game->ChangeScene(new TitleScene());
+        return; // シーン遷移後はこのインスタンスへのアクセスを停止する
+    }
+
+    // 2. ウェーブシミュレーション
     if (EditorGUI::isWaveSimMode) {
         if (!isSimulating) {
             GameSession::GetInstance().ResetSession();
@@ -121,22 +131,32 @@ void EditorScene::OnUpdate(Game* game) {
         }
     }
 
-    // --- テストプレイヤーの生成と削除 ---
+    // 3. テストプレイヤー
     if (EditorGUI::isTestMode) {
         if (!testPlayer) {
             auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
             pPtr->name = "TestPlayer";
             testPlayer = pPtr.get();
-            gameObjects.push_back(std::move(pPtr));
+            // 直接追加せず、Instantiate を使用して安全なタイミングでリストへ合流させる
+            game->Instantiate(std::move(pPtr));
         }
         camera->Follow(testPlayer);
     }
     else {
         if (testPlayer) {
             testPlayer->isDead = true;
-            testPlayer = nullptr;
         }
         camera->Follow(nullptr);
+    }
+
+    // 4. ダングリングポインタ（無効なメモリ参照）対策
+    // Scene::Update の削除処理が走る前に、破棄予定のオブジェクトへのポインタをリセットする
+    if (selectedObject && selectedObject->isDead) {
+        selectedObject = nullptr;
+        EditorGUI::selectedObject = nullptr;
+    }
+    if (testPlayer && testPlayer->isDead) {
+        testPlayer = nullptr;
     }
 }
 
@@ -146,10 +166,9 @@ void EditorScene::Render(Game* game) {
     SDL_RenderClear(renderer);
 
     for (const auto& obj : gameObjects) {
-        obj->RenderWithCamera(renderer, camera.get());
+        if (obj) obj->RenderWithCamera(renderer, camera.get());
     }
 
-    // HPバーなどの描画
     GameSession& session = GameSession::GetInstance();
     float hpRatio = (session.maxBaseHP > 0) ? (float)session.currentBaseHP / session.maxBaseHP : 0;
     SDL_Rect barBG = { 200, 20, 400, 20 };
@@ -162,7 +181,6 @@ void EditorScene::Render(Game* game) {
     SDL_RenderFillRect(renderer, &barFG);
     TextRenderer::Draw(renderer, "GATE STATUS", barBG.x, barBG.y - 15, { 255, 255, 255, 255 });
 
-    // 弾数表示
     std::string ammoText = "Ammo: 0 / 0";
     SDL_Color textColor = { 200, 200, 200, 255 };
     if (testPlayer && !testPlayer->isDead) {
@@ -182,5 +200,6 @@ void EditorScene::Render(Game* game) {
         TextRenderer::Draw(renderer, simInfo, 20, 20, { 255, 100, 100, 255 });
     }
 
-    EditorGUI::Render(renderer, this);
+    // 第3引数に game ポインタを渡して呼び出し
+    EditorGUI::Render(renderer, this, game);
 }

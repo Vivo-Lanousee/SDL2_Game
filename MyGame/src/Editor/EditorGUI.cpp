@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <commdlg.h> 
 
+#include "../Core/Game.h"
 #include "../Core/GameParams.h" 
 #include "../Core/GameSession.h"
 #include "../Scenes/Scene.h"
@@ -36,7 +37,7 @@ int EditorGUI::simLevelID = 1;
 // --- Forward declarations of helper functions ---
 static void DrawPlayerConfigPanel(GameParams& params);
 static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
-static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
+static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene, Game* game);
 static void DrawPhysicsConfigPanel(GameParams& params);
 static void DrawCameraConfigPanel(GameParams& params);
 static void DrawBaseConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene);
@@ -140,7 +141,7 @@ static void NotifyBaseConfigChanged(SDL_Renderer* renderer, Scene* currentScene)
     GameSession::GetInstance().maxBaseHP = GameParams::GetInstance().base.maxHealth;
 }
 
-void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
+void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene, Game* game) {
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
@@ -173,7 +174,7 @@ void EditorGUI::Render(SDL_Renderer* renderer, Scene* currentScene) {
                 switch (currentConfigView) {
                 case ConfigViewMode::PLAYER:  DrawPlayerConfigPanel(params);  break;
                 case ConfigViewMode::GUN:      DrawGunConfigPanel(params, renderer, currentScene); break;
-                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params, renderer, currentScene); break;
+                case ConfigViewMode::ENEMY:   DrawEnemyConfigPanel(params, renderer, currentScene, game); break;
                 case ConfigViewMode::PHYSICS: DrawPhysicsConfigPanel(params); break;
                 case ConfigViewMode::CAMERA:  DrawCameraConfigPanel(params);  break;
                 case ConfigViewMode::BASE:    DrawBaseConfigPanel(params, renderer, currentScene); break;
@@ -266,7 +267,6 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
     ImGui::InputInt("Level ID", &selectedLevel);
     if (selectedLevel < 1) selectedLevel = 1;
 
-    // もし指定したレベルがなければ作成
     if (params.levelConfigs.find(selectedLevel) == params.levelConfigs.end()) {
         if (ImGui::Button("Create Level Config")) {
             params.levelConfigs[selectedLevel] = LevelParams();
@@ -274,7 +274,6 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
         return;
     }
 
-    // --- シミュレートボタンの追加 ---
     ImGui::Separator();
     ImGui::PushStyleColor(ImGuiCol_Button, isWaveSimMode ? ImVec4(0.8f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
     std::string simLabel = isWaveSimMode ? "STOP SIMULATION" : "SIMULATE THIS LEVEL";
@@ -282,7 +281,7 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
         isWaveSimMode = !isWaveSimMode;
         if (isWaveSimMode) {
             simLevelID = selectedLevel;
-            isTestMode = true; // プレイヤーも自動的に出す
+            isTestMode = true;
         }
     }
     ImGui::PopStyleColor();
@@ -306,7 +305,9 @@ void EditorGUI::DrawWaveConfigPanel(GameParams& params) {
                 ImGui::PushID(static_cast<int>(e));
 
                 if (ImGui::BeginCombo("Preset", wave.spawns[e].enemyPresetName.c_str())) {
-                    for (auto const& [name, p] : params.enemyPresets) {
+                    // エラー回避: 構造化束縛を使わずイテレータを使用
+                    for (auto it = params.enemyPresets.begin(); it != params.enemyPresets.end(); ++it) {
+                        const std::string& name = it->first;
                         bool isSelected = (wave.spawns[e].enemyPresetName == name);
                         if (ImGui::Selectable(name.c_str(), isSelected)) {
                             wave.spawns[e].enemyPresetName = name;
@@ -435,7 +436,7 @@ static void DrawGunConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene
     }
 }
 
-static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene) {
+static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Scene* currentScene, Game* game) {
     static char nameBuf[64] = "";
     if (nameBuf[0] == '\0' && !params.activeEnemyPresetName.empty()) {
         strncpy_s(nameBuf, params.activeEnemyPresetName.c_str(), _TRUNCATE);
@@ -444,7 +445,8 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.4f, 0.8f, 1.0f));
     if (ImGui::Button("SPAWN TEST ENEMY", ImVec2(-1, 40))) {
         EditorScene* edScene = dynamic_cast<EditorScene*>(currentScene);
-        if (edScene) edScene->SpawnTestEnemy(renderer);
+        // エラー回避: game 引数を渡す
+        if (edScene) edScene->SpawnTestEnemy(renderer, game);
     }
     ImGui::PopStyleColor();
     ImGui::Separator();
@@ -460,28 +462,27 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
     if (ImGui::CollapsingHeader("Behavior Style", ImGuiTreeNodeFlags_DefaultOpen)) {
         const char* moveMethods[] = { "Linear", "PathFollow" };
         int currentMove = static_cast<int>(params.enemy.moveMethod);
-        if (ImGui::Combo("Move Mode", &currentMove, moveMethods, IM_ARRAYSIZE(moveMethods))) {
+        if (ImGui::Combo("Move Mode", &currentMove, moveMethods, 2)) {
             params.enemy.moveMethod = static_cast<MovementType>(currentMove);
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
 
         const char* locomotionStyles[] = { "Ground", "Flying", "Jumping" };
         int currentLoco = static_cast<int>(params.enemy.locomotionStyle);
-        if (ImGui::Combo("Locomotion", &currentLoco, locomotionStyles, IM_ARRAYSIZE(locomotionStyles))) {
+        if (ImGui::Combo("Locomotion", &currentLoco, locomotionStyles, 3)) {
             params.enemy.locomotionStyle = static_cast<LocomotionType>(currentLoco);
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
 
         const char* attackMethods[] = { "Melee", "Ranged", "Kamikaze" };
         int currentAtk = static_cast<int>(params.enemy.attackMethod);
-        if (ImGui::Combo("Attack Type", &currentAtk, attackMethods, IM_ARRAYSIZE(attackMethods))) {
+        if (ImGui::Combo("Attack Type", &currentAtk, attackMethods, 3)) {
             params.enemy.attackMethod = static_cast<AttackType>(currentAtk);
             NotifyEnemyConfigChanged(renderer, currentScene);
         }
     }
 
     if (ImGui::CollapsingHeader("Appearance Images", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::TextWrapped("Body Path: %s", params.enemy.texturePath.c_str());
         if (ImGui::Button("Import Body Image", ImVec2(-1, 30))) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {
@@ -491,7 +492,6 @@ static void DrawEnemyConfigPanel(GameParams& params, SDL_Renderer* renderer, Sce
         }
 
         ImGui::Separator();
-        ImGui::TextWrapped("Bullet Path: %s", params.enemy.bulletTexturePath.c_str());
         if (ImGui::Button("Import Bullet Image", ImVec2(-1, 30))) {
             std::string newPath = EditorGUI::ImportTexture();
             if (!newPath.empty()) {

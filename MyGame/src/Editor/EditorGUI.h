@@ -26,7 +26,8 @@ public:
 
     static void Init(SDL_Window* window, SDL_Renderer* renderer);
     static void HandleEvents(SDL_Event* event);
-    static void Render(SDL_Renderer* renderer, Scene* currentScene);
+    // 第3引数に Game* を追加
+    static void Render(SDL_Renderer* renderer, Scene* currentScene, class Game* game);
     static void Clean();
 
     static void SetMode(Mode newMode);

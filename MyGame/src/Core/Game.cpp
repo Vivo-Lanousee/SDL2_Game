@@ -12,7 +12,7 @@
 #include "imgui.h" 
 #include "../Editor/EditorGUI.h"
 
-Game::Game() : isRunning(false), window(nullptr), renderer(nullptr) {}
+Game::Game() : isRunning(false), window(nullptr), renderer(nullptr), nextScene(nullptr) {}
 Game::~Game() { Clean(); }
 
 bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bool fullscreen) {
@@ -25,9 +25,7 @@ bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bo
         if (window && renderer) {
             SDL_SetRenderDrawColor(renderer.get(), 255, 255, 255, 255);
 
-            // バックエンドの初期化のみ最初に行う
             EditorGUI::Init(window.get(), renderer.get());
-
             TextRenderer::Init("assets/fonts/PixelMplus10.ttf", 24);
             isRunning = true;
         }
@@ -37,14 +35,21 @@ bool Game::Init(const char* title, int xpos, int ypos, int width, int height, bo
     }
 
     inputHandler = std::make_unique<InputHandler>();
-    ChangeScene(new TitleScene());
+
+    // 初期シーンをセット
+    currentScene.reset(new TitleScene());
+    currentScene->OnEnter(this);
+
     return true;
 }
 
 void Game::ChangeScene(Scene* newScene) {
-    if (currentScene) currentScene->OnExit(this);
-    currentScene.reset(newScene);
-    if (currentScene) currentScene->OnEnter(this);
+    // 既に予約がある場合は削除
+    if (nextScene) {
+        delete nextScene;
+    }
+    // 文字列ではなく、new されたポインタを代入する
+    nextScene = newScene;
 }
 
 void Game::HandleEvents() {
@@ -55,23 +60,36 @@ void Game::HandleEvents() {
         if (event.type == SDL_QUIT) Quit();
 
         if (currentScene) {
-            // 全てのイベント処理をシーンに任せる。
-            // ImGuiを使うかどうかは各シーンが内部で判断する。
             currentScene->HandleEvents(this, &event);
         }
     }
 }
 
 void Game::Update() {
-    if (currentScene) currentScene->Update(this);
+    // シーンの切り替え予約があるかチェック
+    if (nextScene) {
+        if (currentScene) {
+            currentScene->OnExit(this);
+        }
+
+        // unique_ptr に新しいポインタを所有させる（古いのは自動破棄）
+        currentScene.reset(nextScene);
+
+        if (currentScene) {
+            currentScene->OnEnter(this);
+        }
+        nextScene = nullptr;
+    }
+
+    if (currentScene) {
+        currentScene->Update(this);
+    }
 }
 
 void Game::Render() {
-    // 背景
     SDL_SetRenderDrawColor(renderer.get(), 30, 30, 30, 255);
     SDL_RenderClear(renderer.get());
 
-    // ゲーム本編
     if (currentScene) {
         currentScene->Render(this);
     }
@@ -87,7 +105,11 @@ void Game::Clean() {
         currentScene.reset();
     }
 
-    // 終了処理は一括で行う
+    if (nextScene) {
+        delete nextScene;
+        nextScene = nullptr;
+    }
+
     EditorGUI::Clean();
     TextRenderer::Clean();
     TextureManager::Clean();
