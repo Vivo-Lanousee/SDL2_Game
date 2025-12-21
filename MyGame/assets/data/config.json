@@ -1,6 +1,6 @@
 {
     "ActiveCameraPreset": "Default",
-    "ActiveEnemyPreset": "Missile",
+    "ActiveEnemyPreset": "Default",
     "ActiveGunPreset": "Default",
     "ActivePlayerPreset": "Defa",
     "Base": {
@@ -24,21 +24,21 @@
     },
     "Enemy": {
         "attackInterval": 1.5,
-        "attackMethod": 2,
-        "attackPower": 10,
-        "attackRange": 40.0,
+        "attackMethod": 0,
+        "attackPower": 106,
+        "attackRange": 134.0,
         "baseHealth": 100,
-        "baseSpeed": 271.79998779296875,
+        "baseSpeed": 176.0,
         "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
-        "locomotionStyle": 1,
+        "locomotionStyle": 0,
         "moveMethod": 1,
-        "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
+        "texturePath": "assets/images/enemies/AdvSoldier_c.png"
     },
     "EnemyPresets": {
         "Default": {
             "attackInterval": 1.5,
             "attackMethod": 0,
-            "attackPower": 10,
+            "attackPower": 106,
             "attackRange": 134.0,
             "baseHealth": 100,
             "baseSpeed": 176.0,
@@ -50,19 +50,19 @@
         "Missile": {
             "attackInterval": 1.5,
             "attackMethod": 2,
-            "attackPower": 10,
-            "attackRange": 40.0,
+            "attackPower": 106,
+            "attackRange": 134.0,
             "baseHealth": 100,
-            "baseSpeed": 271.79998779296875,
+            "baseSpeed": 176.0,
             "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
             "locomotionStyle": 1,
             "moveMethod": 1,
-            "texturePath": "assets/images/editor_imports/AirMissiler_c.png"
+            "texturePath": "assets/images/enemies/AdvSoldier_c.png"
         }
     },
     "Gun": {
         "bulletSpeed": 49.0,
-        "damage": 10,
+        "damage": 100,
         "fireRate": 0.18000000715255737,
         "magazineSize": 30,
         "offsetX": 0.0,
@@ -75,7 +75,7 @@
     "GunPresets": {
         "Default": {
             "bulletSpeed": 49.0,
-            "damage": 10,
+            "damage": 100,
             "fireRate": 0.18000000715255737,
             "magazineSize": 30,
             "offsetX": 0.0,
@@ -142,17 +142,17 @@
         ]
     ],
     "Physics": {
-        "gravity": 24.020000457763672,
+        "gravity": 21.790000915527344,
         "terminalVelocity": 1537.0
     },
     "Player": {
-        "jumpVelocity": 733.5,
+        "jumpVelocity": 969.7999877929688,
         "maxHealth": 100.0,
         "moveSpeed": 440.20001220703125
     },
     "PlayerPresets": {
         "Defa": {
-            "jumpVelocity": 733.5,
+            "jumpVelocity": 969.7999877929688,
             "maxHealth": 100.0,
             "moveSpeed": 440.20001220703125
         },

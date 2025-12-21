@@ -97,6 +97,8 @@ void EditorScene::SpawnTestEnemy(SDL_Renderer* renderer) {
     gameObjects.push_back(std::move(enemy));
 }
 
+
+
 void EditorScene::OnUpdate(Game* game) {
 
     // --- ウェーブシミュレーションの更新ロジック ---

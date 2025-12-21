@@ -9,9 +9,9 @@
 class Game;
 struct SDL_FPoint;
 
-
 class Enemy : public GameObject {
 public:
+    // パスの引数は削除せず、互換性のために残していますが内部では無視します
     Enemy(float x, float y, int w, int h, SDL_Texture* tex,
         const std::vector<SDL_FPoint>& path);
 
@@ -33,14 +33,10 @@ private:
     float attackInterval;
     float attackTimer;
 
-    const std::vector<SDL_FPoint> targetPath;
-    int currentWaypointIndex;
-    float distanceTolerance;
-
-    //  AI
+    // AI状態
     bool isAttacking;
 
-    //  跳躍移動用
+    // 跳躍移動用タイマー
     float jumpTimer;
     float jumpInterval;
 

@@ -6,6 +6,7 @@
 #include "../Core/GameSession.h" 
 #include "../TextureManager.h"
 #include "Bullet.h"
+#include "Block.h" 
 #include <cmath>
 #include <iostream>
 #include <algorithm> 
@@ -13,13 +14,12 @@
 Enemy::Enemy(float x, float y, int w, int h, SDL_Texture* tex,
     const std::vector<SDL_FPoint>& path)
     : GameObject(x, y, w, h, tex),
-    targetPath(path), currentWaypointIndex(0),
-    distanceTolerance(5.0f), isAttacking(false), attackTimer(0.0f),
+    isAttacking(false), attackTimer(0.0f),
     jumpTimer(0.0f), jumpInterval(1.5f)
 {
     RefreshConfig(nullptr);
-    name = "Enemy";
-    isTrigger = false;
+    this->name = "Enemy";
+    this->isTrigger = true;
 }
 
 void Enemy::RefreshConfig(SDL_Renderer* renderer) {
@@ -53,14 +53,19 @@ void Enemy::RefreshConfig(SDL_Renderer* renderer) {
 void Enemy::Update(Game* game) {
     if (isDead) return;
 
+    // 拠点（Base Gate）のX座標
     float targetX = 150.0f;
-    float distToTarget = std::abs(x - targetX);
 
+    // 拠点までの距離（X軸のみで判定）
+    float distToTarget = std::abs((x + width / 2.0f) - targetX);
+
+    // 射程内に入ったら攻撃、そうでなければ移動
     if (distToTarget <= attackRange) {
         if (!isAttacking) {
             isAttacking = true;
             velX = 0;
-            attackTimer = attackInterval;
+            velY = 0;
+            attackTimer = attackInterval; 
         }
         AttackLogic(game);
     }
@@ -73,46 +78,40 @@ void Enemy::Update(Game* game) {
 void Enemy::MoveLogic() {
     GameParams& params = GameParams::GetInstance();
     float dt = Time::deltaTime;
+    float targetX = 150.0f;
+    float targetY = 450.0f; // 飛行型が目指す高さ（ゲートの中央付近）
 
     if (params.enemy.locomotionStyle == LocomotionType::Jumping) {
         if (isGrounded) {
             jumpTimer += dt;
             if (jumpTimer >= jumpInterval) {
                 jumpTimer = 0;
-                velY = -350.0f;
-                velX = -moveSpeed;
+                velY = -350.0f; // 上に跳ねる
+                velX = -moveSpeed; // 左に進む
+                isGrounded = false;
             }
             else {
-                velX = 0;
+                velX = 0; // 待機中は止まる
             }
         }
         return;
     }
 
-    if (params.enemy.moveMethod == MovementType::Linear) {
-        float targetX = 150.0f;
-        if (x > targetX) {
-            x -= moveSpeed * dt;
-            if (x < targetX) x = targetX;
+    if (params.enemy.locomotionStyle == LocomotionType::Flying) {
+        float dx = targetX - (x + width / 2.0f);
+        float dy = targetY - (y + height / 2.0f);
+        float dist = std::sqrt(dx * dx + dy * dy);
+
+        if (dist > 5.0f) {
+            x += (dx / dist) * moveSpeed * dt;
+            y += (dy / dist) * moveSpeed * dt;
         }
+        return;
     }
-    else if (params.enemy.moveMethod == MovementType::PathFollow) {
-        if (currentWaypointIndex >= targetPath.size()) return;
-        SDL_FPoint target = targetPath[currentWaypointIndex];
-        float dx = target.x - (x + width / 2.0f);
-        if (params.enemy.locomotionStyle == LocomotionType::Flying) {
-            float dy = target.y - (y + height / 2.0f);
-            float dist = std::sqrt(dx * dx + dy * dy);
-            if (dist < distanceTolerance) currentWaypointIndex++;
-            else {
-                x += (dx / dist) * moveSpeed * dt;
-                y += (dy / dist) * moveSpeed * dt;
-            }
-        }
-        else {
-            if (std::abs(dx) < distanceTolerance) currentWaypointIndex++;
-            else x += (dx > 0 ? 1.0f : -1.0f) * moveSpeed * dt;
-        }
+
+    if (x > targetX) {
+        x -= moveSpeed * dt;
+        if (x < targetX) x = targetX;
     }
 }
 
@@ -131,7 +130,6 @@ void Enemy::AttackLogic(Game* game) {
         {
             float spawnX = x - 10.0f;
             float spawnY = y + height / 2.0f;
-            // BulletSide::Enemy を追加
             auto bullet = std::make_unique<Bullet>(spawnX, spawnY, 180.0, bulletTexture ? bulletTexture.get() : nullptr, BulletSide::Enemy);
             bullet->name = "EnemyBullet";
             game->GetPendingObjects().push_back(std::move(bullet));
@@ -154,6 +152,8 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255);
         SDL_RenderFillRect(renderer, &destRect);
     }
+
+    // HPバーの表示
     int barH = 4;
     float hpRatio = (maxHp > 0) ? (float)hp / maxHp : 0;
     SDL_Rect bg = { drawX, drawY - 10, width, barH };
@@ -164,12 +164,13 @@ void Enemy::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_RenderFillRect(renderer, &fg);
 }
 
-// 衝突時：何かが自分（Enemy）に触れた
 void Enemy::OnTriggerEnter(GameObject* other) {
     if (isDead || other->isDead) return;
 
-    Bullet* b = dynamic_cast<Bullet*>(other);
-    if (b && b->GetSide() == BulletSide::Player) {
+    // 地面判定
+    if (other->name == "Block" || other->name == "Editor Ground") {
+        isGrounded = true;
+        velY = 0;
     }
 }
 

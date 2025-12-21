@@ -7,6 +7,7 @@
 #include <SDL.h>
 #include <iostream>
 #include <vector>
+#include <random>
 
 WaveManager::WaveManager() {
 }
@@ -35,7 +36,6 @@ void WaveManager::NextWave() {
         return;
     }
 
-    // キューをクリアして、新しいウェーブの敵を詰め込む
     while (!spawnQueue.empty()) spawnQueue.pop();
 
     auto& params = GameParams::GetInstance();
@@ -113,37 +113,36 @@ void WaveManager::SpawnEnemy(const std::string& presetName, Game* game) {
     auto& params = GameParams::GetInstance();
 
     if (params.enemyPresets.count(presetName)) {
-        // 出現させる敵のパラメータをプリセットから一時的に適用
+        // 現在のパラメータをプリセットで上書き（RefreshConfig用）
         params.enemy = params.enemyPresets[presetName];
         params.activeEnemyPresetName = presetName;
 
-        // 1. コンストラクタに必要な引数を準備
-        float startX = 1300.0f; // 画面右端の外側
-        float startY = 500.0f;  // 地面の高さ
-        int width = 64;         // デフォルトサイズ
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+
+        // 地面(550px)より十分高い位置(50~300px)にスポーンさせる
+        std::uniform_real_distribution<float> disY(50.0f, 300.0f);
+
+        float startX = 1300.0f; // 画面右側
+        float startY = disY(gen);
+        int width = 64;
         int height = 64;
 
-        // テクスチャの取得
         SDL_Texture* tex = nullptr;
         if (!params.enemy.texturePath.empty()) {
             SharedTexturePtr sharedTex = TextureManager::LoadTexture(params.enemy.texturePath, game->GetRenderer());
-            if (sharedTex) {
-                tex = sharedTex.get();
-            }
+            if (sharedTex) tex = sharedTex.get();
         }
 
-        // 移動パスの準備（現在はLinear移動想定なので空のリストを渡す）
+        // シミュレーション用には空のパスを渡すが、Updateループが回れば物理で着地する
         std::vector<SDL_FPoint> path;
 
-        // 2. Enemyのコンストラクタを正しい引数で呼び出す
         auto newEnemy = std::make_unique<Enemy>(startX, startY, width, height, tex, path);
-
-        // 3. パラメータの最終適用（内部変数のセットと弾丸テクスチャのロード）
         newEnemy->RefreshConfig(game->GetRenderer());
-
         newEnemy->name = "Enemy_" + presetName;
 
-        // 4. Gameクラスの生成キューに送る
+        // 重要: SceneのgameObjectsに直接追加するか、game->Instantiate経由で追加されることを保証する
+        // EditorSceneでは game->Instantiate が gameObjects リストに反映される設計である必要があります。
         game->Instantiate(std::move(newEnemy));
     }
     else {

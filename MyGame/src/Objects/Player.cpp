@@ -23,10 +23,18 @@ Player::Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camer
 {
     angle = 0;
     useGravity = true;
-    name = "Player";
+
+    // --- 物理挙動の設定 ---
+    // Physics::ResolveCollision 内の aIsCharacter 判定にヒットさせるため "Player" を含めます
+    this->name = "Player";
+
+    // isTrigger を false にすることで、地面（Block）に対しては物理的に衝突（着地）します。
+    // キャラクター同士の通り抜けは Physics 側のロジックで自動的に行われます。
+    this->isTrigger = true;
+
     this->bulletTexture = bulletTex;
     this->camera = cam;
-    isFlipLeft = false;
+    this->isFlipLeft = false;
 
     // 初期弾数を設定
     currentAmmo = GameParams::GetInstance().gun.magazineSize;
@@ -74,7 +82,6 @@ void Player::Update(Game* game) {
     }
 
     // --- リロード処理 ---
-    // Rキーによる手動リロード、または弾が0の時の自動リロード
     bool wantsReload = input->IsJustPressed(GameAction::Reload);
 
     if ((wantsReload || currentAmmo <= 0) && !isReloading && currentAmmo < params.gun.magazineSize) {
@@ -137,23 +144,17 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
         int mx, my;
         SDL_GetMouseState(&mx, &my);
 
-        // プレイヤーの中心 ＋ エディタで設定したオフセットを回転軸にする
         float centerX = (float)drawX + (float)width / 2.0f + params.gun.offsetX;
         float centerY = (float)drawY + (float)height / 2.0f + params.gun.offsetY;
 
-        // マウスへの角度計算
         double gunAngle = atan2(my - centerY, mx - centerX) * 180.0 / M_PI;
 
-        // 銃のサイズ（64x32）
         int gunW = 64;
         int gunH = 32;
-        // 銃の描画位置（オフセット適用済み）
         SDL_Rect gunDest = { (int)centerX - gunW / 4, (int)centerY - gunH / 2, gunW, gunH };
 
-        // 銃が逆さまにならないようにフリップ処理
         SDL_RendererFlip gunFlip = (gunAngle > 90 || gunAngle < -90) ? SDL_FLIP_VERTICAL : SDL_FLIP_NONE;
 
-        // リロード中は銃を少し透明にするなどの演出
         if (isReloading) {
             SDL_SetTextureAlphaMod(gunTexture.get(), 128);
         }
@@ -171,14 +172,12 @@ std::unique_ptr<Bullet> Player::Shoot(float targetX, float targetY, SDL_Texture*
     float spawnX = x + (width / 2.0f) + params.gun.offsetX;
     float spawnY = y + (height / 2.0f) + params.gun.offsetY;
 
-    // 1. ターゲット（マウス座標）への基本角度を計算
     float dx = targetX - spawnX;
     float dy = targetY - spawnY;
     float baseAngleRad = atan2(dy, dx);
 
     if (dx == 0 && dy == 0) return nullptr;
 
-    // 集弾率（スプレッド）の適用
     static std::random_device rd;
     static std::mt19937 gen(rd());
 
@@ -216,7 +215,6 @@ void Player::RefreshGunConfig(SDL_Renderer* renderer) {
     if (!path.empty()) {
         gunTexture = TextureManager::LoadTexture(path.c_str(), renderer);
     }
-    // 武器設定が変わった際、現在の残弾もリセットする
     currentAmmo = GameParams::GetInstance().gun.magazineSize;
     isReloading = false;
 }
