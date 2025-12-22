@@ -9,6 +9,7 @@
 #include <memory>
 #include <iostream>
 #include <random>
+#include <algorithm> // 追加：std::clamp用
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -44,7 +45,7 @@ void Player::Update(Game* game) {
 
     animator->Update();
 
-    //移動ロジック (GameParamsの数値を即時反映)
+    // 移動ロジック
     float moveSpeed = params.player.moveSpeed;
     velX = 0;
     if (input->IsPressed(GameAction::MoveLeft)) {
@@ -71,14 +72,13 @@ void Player::Update(Game* game) {
         }
     }
 
-    // 銃テクスチャがなければロードを試みる
+    // 銃テクスチャのリロード
     if (!gunTexture) {
         RefreshGunConfig(game->GetRenderer());
     }
 
-    // --- リロード処理 ---
+    // リロード処理
     bool wantsReload = input->IsJustPressed(GameAction::Reload);
-
     if ((wantsReload || currentAmmo <= 0) && !isReloading && currentAmmo < params.gun.magazineSize) {
         isReloading = true;
         reloadTimer = params.gun.reloadTime;
@@ -94,7 +94,7 @@ void Player::Update(Game* game) {
         }
     }
 
-    // 連射クールダウンの更新
+    // 連射クールダウン
     if (fireCooldown > 0) {
         fireCooldown -= Time::deltaTime;
     }
@@ -104,23 +104,29 @@ void Player::Update(Game* game) {
     SDL_GetMouseState(&screenMouseX, &screenMouseY);
     SDL_FPoint worldMouse = camera->ScreenToWorld(screenMouseX, screenMouseY);
 
-    // 射撃条件: ボタン押下中 且つ クールダウン終了 且つ リロード中でない 且つ 残弾がある
     if (input->IsPressed(GameAction::Shoot) && fireCooldown <= 0.0f && !isReloading && currentAmmo > 0) {
-
-        // 残弾を減らす
         currentAmmo--;
-
-        // shotCount の数だけ弾を同時に生成する
         for (int i = 0; i < params.gun.shotCount; ++i) {
             auto newBullet = Shoot(worldMouse.x, worldMouse.y, bulletTexture);
             if (newBullet) {
                 game->Instantiate(std::move(newBullet));
             }
         }
-
-        // クールダウンを設定
         fireCooldown = params.gun.fireRate;
     }
+
+    // --- マップ境界内へのクランプ処理 ---
+    // カメラの制限範囲（マップ全体のサイズ）を取得
+    float minX = 0.0f;
+    float maxX = (float)params.camera.limitX - (float)width;
+    float minY = 0.0f;
+    float maxY = (float)params.camera.limitY - (float)height;
+
+    // プレイヤーの座標を制限
+    if (this->x < minX) this->x = minX;
+    if (this->x > maxX) this->x = maxX;
+    if (this->y < minY) this->y = minY;
+    if (this->y > maxY) this->y = maxY;
 }
 
 void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
@@ -128,12 +134,10 @@ void Player::OnRender(SDL_Renderer* renderer, int drawX, int drawY) {
     SDL_Rect srcRect = animator->GetSrcRect(width, height);
     SDL_RendererFlip flip = isFlipLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
 
-    // プレイヤー本体の描画
     if (texture) {
         SDL_RenderCopyEx(renderer, texture, &srcRect, &destRect, angle, NULL, flip);
     }
 
-    // 銃の描画
     if (gunTexture) {
         GameParams& params = GameParams::GetInstance();
         int mx, my;

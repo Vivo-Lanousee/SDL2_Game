@@ -146,15 +146,15 @@
         "terminalVelocity": 1537.0
     },
     "Player": {
-        "jumpVelocity": 969.7999877929688,
+        "jumpVelocity": 1000.0,
         "maxHealth": 100.0,
-        "moveSpeed": 440.20001220703125
+        "moveSpeed": 431.0
     },
     "PlayerPresets": {
         "Defa": {
-            "jumpVelocity": 969.7999877929688,
+            "jumpVelocity": 1000.0,
             "maxHealth": 100.0,
-            "moveSpeed": 440.20001220703125
+            "moveSpeed": 431.0
         },
         "Default": {
             "jumpVelocity": 733.5,
