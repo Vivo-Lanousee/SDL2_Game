@@ -1,150 +1,168 @@
 ﻿#include "PlayScene.h"
 #include "../Core/Game.h"
-#include "../TextureManager.h"
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <memory>
-
-#include "../Objects/Block.h"
+#include "../Core/Time.h"
+#include "../Core/InputHandler.h"
 #include "../Core/Physics.h"
-#include "../Core/Camera.h"
+#include "../Core/GameParams.h"
+#include "../Core/GameSession.h"
+#include "../Objects/Block.h"
+#include "../Objects/Enemy.h"
+#include "../Objects/Base.h"
+#include "../TextureManager.h"
 #include "../UI/TextRenderer.h"
+#include "TitleScene.h"
+#include <iostream>
+#include <string>
+#include <algorithm>
 
 void PlayScene::OnEnter(Game* game) {
-    std::cout << "Entering PlayScene..." << std::endl;
+    std::cout << "Entering PlayScene... Start Defense." << std::endl;
 
-    playerTexture.reset(TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer()));
-    bulletTexture.reset(TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer()));
+    // 1. セッションの初期化
+    GameSession::GetInstance().ResetSession();
 
-    if (!playerTexture || !bulletTexture) {
-        std::cout << "Failed to load textures!" << std::endl;
+    // 2. テクスチャ読み込み
+    playerTexture = TextureManager::LoadTexture("assets/images/player.png", game->GetRenderer());
+    bulletTexture = TextureManager::LoadTexture("assets/images/bullet.png", game->GetRenderer());
+
+    // 3. カメラ設定
+    camera = std::make_unique<Camera>(800, 600);
+    camera->limitX = 5000;
+    camera->limitY = 1200;
+
+    // 4. 拠点の生成
+    auto baseObj = std::make_unique<Base>(80, 300, 80, 250);
+    baseObj->name = "Base Gate";
+    // 拠点のテクスチャサイズ反映とパラメータ適用
+    baseObj->RefreshConfig(game->GetRenderer());
+    gameObjects.push_back(std::move(baseObj));
+
+    // 5. 地面の生成
+    auto ground = std::make_unique<Block>(0, 550, 5000, 50);
+    ground->name = "Block"; // 物理演算対象にするための固定名
+    ground->useGravity = false; // 地面自体は落下させない
+    gameObjects.push_back(std::move(ground));
+
+    // 6. プレイヤーの生成
+    auto pPtr = std::make_unique<Player>(400, 100, playerTexture.get(), bulletTexture.get(), camera.get());
+    pPtr->name = "Player";
+
+    // プレイヤーの画像サイズを自動取得して当たり判定を補正
+    if (playerTexture) {
+        int realW, realH;
+        if (SDL_QueryTexture(playerTexture.get(), NULL, NULL, &realW, &realH) == 0) {
+            pPtr->width = realW;
+            pPtr->height = realH;
+        }
     }
 
+    player = pPtr.get();
+    gameObjects.push_back(std::move(pPtr));
 
-    camera = std::make_unique<Camera>(800, 600);
-    camera->limitX = 2000;
-    camera->limitY = 1000;
-
-    auto playerPtr = std::make_unique<Player>(
-        100,
-        100,
-        playerTexture.get(),
-        bulletTexture.get(), 
-        camera.get()
-    );
-
-    player = playerPtr.get();
-    gameObjects.push_back(std::move(playerPtr));
-
-    // 3. 地面と足場生成
-    gameObjects.push_back(std::make_unique<Block>(0, 500, 800, 50));
-    gameObjects.push_back(std::make_unique<Block>(200, 350, 200, 30));
-    gameObjects.push_back(std::make_unique<Block>(500, 250, 150, 30));
-    gameObjects.push_back(std::make_unique<Block>(1000, 400, 200, 30));
+    // 7. ウェーブマネージャーの開始（レベル1から）
+    waveManager.Init(1);
 }
 
 void PlayScene::OnExit(Game* game) {
-    std::cout << "Exiting PlayScene..." << std::endl;
-
+    player = nullptr;
     gameObjects.clear();
 }
 
-void PlayScene::Update(Game* game) {
-    // 1. プレイヤーの更新
-    player->Update(game);
-    player->ApplyPhysics();
-    player->isGrounded = false;
+void PlayScene::HandleEvents(Game* game, SDL_Event* event) {
+    if (event->type == SDL_QUIT) {
+        game->Quit();
+    }
+}
 
-    if (camera) {
+void PlayScene::OnUpdate(Game* game) {
+    // --- タイトルへの離脱（Escapeキー） ---
+    if (game->GetInput()->IsJustPressed(GameAction::Pause)) {
+        game->ChangeScene(new TitleScene());
+        return; // 重要：シーン切り替え後は即座に処理を中断する
+    }
+
+    // --- ゲームオーバー判定 ---
+    if (GameSession::GetInstance().currentBaseHP <= 0) {
+        std::cout << "GATE DESTROYED... GAME OVER" << std::endl;
+        game->ChangeScene(new TitleScene());
+        return;
+    }
+
+    // --- ウェーブマネージャーの更新 ---
+    // ここで生成される敵（Enemy）は Enemy::RefreshConfig 内で画像サイズ補正が行われます
+    waveManager.Update(game);
+
+    // --- カメラの追従 ---
+    if (player && !player->isDead) {
         camera->Follow(player);
     }
-
-    // 2. トリガーの当たり判定
-    for (auto& obj : gameObjects) {
-        if (obj->isTrigger) {
-            for (auto& target : gameObjects) {
-                if (obj.get() == target.get()) continue;
-
-                if (Physics::CheckAABB(obj.get(), target.get())) {
-                    obj->OnTriggerEnter(target.get());
-                }
-            }
-        }
+    else {
+        camera->Follow(nullptr);
     }
-
-    // 3. プレイヤーの物理衝突解決
-    for (auto& obj : gameObjects) {
-        if (obj.get() == player) continue;
-        if (obj->isTrigger) continue;
-
-        if (Physics::ResolveCollision(player, obj.get())) {
-            player->isGrounded = true;
-        }
-    }
-
-    // 4. その他のオブジェクト更新
-    for (auto& obj : gameObjects) {
-        if (obj.get() != player) {
-            obj->Update(game);
-        }
-    }
-
-    // 5. お掃除タイム
-    auto it = std::remove_if(gameObjects.begin(), gameObjects.end(),
-        [](const std::unique_ptr<GameObject>& obj) {
-            return obj->isDead;
-        });
-    gameObjects.erase(it, gameObjects.end());
-
-    // 6. 新しく生まれたオブジェクトを回収
-    std::vector<GameObject*>& newObjs = game->GetPendingObjects();
-    for (auto obj : newObjs) {
-        gameObjects.push_back(std::unique_ptr<GameObject>(obj));
-    }
-    game->ClearPendingObjects();
 }
 
 void PlayScene::Render(Game* game) {
-    for (auto& obj : gameObjects) {
-        obj->Render(game->GetRenderer(), camera.get());
+    SDL_Renderer* renderer = game->GetRenderer();
+
+    // 背景色（サバイバル感のある暗い紺色）
+    SDL_SetRenderDrawColor(renderer, 30, 35, 50, 255);
+    SDL_RenderClear(renderer);
+
+    // 全オブジェクトの描画（カメラ位置を考慮）
+    for (const auto& obj : gameObjects) {
+        if (obj) obj->RenderWithCamera(renderer, camera.get());
     }
 
-    SDL_Color white = { 255, 255, 255, 255 };
-    TextRenderer::Draw(game->GetRenderer(), "WASD/Arrows: Move | R-Click: Raycast", 10, 10, white);
-}
+    // --- UI 描画エリア ---
 
-void PlayScene::HandleEvents(Game* game) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            game->Quit();
+    // 拠点HPバー（中央上部）
+    GameSession& session = GameSession::GetInstance();
+    float hpRatio = (session.maxBaseHP > 0) ? (float)session.currentBaseHP / session.maxBaseHP : 0;
+
+    SDL_Rect barBG = { 200, 30, 400, 15 };
+    SDL_Rect barFG = { 200, 30, (int)(400 * hpRatio), 15 };
+
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255); // バーの背景
+    SDL_RenderFillRect(renderer, &barBG);
+
+    // HP残量に応じた色変化
+    if (hpRatio > 0.5f) SDL_SetRenderDrawColor(renderer, 0, 255, 100, 255); // 安全：緑
+    else if (hpRatio > 0.2f) SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255); // 警告：黄
+    else SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255); // 危険：赤
+
+    SDL_RenderFillRect(renderer, &barFG);
+    TextRenderer::Draw(renderer, "GATE INTEGRITY", 200, 12, { 255, 255, 255, 255 });
+
+    // ウェーブ（生存日数）表示（左上）
+    std::string dayText = "SURVIVAL DAY: " + std::to_string(waveManager.GetCurrentWaveNumber());
+    TextRenderer::Draw(renderer, dayText, 20, 20, { 255, 255, 0, 255 });
+
+    // 状況説明テキスト
+    std::string statusText = "";
+    switch (waveManager.GetState()) {
+    case WaveManager::State::PREPARING: statusText = "NEXT WAVE APPROACHING..."; break;
+    case WaveManager::State::SPAWNING:  statusText = "ENEMY DETECTED!"; break;
+    case WaveManager::State::BATTLE:    statusText = "ELIMINATE REMAINING HOSTILES"; break;
+    case WaveManager::State::LEVEL_COMPLETED: statusText = "MISSION ACCOMPLISHED!"; break;
+    }
+    TextRenderer::Draw(renderer, statusText, 20, 50, { 200, 200, 200, 255 });
+
+    // プレイヤーUI (体力バーの下に弾数を表示)
+    if (player && !player->isDead) {
+        int currentAmmo = player->GetCurrentAmmo();
+        int maxAmmo = GameParams::GetInstance().gun.magazineSize;
+        std::string ammoStr = "AMMO: " + std::to_string(currentAmmo) + " / " + std::to_string(maxAmmo);
+
+        SDL_Color ammoCol = { 255, 255, 255, 255 };
+        if (player->GetIsReloading()) {
+            ammoStr = "RELOADING...";
+            ammoCol = { 255, 100, 0, 255 };
+        }
+        else if (currentAmmo == 0) {
+            ammoCol = { 255, 50, 50, 255 };
         }
 
-        if (event.type == SDL_MOUSEBUTTONDOWN) {
-            int mx, my;
-            SDL_GetMouseState(&mx, &my);
-
-            if (event.button.button == SDL_BUTTON_RIGHT) {
-                std::cout << "--- Raycast Test ---" << std::endl;
-
-                SDL_FPoint worldPoint = camera->ScreenToWorld(mx, my);
-
-                float startX = player->x + player->width / 2;
-                float startY = player->y + player->height / 2;
-                bool hitWall = false;
-
-                for (auto& obj : gameObjects) {
-                    if (obj.get() == player) continue;
-                    if (obj->isTrigger) continue;
-
-                    if (Physics::LineVsAABB(startX, startY, worldPoint.x, worldPoint.y, obj.get())) {
-                        std::cout << "[Block] detected!" << std::endl;
-                        hitWall = true;
-                    }
-                }
-                if (!hitWall) std::cout << "Clear!" << std::endl;
-            }
-        }
+        // 中央の体力バー(y=30, h=15)のすぐ下、y=52に配置
+        TextRenderer::Draw(renderer, ammoStr, 200, 52, ammoCol);
     }
 }

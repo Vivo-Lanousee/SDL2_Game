@@ -2,13 +2,16 @@
 #include "GameObject.h"
 #include "../Core/Timer.h"
 #include "../Core/Animator.h"
-#include <memory> // ★必須
+#include "../TextureManager.h"
+#include <memory>
+#include <string>
 
-// 前方宣言
 class Game;
 class Camera;
 class Bullet;
 struct SDL_Texture;
+
+using SharedTexturePtr = std::shared_ptr<SDL_Texture>;
 
 struct UnitStatus {
     int hp;
@@ -22,26 +25,37 @@ class Player : public GameObject {
 public:
     Player(float x, float y, SDL_Texture* tex, SDL_Texture* bulletTex, Camera* cam);
 
-
     void Update(Game* game) override;
     void OnRender(SDL_Renderer* renderer, int drawX, int drawY) override;
 
     void TakeDamage(int damage);
-    int GetHP() const { return status.hp; }
-    int GetMaxHP() const { return status.maxHp; }
+    int GetHP() const { return (int)currentHealth; }
+    int GetMaxHP() const;
 
-private:
-    Bullet* Shoot(float targetX, float targetY, SDL_Texture* bulletTex);
+    // エディタで画像が変更された際などに呼び出してテクスチャを再ロードする
+    void RefreshGunConfig(SDL_Renderer* renderer);
+    int GetCurrentAmmo() const { return currentAmmo; }
+    bool GetIsReloading() const { return isReloading; }
 
 public:
     UnitStatus status;
 
 private:
+    // 弾を生成して返す内部関数
+    std::unique_ptr<Bullet> Shoot(float targetX, float targetY, SDL_Texture* bulletTex);
+
     double angle;
-    SDL_Texture* bulletTexture;
+    SDL_Texture* bulletTexture;  // 弾のテクスチャ
+    SharedTexturePtr gunTexture; // 銃本体のテクスチャ
     Camera* camera;
 
-    Timer shootTimer;
+    float fireCooldown;          // 連射間隔の管理用
+    float currentHealth;
+
+    // リロード管理
+    int currentAmmo;
+    float reloadTimer;
+    bool isReloading;
 
     std::unique_ptr<Animator> animator;
 

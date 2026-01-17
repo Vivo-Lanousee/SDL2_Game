@@ -1,40 +1,47 @@
 ﻿#pragma once
 #include "Scene.h"
 #include <vector>
+#include <memory>
+#include <SDL.h>
 #include "../Objects/GameObject.h"
 #include "../Objects/Player.h"
-#include "../Objects/Bullet.h"
+#include "../Objects/Base.h"
 #include "../Core/Camera.h"
-#include <memory>
 #include "../TextureManager.h"
+#include "../GameLogic/WaveManager.h"
+
+class Game;
 
 class PlayScene : public Scene {
 public:
-    // シーンに入った時
-    void OnEnter(Game* game) override;
+    PlayScene() = default;
+    ~PlayScene() override = default;
 
-    // シーンを出る時
+    void OnEnter(Game* game) override;
     void OnExit(Game* game) override;
 
-    // 更新（移動など）
-    void Update(Game* game) override;
-
-    // 描画
+    void HandleEvents(Game* game, SDL_Event* event) override;
+    void OnUpdate(Game* game) override;
     void Render(Game* game) override;
 
-    // 入力
-    void HandleEvents(Game* game) override;
+    // ゲーム本編では ImGui は表示しない
+    bool ShowImGui() const override { return false; };
+
+    std::vector<std::unique_ptr<GameObject>>& GetObjects() override { return gameObjects; }
+
+    SDL_Texture* GetBulletTexturePtr() const { return bulletTexture.get(); }
 
 private:
-    // このシーンで使う変数たち
-    // Playerは所有権をリスト(gameObjects)に渡すので、ここは参照用の生ポインタでOK
-    Player* player;
-
-    // GameObjectのリスト（所有権あり）
     std::vector<std::unique_ptr<GameObject>> gameObjects;
-
-    // カメラ（所有権あり）
     std::unique_ptr<Camera> camera;
-    TexturePtr playerTexture;
-    TexturePtr bulletTexture;
+
+    // プレイヤーへの生ポインタ（追従・参照用）
+    Player* player = nullptr;
+
+    // ウェーブ管理
+    WaveManager waveManager;
+
+    // リソース保持
+    SharedTexturePtr playerTexture;
+    SharedTexturePtr bulletTexture;
 };

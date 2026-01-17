@@ -9,6 +9,7 @@ enum class GameAction {
     MoveLeft,
     MoveRight,
     Shoot,
+    Reload, 
     Pause
 };
 
@@ -16,15 +17,14 @@ class InputHandler {
 public:
     InputHandler() {
         // --- キーボード設定 ---
-        keyMap[GameAction::MoveUp] = SDL_SCANCODE_UP;
-        keyMap[GameAction::MoveDown] = SDL_SCANCODE_DOWN;
-        keyMap[GameAction::MoveLeft] = SDL_SCANCODE_LEFT;
-        keyMap[GameAction::MoveRight] = SDL_SCANCODE_RIGHT;
-        //keyMap[GameAction::Shoot] = SDL_SCANCODE_R; // Rキーでも撃てる
+        keyMap[GameAction::MoveUp] = SDL_SCANCODE_W;
+        keyMap[GameAction::MoveDown] = SDL_SCANCODE_S;
+        keyMap[GameAction::MoveLeft] = SDL_SCANCODE_A;
+        keyMap[GameAction::MoveRight] = SDL_SCANCODE_D;
+        keyMap[GameAction::Reload] = SDL_SCANCODE_R;
         keyMap[GameAction::Pause] = SDL_SCANCODE_ESCAPE;
 
-        // 追加：マウス設定 ---
-        // Shootアクションを「左クリック」に割り当て
+        // --- マウス設定 ---
         mouseMap[GameAction::Shoot] = SDL_BUTTON_LEFT;
 
 
@@ -50,7 +50,7 @@ public:
 
         // マウス更新
         prevMouseState = currentMouseState;
-        currentMouseState = SDL_GetMouseState(NULL, NULL); // 座標は不要なのでNULL
+        currentMouseState = SDL_GetMouseState(NULL, NULL);
     }
 
     // 押しっぱなし判定

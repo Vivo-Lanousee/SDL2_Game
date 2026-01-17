@@ -1,19 +1,40 @@
 ﻿#include "TextureManager.h"
-#include <SDL_image.h>
 #include <iostream>
 
-SDL_Texture* TextureManager::LoadTexture(const char* fileName, SDL_Renderer* ren) {
-    // 画像をサーフェスとして読み込む
-    SDL_Surface* tempSurface = IMG_Load(fileName);
+std::map<std::string, SharedTexturePtr> TextureManager::textureCache;
 
-    if (tempSurface == nullptr) {
-        std::cout << "Failed to load image: " << fileName << std::endl;
-        return nullptr;
+SharedTexturePtr TextureManager::LoadTexture(const std::string& fileName, SDL_Renderer* renderer) {
+    auto it = textureCache.find(fileName);
+
+    if (it != textureCache.end()) {
+        std::cout << "[Cache Hit] Use existing texture: " << fileName << std::endl;
+        return it->second;
     }
 
-    // テクスチャに変換する
-    SDL_Texture* tex = SDL_CreateTextureFromSurface(ren, tempSurface);
+    //キャッシュになかったので、新しくロードする
+    std::cout << "[Load New] Loading texture from disk: " << fileName << std::endl;
+
+    SDL_Surface* tempSurface = IMG_Load(fileName.c_str());
+    if (!tempSurface) {
+        std::cout << "Failed to load image: " << fileName << std::endl;
+        return nullptr; 
+    }
+
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, tempSurface);
     SDL_FreeSurface(tempSurface);
 
-    return tex;
+    if (tex) {
+        SharedTexturePtr newPtr(tex, TextureDestroyer());
+        textureCache[fileName] = newPtr;
+
+        return newPtr;
+    }
+
+    return nullptr;
+}
+
+void TextureManager::Clean() {
+    std::cout << "Clearing texture cache..." << std::endl;
+    // キャッシュを空にする
+    textureCache.clear();
 }

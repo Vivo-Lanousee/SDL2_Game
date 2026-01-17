@@ -19,20 +19,36 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\libs\imgui\imgui.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_impl_sdlrenderer2.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\libs\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Objects\Base.cpp" />
+    <ClCompile Include="src\Core\GameSession.cpp" />
+    <ClCompile Include="src\Core\ConfigManager.cpp" />
+    <ClCompile Include="src\Core\Physics.cpp" />
+    <ClCompile Include="src\Objects\Bullet.cpp" />
+    <ClCompile Include="src\Objects\Enemy.cpp" />
+    <ClCompile Include="src\Editor\EditorGUI.cpp" />
     <ClCompile Include="src\Core\Animator.cpp" />
     <ClCompile Include="src\Core\Camera.cpp" />
     <ClCompile Include="src\Objects\Player.cpp" />
     <ClCompile Include="src\Core\Game.cpp" />
     <ClCompile Include="src\Core\main.cpp" />
+    <ClCompile Include="src\Objects\Turret.cpp" />
+    <ClCompile Include="src\Scenes\EditorScene.cpp" />
     <ClCompile Include="src\Scenes\PlayScene.cpp" />
+    <ClCompile Include="src\Scenes\Scene.cpp" />
     <ClCompile Include="src\Scenes\TitleScene.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
     <ClCompile Include="src\UI\Button.cpp" />
     <ClCompile Include="src\UI\TextRenderer.cpp" />
     <ClCompile Include="src\Core\Time.cpp" />
+    <ClCompile Include="src\GameLogic\WaveManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\data\player.json" />
     <None Include="libavif-16.dll" />
     <None Include="libtiff-5.dll" />
     <None Include="libwebp-7.dll" />
@@ -62,6 +78,12 @@
     <Text Include="x64\Debug\MyGame.log" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Objects\Base.h" />
+    <ClInclude Include="src\Core\GameSession.h" />
+    <ClInclude Include="src\Core\ConfigManager.h" />
+    <ClInclude Include="src\Core\GameParams.h" />
+    <ClInclude Include="src\Objects\Enemy.h" />
+    <ClInclude Include="src\Editor\EditorGUI.h" />
     <ClInclude Include="include\nlohmann\json.hpp" />
     <ClInclude Include="include\nlohmann\json_fwd.hpp" />
     <ClInclude Include="src\Core\Animator.h" />
@@ -75,6 +97,8 @@
     <ClInclude Include="src\Objects\Player.h" />
     <ClInclude Include="src\Objects\GameObject.h" />
     <ClInclude Include="src\Core\Game.h" />
+    <ClInclude Include="src\Objects\Turret.h" />
+    <ClInclude Include="src\Scenes\EditorScene.h" />
     <ClInclude Include="src\Scenes\PlayScene.h" />
     <ClInclude Include="src\Scenes\Scene.h" />
     <ClInclude Include="src\Scenes\TitleScene.h" />
@@ -82,8 +106,12 @@
     <ClInclude Include="src\UI\Button.h" />
     <ClInclude Include="src\UI\TextRenderer.h" />
     <ClInclude Include="src\Core\Time.h" />
+    <ClInclude Include="src\Weapons\WeaponConfig.h" />
+    <ClInclude Include="src\GameLogic\WaveManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\images\guns\AdvLMG1_c.png" />
+    <Image Include="assets\images\guns\GR1_c.png" />
     <Image Include="assets\images\player.png" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +204,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)libs\SDL2\include;$(SolutionDir)libs\SDL2_image\include;$(SolutionDir)libs\SDL2_ttf\include;$(ProjectDir)Objects;$(ProjectDir)include;$(SolutionDir)libs\imgui</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

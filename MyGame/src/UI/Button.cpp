@@ -1,5 +1,6 @@
 ﻿#include "Button.h"
 #include "TextRenderer.h"
+#include "imgui.h"
 
 // コンストラクタ
 Button::Button(int x, int y, int w, int h, std::string label)
@@ -9,6 +10,12 @@ Button::Button(int x, int y, int w, int h, std::string label)
 
 // イベント処理
 bool Button::HandleEvents(SDL_Event* event) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        // マウスが動いていても、ImGuiが優先されるため、isHoveredの更新も行いません。
+        return false;
+    }
+
     if (event->type == SDL_MOUSEMOTION) {
         int mx = event->motion.x;
         int my = event->motion.y;
@@ -18,7 +25,6 @@ bool Button::HandleEvents(SDL_Event* event) {
 
     if (event->type == SDL_MOUSEBUTTONDOWN) {
         if (event->button.button == SDL_BUTTON_LEFT && isHovered) {
-            // ★修正：クリックされたら、登録されている関数を実行する
             if (OnClick) {
                 OnClick();
             }
@@ -29,10 +35,7 @@ bool Button::HandleEvents(SDL_Event* event) {
 }
 
 // 描画処理
-// ★修正：Game* ではなく SDL_Renderer* を受け取る
 void Button::Render(SDL_Renderer* renderer) {
-    // Game* game -> GetRenderer() の手間がなくなる
-
     if (isHovered) {
         SDL_SetRenderDrawColor(renderer, 100, 100, 255, 255);
     }
@@ -46,6 +49,5 @@ void Button::Render(SDL_Renderer* renderer) {
 
     SDL_Color white = { 255, 255, 255, 255 };
 
-    // TextRenderer は static なのでそのまま呼び出し
     TextRenderer::Draw(renderer, text.c_str(), rect.x + 20, rect.y + 15, white);
 }

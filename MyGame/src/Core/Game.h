@@ -1,12 +1,13 @@
 ﻿#pragma once
 #include <SDL.h>
 #include <vector>
-#include <memory>
+#include <memory> 
 
 class Scene;
 class InputHandler;
 class GameObject;
-
+class Bullet;
+struct SDL_Texture;
 
 struct WindowDestroyer {
     void operator()(SDL_Window* w) const {
@@ -36,21 +37,23 @@ public:
     bool Running() { return isRunning; }
     void Quit() { isRunning = false; }
 
+    // シーン遷移を予約する
     void ChangeScene(Scene* newScene);
 
-
     SDL_Renderer* GetRenderer() const { return renderer.get(); }
-
     InputHandler* GetInput() const { return inputHandler.get(); }
 
-    std::vector<GameObject*>& GetPendingObjects() { return pendingObjects; }
+    std::vector<std::unique_ptr<GameObject>>& GetPendingObjects() { return pendingObjects; }
     void ClearPendingObjects() { pendingObjects.clear(); }
-    void Instantiate(GameObject* obj) { pendingObjects.push_back(obj); }
+    void Instantiate(std::unique_ptr<GameObject> obj) { pendingObjects.push_back(std::move(obj)); }
 
+    std::vector<std::unique_ptr<GameObject>>& GetCurrentSceneObjects();
+    SDL_Texture* GetBulletTexture();
     void DrawText(const char* text, int x, int y, SDL_Color color);
 
 private:
     bool isRunning;
+    bool isCleanedUp = false;
 
     WindowPtr window;
     RendererPtr renderer;
@@ -58,5 +61,8 @@ private:
     std::unique_ptr<InputHandler> inputHandler;
     std::unique_ptr<Scene> currentScene;
 
-    std::vector<GameObject*> pendingObjects;
+    // 次のフレームで切り替えるためのシーン保持
+    Scene* nextScene = nullptr;
+
+    std::vector<std::unique_ptr<GameObject>> pendingObjects;
 };

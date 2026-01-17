@@ -1,0 +1,165 @@
+{
+    "ActiveCameraPreset": "Default",
+    "ActiveEnemyPreset": "Default",
+    "ActiveGunPreset": "Default",
+    "ActivePlayerPreset": "Defa",
+    "Base": {
+        "defense": 0.0,
+        "maxHealth": 1012,
+        "texturePath": "assets/images/base/gate.png"
+    },
+    "Camera": {
+        "limitX": 2000,
+        "limitY": 2600,
+        "offsetX": 118.4000015258789,
+        "offsetY": -343.6000061035156
+    },
+    "CameraPresets": {
+        "Default": {
+            "limitX": 2000,
+            "limitY": 2600,
+            "offsetX": 118.4000015258789,
+            "offsetY": -343.6000061035156
+        }
+    },
+    "Enemy": {
+        "attackInterval": 1.5,
+        "attackMethod": 0,
+        "attackPower": 106,
+        "attackRange": 134.0,
+        "baseHealth": 100,
+        "baseSpeed": 176.0,
+        "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+        "locomotionStyle": 0,
+        "moveMethod": 1,
+        "texturePath": "assets/images/enemies/AdvSoldier_c.png"
+    },
+    "EnemyPresets": {
+        "Default": {
+            "attackInterval": 1.5,
+            "attackMethod": 0,
+            "attackPower": 106,
+            "attackRange": 134.0,
+            "baseHealth": 100,
+            "baseSpeed": 176.0,
+            "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+            "locomotionStyle": 0,
+            "moveMethod": 1,
+            "texturePath": "assets/images/enemies/AdvSoldier_c.png"
+        },
+        "Missile": {
+            "attackInterval": 1.5,
+            "attackMethod": 2,
+            "attackPower": 106,
+            "attackRange": 134.0,
+            "baseHealth": 100,
+            "baseSpeed": 176.0,
+            "bulletTexturePath": "assets/images/enemies/enemy_bullet.png",
+            "locomotionStyle": 1,
+            "moveMethod": 1,
+            "texturePath": "assets/images/enemies/AdvSoldier_c.png"
+        }
+    },
+    "Gun": {
+        "bulletSpeed": 49.0,
+        "damage": 100,
+        "fireRate": 0.18000000715255737,
+        "magazineSize": 30,
+        "offsetX": 0.0,
+        "offsetY": 0.0,
+        "reloadTime": 1.5,
+        "shotCount": 1,
+        "spreadAngle": 5.0,
+        "texturePath": "assets/images/guns/GR1_c.png"
+    },
+    "GunPresets": {
+        "Default": {
+            "bulletSpeed": 49.0,
+            "damage": 100,
+            "fireRate": 0.18000000715255737,
+            "magazineSize": 30,
+            "offsetX": 0.0,
+            "offsetY": 0.0,
+            "reloadTime": 1.5,
+            "shotCount": 1,
+            "spreadAngle": 5.0,
+            "texturePath": "assets/images/guns/GR1_c.png"
+        },
+        "test": {
+            "bulletSpeed": 49.0,
+            "damage": 13,
+            "fireRate": 0.14000000059604645,
+            "magazineSize": 30,
+            "offsetX": 1.5,
+            "offsetY": -0.5,
+            "reloadTime": 1.5,
+            "shotCount": 1,
+            "spreadAngle": 21.200000762939453,
+            "texturePath": "assets/images/guns/AdvLMG1_c.png"
+        }
+    },
+    "Levels": [
+        [
+            1,
+            {
+                "waves": [
+                    {
+                        "spawns": [
+                            {
+                                "count": 1,
+                                "preset": "Missile"
+                            },
+                            {
+                                "count": 1,
+                                "preset": "Default"
+                            }
+                        ]
+                    },
+                    {
+                        "spawns": []
+                    }
+                ]
+            }
+        ],
+        [
+            2,
+            {
+                "waves": [
+                    {
+                        "spawns": [
+                            {
+                                "count": 1,
+                                "preset": "Default"
+                            },
+                            {
+                                "count": 1,
+                                "preset": "Missile"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    ],
+    "Physics": {
+        "gravity": 21.790000915527344,
+        "terminalVelocity": 1537.0
+    },
+    "Player": {
+        "jumpVelocity": 1000.0,
+        "maxHealth": 100.0,
+        "moveSpeed": 431.0
+    },
+    "PlayerPresets": {
+        "Defa": {
+            "jumpVelocity": 1000.0,
+            "maxHealth": 100.0,
+            "moveSpeed": 431.0
+        },
+        "Default": {
+            "jumpVelocity": 733.5,
+            "maxHealth": 100.0,
+            "moveSpeed": 477.1000061035156
+        }
+    }
+}
